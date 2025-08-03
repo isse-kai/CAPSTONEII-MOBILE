@@ -1,72 +1,45 @@
-import { Pressable, Text, TextInput, View } from 'dripsy'
+import { Pressable, Text, View } from 'dripsy'
 import { useRouter } from 'expo-router'
-import { useState } from 'react'
 
 export default function Signup() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
 
   return (
-    <View
-      sx={{
-        flex: 1,
-        justifyContent: 'center',
-        px: 'md',
-        bg: 'background',
-      }}
-    >
-      <Text sx={{ fontSize: 24, fontWeight: 'bold', mb: 'md' }}>Sign Up</Text>
-
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={{
-          padding: 12,
-          marginBottom: 12,
-          borderRadius: 8,
-          backgroundColor: '#f3f4f6',
-        }}
-      />
-
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={{
-          padding: 12,
-          marginBottom: 12,
-          borderRadius: 8,
-          backgroundColor: '#f3f4f6',
-        }}
-      />
-
-      <TextInput
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        style={{
-          padding: 12,
-          marginBottom: 16,
-          borderRadius: 8,
-          backgroundColor: '#f3f4f6',
-        }}
-      />
+    <View sx={{ flex: 1, justifyContent: 'center', alignItems: 'center', px: 'lg', bg: 'background' }}>
+      <Text sx={{ fontSize: 24, fontWeight: 'bold', mb: 'xl', textAlign: 'center' }}>
+        Are you a client or a worker?
+      </Text>
 
       <Pressable
-        onPress={() => console.log('Signup pressed')}
+        onPress={() => router.push('./client')}
         sx={{
-          bg: 'secondary',
-          py: 'sm',
+          bg: 'primary',
+          py: 'md',
+          px: 'lg',
           borderRadius: 'md',
+          mb: 'md',
+          width: '100%',
+          alignItems: 'center',
         }}
       >
-        <Text sx={{ textAlign: 'center', color: 'background', fontWeight: 'bold' }}>
-          Sign Up
+        <Text sx={{ textAlign: 'center', color: 'background', fontWeight: 'bold', fontSize: 18 }}>
+          I&#39;m a Client
+        </Text>
+      </Pressable>
+
+      <Pressable
+        onPress={() => router.push('./worker')}
+        sx={{
+          bg: 'secondary',
+          py: 'md',
+          px: 'lg',
+          borderRadius: 'md',
+          width: '100%',
+          alignItems: 'center',
+        }}
+      >
+        <Text sx={{ textAlign: 'center', color: 'background', fontWeight: 'bold', fontSize: 18 }}>
+          I&#39;m a Worker
         </Text>
       </Pressable>
     </View>
