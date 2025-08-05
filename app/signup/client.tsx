@@ -7,7 +7,7 @@ export default function SignupClient() {
   const [password, setPassword] = useState('')
 
   const handleSignup = () => {
-    // Firebase logic for CLIENT sign up goes here
+    // Database
     console.log('Client signup:', { name, email })
   }
 

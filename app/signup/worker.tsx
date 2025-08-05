@@ -9,7 +9,7 @@ export default function SignupWorker() {
   const [experience, setExperience] = useState('')
 
   const handleSignup = () => {
-    // Firebase logic for WORKER sign up goes here
+    // Database
     console.log('Worker signup:', { name, email, serviceType, experience })
   }
 
