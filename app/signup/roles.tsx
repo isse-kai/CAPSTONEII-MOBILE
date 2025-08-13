@@ -7,7 +7,7 @@ export default function Roles() {
   return (
     <View sx={{ flex: 1, justifyContent: 'center', alignItems: 'center', px: 'lg', bg: 'background' }}>
       <Text sx={{ fontSize: 24, fontWeight: 'bold', mb: 'xl', textAlign: 'center' }}>
-        Are you a client or a worker?
+        Are you a Client or a Worker?
       </Text>
 
       <Pressable
