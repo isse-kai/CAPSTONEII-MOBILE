@@ -29,11 +29,11 @@ export default function Login() {
         }}
       >
         {/* Vector Image */}
-        {/* <Image
-          source={require('../../assets/4.png')}
+        <Image
+          source={require('../../assets/jdklogo.png')}
           style={{ width: 280, height: 280, alignSelf: 'center', marginBottom: -70, marginTop: -150 }}
           resizeMode="contain"
-        /> */}
+        />
 
         <View
           sx={{

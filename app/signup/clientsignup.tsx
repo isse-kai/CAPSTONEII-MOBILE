@@ -1,231 +1,285 @@
-// import { Image, Pressable, Text, TextInput, View } from 'dripsy'
-// import { useFonts } from 'expo-font'
-// import { useRouter } from 'expo-router'
-// import { useState } from 'react'
-// import { Alert, ImageBackground } from 'react-native'
-
-// export default function ClientSignup() {
-//   const router = useRouter()
-
-//   const [first_name, setFirstName] = useState('')
-//   const [last_name, setLastName] = useState('')
-//   const [sex, setSex] = useState('')
-//   const [email_address, setEmail] = useState('')
-//   const [password, setPassword] = useState('')
-//   const [confirm_password, setConfirmPassword] = useState('')
-//   const [is_agreed_to_terms, setIsAgreedToTerms] = useState(false)
-//   const [error_message, setErrorMessage] = useState('')
-
-//   const [fontsLoaded] = useFonts({
-//     'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
-//     'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
-//     'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
-//   })
-
-//   const isFormValid = (
-//     first_name.trim() &&
-//     last_name.trim() &&
-//     sex.trim() &&
-//     email_address.trim() &&
-//     password.trim() &&
-//     confirm_password.trim() &&
-//     password === confirm_password &&
-//     is_agreed_to_terms
-//   )
-
-//   const handleSubmit = () => {
-//     if (!isFormValid) {
-//       setErrorMessage('Please complete all fields correctly.')
-//       return
-//     }
-
-//     setErrorMessage('')
-//     Alert.alert('Success', 'Account created successfully!')
-//     router.push('/login/login') // Simulated navigation
-//   }
-
-//   return (
-//     <ImageBackground
-//       source={require('../../assets/signup.jpg')}
-//       style={{ flex: 1 }}
-//       resizeMode="cover"
-//     >
-//       <View
-//         sx={{
-//           flex: 1,
-//           justifyContent: 'center',
-//           px: 'md',
-//         }}
-//       >
-//         <Image
-//           source={require('../../assets/jdklogo.png')}
-//           style={{ width: 180, height: 180, alignSelf: 'center', marginBottom: -40, marginTop: -120 }}
-//           resizeMode="contain"
-//         />
-
-//         <Text
-//           sx={{
-//             fontSize: 26,
-//             fontWeight: 'bold',
-//             mb: 'md',
-//             textAlign: 'center',
-//             fontFamily: 'Poppins-ExtraBold',
-//           }}
-//         >
-//           Sign up to be a <Text sx={{ color: 'blue' }}>Client</Text>
-//         </Text>
-
-//         <TextInput
-//           placeholder="First Name"
-//           value={first_name}
-//           onChangeText={setFirstName}
-//           style={inputStyle}
-//         />
-//         <TextInput
-//           placeholder="Last Name"
-//           value={last_name}
-//           onChangeText={setLastName}
-//           style={inputStyle}
-//         />
-//         <TextInput
-//           placeholder="Sex (Male/Female)"
-//           value={sex}
-//           onChangeText={setSex}
-//           style={inputStyle}
-//         />
-//         <TextInput
-//           placeholder="Email Address"
-//           value={email_address}
-//           onChangeText={setEmail}
-//           keyboardType="email-address"
-//           style={inputStyle}
-//         />
-//         <TextInput
-//           placeholder="Password"
-//           value={password}
-//           onChangeText={setPassword}
-//           secureTextEntry
-//           style={inputStyle}
-//         />
-//         <TextInput
-//           placeholder="Confirm Password"
-//           value={confirm_password}
-//           onChangeText={setConfirmPassword}
-//           secureTextEntry
-//           style={inputStyle}
-//         />
-
-//         <Pressable onPress={() => setIsAgreedToTerms(!is_agreed_to_terms)} sx={{ mb: 'sm' }}>
-//           <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular' }}>
-//             {is_agreed_to_terms ? '☑' : '☐'} I agree to JDK HOMECARE’s{' '}
-//             <Text sx={{ color: 'blue' }}>Terms of Service</Text> and{' '}
-//             <Text sx={{ color: 'blue' }}>Privacy Policy</Text>.
-//           </Text>
-//         </Pressable>
-
-//         <Pressable
-//           onPress={handleSubmit}
-//           sx={{
-//             bg: 'blue',
-//             py: 'sm',
-//             borderRadius: 'md',
-//             alignItems: 'center',
-//             mb: 'md',
-//           }}
-//         >
-//           <Text
-//             sx={{
-//               textAlign: 'center',
-//               color: 'background',
-//               fontWeight: 'bold',
-//               fontSize: 18,
-//               fontFamily: 'Poppins-ExtraBold',
-//             }}
-//           >
-//             Create my account
-//           </Text>
-//         </Pressable>
-
-//         {error_message ? (
-//           <Text sx={{ color: 'red', textAlign: 'center', fontFamily: 'Poppins-Regular' }}>
-//             {error_message}
-//           </Text>
-//         ) : null}
-
-//         <Pressable onPress={() => router.push('/login/login')} sx={{ mt: 'md' }}>
-//           <Text sx={{ textAlign: 'center', fontFamily: 'Poppins-Regular' }}>
-//             Already have an account? <Text sx={{ color: 'blue' }}>Log In</Text>
-//           </Text>
-//         </Pressable>
-//       </View>
-//     </ImageBackground>
-//   )
-// }
-
-// const inputStyle = {
-//   padding: 12,
-//   marginBottom: 12,
-//   borderRadius: 8,
-//   backgroundColor: '#f3f4f6',
-// }
-
-
-
-
-
-
-
-
-
-
-
-// BACKUP
+import { Picker } from '@react-native-picker/picker'
 import { Pressable, Text, TextInput, View } from 'dripsy'
+import Checkbox from 'expo-checkbox'
+import { useFonts } from 'expo-font'
+import { useRouter } from 'expo-router'
 import { useState } from 'react'
+import {
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native'
 
-export default function SignupClient() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+export default function WorkerSignup() {
+  const router = useRouter()
 
-  const handleSignup = () => {
-    // Database
-    console.log('Client signup:', { name, email })
-  }
+  const [fontsLoaded] = useFonts({
+    'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
+    'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
+  })
+
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    sex: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    agreedToTerms: false,
+  })
+
+  const isFormValid =
+    form.firstName &&
+    form.lastName &&
+    form.sex &&
+    form.email &&
+    form.password.length >= 8 &&
+    form.password === form.confirmPassword &&
+    form.agreedToTerms
+
+  if (!fontsLoaded) return null
 
   return (
-    <View sx={{ flex: 1, justifyContent: 'center', px: 'lg', bg: 'background' }}>
-      <Text sx={{ fontSize: 24, fontWeight: 'bold', mb: 'xl', textAlign: 'center' }}>
-        Client Signup
-      </Text>
+    <ImageBackground
+      source={require('../../assets/login.jpg')} // ✅ Replace with your actual image
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View
+            sx={{
+              flex: 1,
+              justifyContent: 'center',
+              px: 'lg',
+              py: 'lg',
+              bg: 'transparent',
+            }}
+          >
+            {/* Google Login */}
+            <Pressable onPress={() => router.push('/signup/clientsignup')}>
+              {({ hovered }) => (
+                <View
+                  sx={{
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    bg: hovered ? '#008CFC' : 'transparent',
+                    py: 10,
+                    borderRadius: 8,
+                    mb: 'md',
+                    borderWidth: 1,
+                    borderColor: '#008CFC',
+                  }}
+                >
+                  <Image
+                    source={require('../../assets/google.png')}
+                    style={{
+                      width: 24,
+                      height: 24,
+                      marginRight: 8,
+                    }}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    sx={{
+                      textAlign: 'center',
+                      color: hovered ? 'background' : '#008CFC',
+                      fontWeight: 'bold',
+                      fontSize: 20,
+                      fontFamily: 'Poppins-ExtraBold',
+                    }}
+                  >
+                    Continue with Google
+                  </Text>
+                </View>
+              )}
+            </Pressable>
 
-      <TextInput
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-        sx={{ mb: 'md', p: 'md', bg: 'muted', borderRadius: 'md' }}
-      />
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        sx={{ mb: 'md', p: 'md', bg: 'muted', borderRadius: 'md' }}
-      />
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        sx={{ mb: 'xl', p: 'md', bg: 'muted', borderRadius: 'md' }}
-      />
+            {/* First & Last Name */}
+            <Text sx={{ fontFamily: 'Poppins-Bold', mb: 4 }}>Name</Text>
+            <View sx={{ flexDirection: 'row', gap: 12, mb: 'md' }}>
+              <TextInput
+                placeholder="First Name"
+                value={form.firstName}
+                onChangeText={text => setForm({ ...form, firstName: text })}
+                sx={{
+                  flex: 1,
+                  borderWidth: 1,
+                  borderColor: '#ccc',
+                  borderRadius: 8,
+                  px: 'md',
+                  py: 10,
+                  fontFamily: 'Poppins-Regular',
+                }}
+              />
+              <TextInput
+                placeholder="Last Name"
+                value={form.lastName}
+                onChangeText={text => setForm({ ...form, lastName: text })}
+                sx={{
+                  flex: 1,
+                  borderWidth: 1,
+                  borderColor: '#ccc',
+                  borderRadius: 8,
+                  px: 'md',
+                  py: 10,
+                  fontFamily: 'Poppins-Regular',
+                }}
+              />
+            </View>
 
-      <Pressable onPress={handleSignup} sx={{ bg: 'primary', p: 'md', borderRadius: 'md' }}>
-        <Text sx={{ textAlign: 'center', color: 'background', fontWeight: 'bold' }}>
-          Sign Up as Client
-        </Text>
-      </Pressable>
-    </View>
+            {/* Sex */}
+            <Text sx={{ fontFamily: 'Poppins-Bold', mb: 4 }}>Sex</Text>
+            <View
+              sx={{
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 8,
+                mb: 'md',
+                overflow: 'hidden',
+              }}
+            >
+              <Picker
+                selectedValue={form.sex}
+                onValueChange={value => setForm({ ...form, sex: value })}
+                style={{
+                  height: 50,
+                  fontFamily: 'Poppins-Regular',
+                }}
+              >
+                <Picker.Item label="Select Sex" value="" />
+                <Picker.Item label="Male" value="male" />
+                <Picker.Item label="Female" value="female" />
+              </Picker>
+            </View>
+
+            {/* Email */}
+            <Text sx={{ fontFamily: 'Poppins-Bold', mb: 4 }}>Email Address</Text>
+            <TextInput
+              placeholder="Email Address"
+              value={form.email}
+              onChangeText={text => setForm({ ...form, email: text })}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              sx={{
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 8,
+                px: 'md',
+                py: 10,
+                mb: 'md',
+                fontFamily: 'Poppins-Regular',
+              }}
+            />
+
+            {/* Password */}
+            <Text sx={{ fontFamily: 'Poppins-Bold', mb: 4 }}>Password</Text>
+            <TextInput
+              placeholder="Password (8 or more characters)"
+              value={form.password}
+              onChangeText={text => setForm({ ...form, password: text })}
+              secureTextEntry
+              sx={{
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 8,
+                px: 'md',
+                py: 10,
+                mb: 'md',
+                fontFamily: 'Poppins-Regular',
+              }}
+            />
+
+            {/* Confirm Password */}
+            <Text sx={{ fontFamily: 'Poppins-Bold', mb: 4 }}>Confirm Password</Text>
+            <TextInput
+              placeholder="Confirm Password"
+              value={form.confirmPassword}
+              onChangeText={text => setForm({ ...form, confirmPassword: text })}
+              secureTextEntry
+              sx={{
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 8,
+                px: 'md',
+                py: 10,
+                mb: 'md',
+                fontFamily: 'Poppins-Regular',
+              }}
+            />
+
+            {/* Terms and Conditions */}
+            <View sx={{ flexDirection: 'row', alignItems: 'center', mb: 'lg' }}>
+              <Checkbox
+                value={form.agreedToTerms}
+                onValueChange={value => setForm({ ...form, agreedToTerms: value })}
+                color={form.agreedToTerms ? '#008CFC' : undefined}
+              />
+              <Text
+                sx={{
+                  ml: 'sm',
+                  fontSize: 14,
+                  fontFamily: 'Poppins-Regular',
+                  color: 'text',
+                  flex: 1,
+                }}
+              >
+                I agree to JDK HOMECARE’s Terms of Service and Privacy Policy.
+              </Text>
+            </View>
+
+            {/* Create Account Button */}
+            <Pressable
+              onPress={() => {
+                if (isFormValid) {
+                  console.log('Create account with:', form)
+                  // router.push('/worker/dashboard')
+                }
+              }}
+              sx={{
+                bg: isFormValid ? '#008CFC' : '#ccc',
+                py: 12,
+                borderRadius: 8,
+                alignItems: 'center',
+                mb: 'md',
+              }}
+              disabled={!isFormValid}
+            >
+              <Text
+                sx={{
+                  fontSize: 18,
+                  fontFamily: 'Poppins-Bold',
+                  color: '#fff',
+                }}
+              >
+                Create My Account
+              </Text>
+            </Pressable>
+
+            {/* Apply as Worker Text Button */}
+            <Pressable onPress={() => router.push('/signup/workersignup')}>
+              <Text
+                sx={{
+                  fontSize: 14,
+                  fontFamily: 'Poppins-Regular',
+                  color: '#008CFC',
+                  textDecorationLine: 'underline',
+                  textAlign: 'center',
+                }}
+              >
+                Apply as Worker
+              </Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ImageBackground>
   )
 }
