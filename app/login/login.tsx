@@ -1,8 +1,8 @@
-import { Image, Pressable, Text, TextInput, View } from 'dripsy'
+import { Pressable, Text, TextInput, View } from 'dripsy'
 import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { ImageBackground } from 'react-native'
+import { Image, ImageBackground } from 'react-native'
 
 export default function Login() {
   const router = useRouter()
@@ -29,28 +29,49 @@ export default function Login() {
         }}
       >
         {/* Vector Image */}
-        <Image
+        {/* <Image
           source={require('../../assets/4.png')}
-          style={{ width: 250, height: 250, alignSelf: 'center', marginBottom: -50, marginTop: -200 }}
+          style={{ width: 280, height: 280, alignSelf: 'center', marginBottom: -70, marginTop: -150 }}
           resizeMode="contain"
-        />
+        /> */}
 
-        <Text sx={{ 
-          fontSize: 30, 
-          fontWeight: 'bold', 
-          mb: 'md', 
-          textAlign: 'center',
-          fontFamily: 'Poppins-ExtraBold' }}
+        <View
+          sx={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            mb: 'md',
+            mt: 'md'
+          }}
+        >
+          <Text
+            sx={{
+              fontSize: 26,
+              fontWeight: '400',
+              fontFamily: 'Poppins-Bold',
+            }}
           >
-          Login
-        </Text>
+            Login to{' '}
+          </Text>
+
+          <Text
+            sx={{
+              fontSize: 26,
+              fontWeight: 'extrabold',
+              fontFamily: 'Poppins-Bold',
+              color: '#008CFC',
+            }}
+          >
+            JDK Homecare
+          </Text>
+        </View>
 
         <TextInput
-          placeholder="Email"
+          placeholder="Email Address"
           value={email}
           onChangeText={setEmail}
           style={{
-            padding: 12,
+            padding: 20,
             marginBottom: 12,
             borderRadius: 8,
             backgroundColor: '#f3f4f6',
@@ -63,7 +84,7 @@ export default function Login() {
           onChangeText={setPassword}
           secureTextEntry
           style={{
-            padding: 12,
+            padding: 20,
             marginBottom: 16,
             borderRadius: 8,
             backgroundColor: '#f3f4f6',
@@ -73,9 +94,9 @@ export default function Login() {
         <Pressable
           onPress={() => console.log('Login pressed')}
           sx={{
-            bg: 'blue',
-            py: 'sm',
-            borderRadius: 'md',
+            bg: '#008CFC',
+            py: 10,
+            borderRadius: 8,
             alignItems: 'center',
             mb: 'md',
           }}
@@ -84,11 +105,101 @@ export default function Login() {
             textAlign: 'center', 
             color: 'background', 
             fontWeight: 'bold', 
-            fontSize: 18, 
+            fontSize: 20, 
             fontFamily: 'Poppins-ExtraBold'}}>
             Login
           </Text>
         </Pressable>
+
+        <Text
+            sx={{
+              fontSize: 20,
+              fontWeight: 'extrabold',
+              fontFamily: 'Poppins-Regular',
+              color: 'black',
+              textAlign: 'center',
+            }}
+          >
+            or
+          </Text>
+
+        <Pressable
+          onPress={() => router.push('/signup/clientsignup')}
+        >
+          {({ hovered }) => (
+            <View
+              sx={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                bg: hovered ? '#008CFC' : 'transparent',
+                py: 10,
+                borderRadius: 8,
+                mb: 'md',
+                borderWidth: 1,
+                borderColor: '#008CFC',
+              }}
+            >
+              <Image
+                source={require('../../assets/google.png')}
+                style={{
+                  width: 24,
+                  height: 24,
+                  marginRight: 8,
+                }}
+                resizeMode="contain"
+              />
+
+              <Text
+                sx={{
+                  textAlign: 'center',
+                  color: hovered ? 'background' : '#008CFC',
+                  fontWeight: 'bold',
+                  fontSize: 20,
+                  fontFamily: 'Poppins-ExtraBold',
+                }}
+              >
+                Continue with Google
+              </Text>
+            </View>
+          )}
+        </Pressable>
+        
+        <View
+          sx={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            mb: 'md',
+            mt: 'md'
+          }}
+        >
+          <Text
+            sx={{
+              fontSize: 14,
+              fontWeight: 'Regular',
+              fontFamily: 'Poppins-Regular',
+            }}
+          >
+            Dont have an account?{' '}
+          </Text>
+
+          <Pressable onPress={() => router.push('/signup/roles')}>
+            <Text
+              sx={{
+                fontSize: 14,
+                fontWeight: 'Regular',
+                fontFamily: 'Poppins-Regular',
+                color: '#008CFC',
+                textDecorationLine: 'underline',
+              }}
+            >
+              Sign Up
+            </Text>
+          </Pressable>
+        </View>
+
+
       </View>
     </ImageBackground>
   )
