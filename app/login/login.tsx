@@ -8,12 +8,15 @@ export default function Login() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const [fontsLoaded] = useFonts({
-      'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
-      'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
-      'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
-    })
+    'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
+    'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
+  })
+
+  if (!fontsLoaded) return null
 
   return (
     <ImageBackground
@@ -21,27 +24,28 @@ export default function Login() {
       style={{ flex: 1 }}
       resizeMode="cover"
     >
-      <View
-        sx={{
-          flex: 1,
-          justifyContent: 'center',
-          px: 'md',
-        }}
-      >
-        {/* Vector Image */}
+      <View sx={{ flex: 1, justifyContent: 'center', px: 'md' }}>
+        {/* Logo */}
         <Image
           source={require('../../assets/jdklogo.png')}
-          style={{ width: 280, height: 280, alignSelf: 'center', marginBottom: -70, marginTop: -150 }}
+          style={{
+            width: 280,
+            height: 280,
+            alignSelf: 'center',
+            marginBottom: -70,
+            marginTop: -150,
+          }}
           resizeMode="contain"
         />
 
+        {/* Header */}
         <View
           sx={{
             flexDirection: 'row',
-            justifyContent: 'center',
+            justifyContent: 'left',
             alignItems: 'center',
             mb: 'md',
-            mt: 'md'
+            mt: 'md',
           }}
         >
           <Text
@@ -51,21 +55,11 @@ export default function Login() {
               fontFamily: 'Poppins-Bold',
             }}
           >
-            Login to{' '}
-          </Text>
-
-          <Text
-            sx={{
-              fontSize: 26,
-              fontWeight: 'extrabold',
-              fontFamily: 'Poppins-Bold',
-              color: '#008CFC',
-            }}
-          >
-            JDK Homecare
+            Login
           </Text>
         </View>
 
+        {/* Email Input */}
         <TextInput
           placeholder="Email Address"
           value={email}
@@ -78,19 +72,42 @@ export default function Login() {
           }}
         />
 
-        <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={{
-            padding: 20,
-            marginBottom: 16,
-            borderRadius: 8,
-            backgroundColor: '#f3f4f6',
-          }}
-        />
+        {/* Password Input with Toggle */}
+        <View style={{ position: 'relative', marginBottom: 16 }}>
+          <TextInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            style={{
+              padding: 20,
+              borderRadius: 8,
+              backgroundColor: '#f3f4f6',
+              paddingRight: 60,
+            }}
+          />
+          <Pressable
+            onPress={() => setShowPassword(!showPassword)}
+            style={{
+              position: 'absolute',
+              right: 16,
+              top: 18,
+              padding: 4,
+            }}
+          >
+            <Text
+              sx={{
+                fontSize: 14,
+                fontFamily: 'Poppins-Regular',
+                color: '#008CFC',
+              }}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </Text>
+          </Pressable>
+        </View>
 
+        {/* Login Button */}
         <Pressable
           onPress={() => console.log('Login pressed')}
           sx={{
@@ -101,31 +118,34 @@ export default function Login() {
             mb: 'md',
           }}
         >
-          <Text sx={{ 
-            textAlign: 'center', 
-            color: 'background', 
-            fontWeight: 'bold', 
-            fontSize: 20, 
-            fontFamily: 'Poppins-ExtraBold'}}>
+          <Text
+            sx={{
+              textAlign: 'center',
+              color: 'background',
+              fontWeight: 'bold',
+              fontSize: 20,
+              fontFamily: 'Poppins-ExtraBold',
+            }}
+          >
             Login
           </Text>
         </Pressable>
 
+        {/* Divider */}
         <Text
-            sx={{
-              fontSize: 20,
-              fontWeight: 'extrabold',
-              fontFamily: 'Poppins-Regular',
-              color: 'black',
-              textAlign: 'center',
-            }}
-          >
-            or
-          </Text>
-
-        <Pressable
-          onPress={() => router.push('/signup/clientsignup')}
+          sx={{
+            fontSize: 20,
+            fontWeight: 'extrabold',
+            fontFamily: 'Poppins-Regular',
+            color: 'black',
+            textAlign: 'center',
+          }}
         >
+          or
+        </Text>
+
+        {/* Google Login */}
+        <Pressable onPress={() => router.push('/signup/clientsignup')}>
           {({ hovered }) => (
             <View
               sx={{
@@ -149,7 +169,6 @@ export default function Login() {
                 }}
                 resizeMode="contain"
               />
-
               <Text
                 sx={{
                   textAlign: 'center',
@@ -164,14 +183,15 @@ export default function Login() {
             </View>
           )}
         </Pressable>
-        
+
+        {/* Signup Prompt */}
         <View
           sx={{
             flexDirection: 'row',
             justifyContent: 'center',
             alignItems: 'center',
             mb: 'md',
-            mt: 'md'
+            mt: 'md',
           }}
         >
           <Text
@@ -181,9 +201,8 @@ export default function Login() {
               fontFamily: 'Poppins-Regular',
             }}
           >
-            Dont have an account?{' '}
+            Don’t have an account?{' '}
           </Text>
-
           <Pressable onPress={() => router.push('/signup/roles')}>
             <Text
               sx={{
@@ -198,8 +217,6 @@ export default function Login() {
             </Text>
           </Pressable>
         </View>
-
-
       </View>
     </ImageBackground>
   )

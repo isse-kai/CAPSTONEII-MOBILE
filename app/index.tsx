@@ -198,7 +198,7 @@ export default function Index() {
           mb: 65,
           left: 0,
           right: 0,
-          alignItems: 'center',
+          alignItems: 'center'
         }}
       >
         <Pressable

@@ -20,12 +20,12 @@ export default function Roles() {
     {
       key: 'client',
       label: "I'm a client, hiring for a service",
-      route: './clientsignup',
+      route: '/signup/clientsignup',
     },
     {
       key: 'worker',
       label: "I'm a worker, looking for a service job",
-      route: './workersignup',
+      route: '/signup/workersignup',
     },
   ]
 
@@ -117,7 +117,7 @@ export default function Roles() {
           return (
             <Pressable
               key={key}
-              onPress={() => setSelectedRole(key)}
+              onPress={() => setSelectedRole(key as 'client' | 'worker')}
               sx={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -165,7 +165,7 @@ export default function Roles() {
         {/* Continue Button */}
         <Pressable
           onPress={() => {
-            if (selected) router.push(selected.route)
+            if (selected) router.push(selected.route as '/signup/clientsignup' | '/signup/workersignup')
           }}
           sx={{
             mt: 'sm',
