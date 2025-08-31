@@ -47,7 +47,7 @@ export default function Login() {
 
   const handleSignUp = () => {
     console.log('Navigate to sign up')
-    // router.push('/signup')
+    router.push('/signup/signup')
   }
 
   if (!fontsLoaded) {
@@ -144,7 +144,7 @@ export default function Login() {
                 textAlign: 'center',
                 mb: 'sm',
               }}>
-                Sign in to JDK HOMECARE
+                Log in to JDK HOMECARE
               </Text>
 
               {/* Simple brand identifier */}
@@ -258,7 +258,7 @@ export default function Login() {
                   fontFamily: 'Poppins-SemiBold',
                   color: (!email || !password) ? '#9aa4b2' : '#ffffff',
                 }}>
-                  {isLoading ? 'Signing in...' : 'Sign in'}
+                  {isLoading ? 'Logging in...' : 'Log in'}
                 </Text>
               </Pressable>
             </View>
