@@ -1,10 +1,14 @@
 import { Image, Pressable, Text, View } from 'dripsy'
 import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
+import { MotiView } from 'moti'
 import { useRef, useState } from 'react'
-import { Dimensions, NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-native'
-
-const { width } = Dimensions.get('window')
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  useWindowDimensions,
+} from 'react-native'
 
 const carouselData = [
   {
@@ -18,20 +22,23 @@ const carouselData = [
     key: '2',
     vector: require('../assets/2.png'),
     title: 'JDK HOMECARE: Home Service and Maintenance',
-    description: 'Connects clients with skilled workers to get their home services done. Whether you’re looking for a plumber, electrician, cleaner, or handyman, our platform makes it easy to find trusted workers. For workers, it’s a great opportunity to offer your skills and connect with clients in need of your expertise. Everyone’s home deserves the best care, and we’re here to make it happen.',
+    description:
+      'Connects clients with skilled workers to get their home services done. Whether you’re looking for a plumber, electrician, cleaner, or handyman, our platform makes it easy to find trusted workers. For workers, it’s a great opportunity to offer your skills and connect with clients in need of your expertise. Everyone’s home deserves the best care, and we’re here to make it happen.',
     showLogo: false,
   },
   {
     key: '3',
     vector: require('../assets/3.jpg'),
     title: 'Why Choose JDK HOMECARE?',
-    description: 'Home services and maintenance to keep your home in top shape. Whether it’s routine upkeep or unexpected repairs, our expert team is here to deliver fast, trusted solutions for all your needs.',
+    description:
+      'Home services and maintenance to keep your home in top shape. Whether it’s routine upkeep or unexpected repairs, our expert team is here to deliver fast, trusted solutions for all your needs.',
     showLogo: false,
   },
 ]
 
 export default function Index() {
   const router = useRouter()
+  const { width, height } = useWindowDimensions()
   const [currentIndex, setCurrentIndex] = useState(0)
   const scrollRef = useRef<ScrollView>(null)
 
@@ -41,9 +48,7 @@ export default function Index() {
     'Poppins-ExtraBold': require('../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
   })
 
-  if (!fontsLoaded) {
-    return null
-  }
+  if (!fontsLoaded) return null
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const page = Math.round(event.nativeEvent.contentOffset.x / width)
@@ -62,107 +67,74 @@ export default function Index() {
         scrollEventThrottle={16}
       >
         {carouselData.map((item, idx) => (
-        <View
-          key={item.key}
-          style={{
-            width,
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            paddingTop: 50,
-            flex: 1,
-          }}
-        >
-          {/* Vector Images */}
-          <Image
-            source={item.vector}
-            style={{ width: 280, height: 240, marginTop: 50 }}
-            resizeMode="contain"
-          />
-
-          {/* h1 */}
-          <Text
-            sx={{
-              fontSize: 25,
-              fontWeight: '300',
-              color: idx === 0 ? '#000' : idx === 1 ? '#008cfd' : '#008cfd',
-              fontFamily: 'Poppins-ExtraBold',
-              mb: 8,
-              textAlign: idx === 0 ? 'center' : 'center',
-              width: idx === 1 ? 320 : undefined,
+          <View
+            key={item.key}
+            style={{
+              width,
+              height,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: 24,
             }}
           >
-            {item.title}
-          </Text>
+            <MotiView
+              from={{ opacity: 0, translateY: 20 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: 'timing', duration: 500, delay: 200 }}
+              style={{ alignItems: 'center' }}
+            >
+              <Image
+                source={item.vector}
+                style={{
+                  width: width * 0.7,
+                  height: width * 0.5,
+                  marginBottom: 20,
+                }}
+                resizeMode="contain"
+              />
 
-          {/* Logo */}
-          {item.showLogo && (
-            <Image
-              source={require('../assets/jdklogo.png')}
-              style={{ width: 250, height: 250, marginTop: -110 }}
-              resizeMode="contain"
-            />
-          )}
+              <Text
+                sx={{
+                  fontSize: 24,
+                  fontWeight: '300',
+                  color: '#008cfd',
+                  fontFamily: 'Poppins-ExtraBold',
+                  mb: 'sm',
+                  textAlign: 'center',
+                  maxWidth: 320,
+                }}
+              >
+                {item.title}
+              </Text>
 
-          {/* Description */}
-          {idx === 0 ? (
-            <Text
-              sx={{
-                fontSize: 18,
-                color: '#4e6075',
-                textAlign: 'center',
-                fontFamily: 'Poppins-Regular',
-                maxWidth: 320,
-                mb: 16,
-                mt: item.showLogo ? -50 : 0,
-              }}
-            >
-              Reliable home services for a safer, better home.
-            </Text>
-          ) : idx === 1 ? (
-            <Text
-              sx={{
-                fontSize: 12,
-                color: '#4e6075',
-                textAlign: 'center',
-                fontFamily: 'Poppins-Regular',
-                maxWidth: 320,
-                mb: 16,
-                mt: item.showLogo ? -50 : 0,
-              }}
-            >
-              Connects clients with skilled workers to get their home services done. Whether you’re looking for a plumber, electrician, cleaner, or handyman, our platform makes it easy to find trusted workers. For workers, it’s a great opportunity to offer your skills and connect with clients in need of your expertise. Everyone’s home deserves the best care, and we’re here to make it happen.
-            </Text>
-          ) : idx === 2 ? (
-            <Text
-              sx={{
-                fontSize: 14,
-                color: '#4e6075',
-                textAlign: 'center',
-                fontFamily: 'Poppins-Regular',
-                maxWidth: 320,
-                mb: 16,
-                mt: item.showLogo ? -50 : 0,
-              }}
-            >
-              Home services and maintenance to keep your home in top shape. Whether it’s routine upkeep or unexpected repairs, our expert team is here to deliver fast, trusted solutions for all your needs.
-            </Text>
-          ) : (
-            <Text
-              sx={{
-                fontSize: 18,
-                color: '#4e6075',
-                textAlign: 'center',
-                fontFamily: 'Poppins-Regular',
-                maxWidth: 320,
-                mb: 16,
-                mt: item.showLogo ? -50 : 0,
-              }}
-            >
-              {item.description}
-            </Text>
-          )}
-        </View>
-      ))}
+              {item.showLogo && (
+                <Image
+                  source={require('../assets/jdklogo.png')}
+                  style={{
+                    width: width * 0.6,
+                    height: width * 0.6,
+                    marginTop: -80,
+                    marginBottom: 20,
+                  }}
+                  resizeMode="contain"
+                />
+              )}
+
+              <Text
+                sx={{
+                  fontSize: idx === 1 ? 12 : idx === 2 ? 14 : 16,
+                  color: '#4e6075',
+                  textAlign: 'center',
+                  fontFamily: 'Poppins-Regular',
+                  maxWidth: 320,
+                  mt: item.showLogo ? 0 : 20,
+                }}
+              >
+                {item.description}
+              </Text>
+            </MotiView>
+          </View>
+        ))}
       </ScrollView>
 
       {/* Carousel Indicator */}
@@ -191,14 +163,14 @@ export default function Index() {
         ))}
       </View>
 
-      {/* Button */}
+      {/* Get Started Button */}
       <View
         sx={{
-          position: 'relative',
-          mb: 65,
+          position: 'absolute',
+          bottom: 60,
           left: 0,
           right: 0,
-          alignItems: 'center'
+          alignItems: 'center',
         }}
       >
         <Pressable
@@ -208,7 +180,7 @@ export default function Index() {
             paddingVertical: 16,
             paddingHorizontal: 32,
             borderRadius: 30,
-            minWidth: 200,
+            minWidth: width * 0.5,
             alignItems: 'center',
             opacity: pressed ? 0.85 : 1,
           })}

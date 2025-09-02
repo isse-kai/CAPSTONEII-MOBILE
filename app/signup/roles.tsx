@@ -1,8 +1,9 @@
 import { Image, Pressable, Text, View } from 'dripsy'
 import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
+import { MotiView } from 'moti'
 import { useState } from 'react'
-import { ImageBackground } from 'react-native'
+import { ImageBackground, ScrollView } from 'react-native'
 
 export default function Roles() {
   const router = useRouter()
@@ -37,199 +38,256 @@ export default function Roles() {
       resizeMode="cover"
       style={{ flex: 1 }}
     >
-      <View
-        sx={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          px: 'lg',
-          bg: 'transparent',
-        }}
-      >
-        {/* Logo */}
-        <Image
-          source={require('../../assets/jdklogo.png')}
-          style={{
-            width: 280,
-            height: 280,
-            alignSelf: 'center',
-            marginBottom: -70,
-            marginTop: -150,
-          }}
-          resizeMode="contain"
-        />
-
-        {/* Heading */}
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View
           sx={{
-            flexDirection: 'row',
+            flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            mb: 'xl',
-            flexWrap: 'wrap',
+            px: 'lg',
+            py: 'xl',
+            bg: 'transparent',
           }}
         >
-          <Text
-            sx={{
-              fontSize: 24,
-              fontWeight: 'normal',
-              fontFamily: 'Poppins-Bold',
-              color: 'text',
+          <MotiView
+            from={{ opacity: 0, translateX: -20 }}
+            animate={{ opacity: 1, translateX: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 50 }}
+            style={{
+              position: 'absolute',
+              top: 50,
+              left: 20,
+              zIndex: 10,
             }}
           >
-            Join as a{' '}
-          </Text>
-          <Text
-            sx={{
-              fontSize: 24,
-              fontWeight: 'extrabold',
-              fontFamily: 'Poppins-Bold',
-              color: '#008CFC',
-            }}
-          >
-            Client
-          </Text>
-          <Text
-            sx={{
-              fontSize: 24,
-              fontWeight: 'normal',
-              fontFamily: 'Poppins-Bold',
-              color: 'text',
-            }}
-          >
-            {' '}or{' '}
-          </Text>
-          <Text
-            sx={{
-              fontSize: 24,
-              fontWeight: 'extrabold',
-              fontFamily: 'Poppins-Bold',
-              color: '#008CFC',
-            }}
-          >
-            Worker
-          </Text>
-        </View>
-
-        {/* Role Options */}
-        {roles.map(({ key, label }) => {
-          const isSelected = selectedRole === key
-          return (
             <Pressable
-              key={key}
-              onPress={() => setSelectedRole(key as 'client' | 'worker')}
+              onPress={() => router.back()}
               sx={{
-                flexDirection: 'row',
+                bg: '#f3f4f6',
+                borderRadius: 20,
+                height: 40,
+                width: 40,
+                justifyContent: 'center',
                 alignItems: 'center',
-                bg: 'transparent',
-                padding: 'lg',
-                borderRadius: 8,
-                mb: 'md',
-                width: '100%',
-                borderWidth: 2,
-                borderColor: isSelected ? '#008CFC' : '#ccc',
-                opacity: isSelected ? 1 : 0.85,
+                elevation: 2,
               }}
             >
-              {/* Circle Indicator */}
-              <View
-                sx={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  borderWidth: 2,
-                  borderColor: isSelected ? '#008CFC' : '#ccc',
-                  bg: isSelected ? '#008CFC' : 'transparent',
-                  mr: 'md',
-                }}
-              />
-
-              {/* Role Label */}
               <Text
                 sx={{
-                  flex: 1,
-                  textAlign: 'left',
-                  color: isSelected ? '#008CFC' : 'text',
-                  fontWeight: 'bold',
-                  fontSize: 14,
-                  fontFamily: 'Poppins-Regular',
+                  fontSize: 18,
+                  fontFamily: 'Poppins-Bold',
+                  color: '#001a33',
+                  textAlign: 'center',
+                  lineHeight: 20
                 }}
               >
-                {label}
+                ←
               </Text>
             </Pressable>
+          </MotiView>
 
-          )
-        })}
-
-        {/* Continue Button */}
-        <Pressable
-          onPress={() => {
-            if (selected) router.push(selected.route as '/signup/clientsignup' | '/signup/workersignup')
-          }}
-          sx={{
-            mt: 'sm',
-            py: 10,
-            px: 'lg',
-            borderRadius: 8,
-            borderColor: selected ? '#008CFC' : '#ccc',
-            bg: selected ? '#008CFC' : '#f0f0f0',
-            alignItems: 'center',
-            width: '100%',
-            opacity: selected ? 1 : 0.9,
-          }}
-        >
-          <Text
-            sx={{
-              fontSize: 20,
-              fontWeight: 'bold',
-              fontFamily: 'Poppins-ExtraBold',
-              color: selected ? '#fff' : '#999',
-            }}
+          {/* Logo */}
+          <MotiView
+            from={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'timing', duration: 600 }}
+            style={{ marginBottom: -70, marginTop: -150 }}
           >
-            {selectedRole === 'client'
-              ? 'Create Account as Client'
-              : selectedRole === 'worker'
-              ? 'Create Account as Worker'
-              : 'Create Account'}
-          </Text>
-        </Pressable>
+            <Image
+              source={require('../../assets/jdklogo.png')}
+              style={{ 
+                width: 220, 
+                height: 220,
+                alignSelf: 'center',
+                marginTop: -100
+              }}
+              resizeMode="contain"
+            />
+          </MotiView>
 
-        {/* Login Link */}
-        <View
-          sx={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            mb: 'md',
-            mt: 'md',
-          }}
-        >
-          <Text
-            sx={{
-              fontSize: 14,
-              fontWeight: 'normal',
-              fontFamily: 'Poppins-Regular',
-              color: 'text',
-            }}
+          {/* Heading */}
+          <MotiView
+            from={{ opacity: 0, translateY: -20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 100 }}
+            style={{ marginBottom: 24 }}
           >
-            Already have an account?{' '}
-          </Text>
-          <Pressable onPress={() => router.push('/login/login')}>
-            <Text
+            <View
               sx={{
-                fontSize: 14,
-                fontWeight: 'normal',
-                fontFamily: 'Poppins-Regular',
-                color: '#008CFC',
-                textDecorationLine: 'underline',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexWrap: 'wrap',
               }}
             >
-              Login
-            </Text>
-          </Pressable>
+              <Text
+                sx={{
+                  fontSize: 24,
+                  fontFamily: 'Poppins-Bold',
+                  color: 'text',
+                }}
+              >
+                Join as a{' '}
+              </Text>
+              <Text
+                sx={{
+                  fontSize: 24,
+                  fontFamily: 'Poppins-Bold',
+                  color: '#008CFC',
+                }}
+              >
+                Client
+              </Text>
+              <Text
+                sx={{
+                  fontSize: 24,
+                  fontFamily: 'Poppins-Bold',
+                  color: 'text',
+                }}
+              >
+                {' '}or{' '}
+              </Text>
+              <Text
+                sx={{
+                  fontSize: 24,
+                  fontFamily: 'Poppins-Bold',
+                  color: '#008CFC',
+                }}
+              >
+                Worker
+              </Text>
+            </View>
+          </MotiView>
+
+          {/* Role Options */}
+          {roles.map(({ key, label }, index) => {
+            const isSelected = selectedRole === key
+            return (
+              <MotiView
+                key={key}
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'timing', duration: 500, delay: 200 + index * 100 }}
+                style={{ width: '100%' }}
+              >
+                <Pressable
+                  onPress={() => setSelectedRole(key as 'client' | 'worker')}
+                  sx={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    bg: 'transparent',
+                    padding: 'lg',
+                    borderRadius: 8,
+                    mb: 'md',
+                    borderWidth: 2,
+                    borderColor: isSelected ? '#008CFC' : '#ccc',
+                    opacity: isSelected ? 1 : 0.85,
+                  }}
+                >
+                  <View
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      borderWidth: 2,
+                      borderColor: isSelected ? '#008CFC' : '#ccc',
+                      bg: isSelected ? '#008CFC' : 'transparent',
+                      mr: 'md',
+                    }}
+                  />
+                  <Text
+                    sx={{
+                      flex: 1,
+                      textAlign: 'left',
+                      color: isSelected ? '#008CFC' : 'text',
+                      fontWeight: 'bold',
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Regular',
+                    }}
+                  >
+                    {label}
+                  </Text>
+                </Pressable>
+              </MotiView>
+            )
+          })}
+
+          {/* Continue Button */}
+          <MotiView
+            from={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'timing', duration: 500, delay: 400 }}
+            style={{ width: '100%' }}
+          >
+            <Pressable
+              onPress={() => {
+                if (selected) router.push(selected.route as '/signup/clientsignup' | '/signup/workersignup')
+              }}
+              sx={{
+                mt: 'sm',
+                py: 10,
+                px: 'lg',
+                borderRadius: 8,
+                borderColor: selected ? '#008CFC' : '#ccc',
+                bg: selected ? '#008CFC' : '#f0f0f0',
+                alignItems: 'center',
+                opacity: selected ? 1 : 0.9,
+              }}
+            >
+              <Text
+                sx={{
+                  fontSize: 20,
+                  fontFamily: 'Poppins-ExtraBold',
+                  color: selected ? '#fff' : '#999',
+                }}
+              >
+                {selectedRole === 'client'
+                  ? 'Create Account as Client'
+                  : selectedRole === 'worker'
+                  ? 'Create Account as Worker'
+                  : 'Create Account'}
+              </Text>
+            </Pressable>
+          </MotiView>
+
+          {/* Login Link */}
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 400, delay: 500 }}
+            style={{ marginTop: 16 }}
+          >
+            <View
+              sx={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                sx={{
+                  fontSize: 14,
+                  fontFamily: 'Poppins-Regular',
+                  color: 'text',
+                }}
+              >
+                Already have an account?{' '}
+              </Text>
+              <Pressable onPress={() => router.push('/login/login')}>
+                <Text
+                  sx={{
+                    fontSize: 14,
+                    fontFamily: 'Poppins-Regular',
+                    color: '#008CFC',
+                  }}
+                >
+                  Login
+                </Text>
+              </Pressable>
+            </View>
+          </MotiView>
         </View>
-      </View>
+      </ScrollView>
     </ImageBackground>
   )
 }

@@ -1,6 +1,7 @@
 import { Pressable, Text, TextInput, View } from 'dripsy'
 import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
+import { MotiView } from 'moti'
 import { useState } from 'react'
 import { Image, ImageBackground } from 'react-native'
 
@@ -24,200 +25,352 @@ export default function Login() {
       style={{ flex: 1 }}
       resizeMode="cover"
     >
-      <View sx={{ flex: 1, justifyContent: 'center', px: 'md' }}>
-        {/* Logo */}
-        <Image
-          source={require('../../assets/jdklogo.png')}
-          style={{
-            width: 280,
-            height: 280,
-            alignSelf: 'center',
-            marginBottom: -70,
-            marginTop: -150,
-          }}
-          resizeMode="contain"
-        />
-
-        {/* Header */}
-        <View
-          sx={{
-            flexDirection: 'row',
-            justifyContent: 'left',
-            alignItems: 'center',
-            mb: 'md',
-            mt: 'md',
-          }}
+      <MotiView
+        from={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 600 }}
+        style={{ flex: 1 }}
+      >
+        {/* Back Button */}
+        <MotiView
+          from={{ opacity: 0, translateX: -20 }}
+          animate={{ opacity: 1, translateX: 0 }}
+          transition={{ type: 'timing', duration: 500, delay: 50 }}
         >
-          <Text
-            sx={{
-              fontSize: 26,
-              fontWeight: '400',
-              fontFamily: 'Poppins-Bold',
-            }}
-          >
-            Login
-          </Text>
-        </View>
-
-        {/* Email Input */}
-        <TextInput
-          placeholder="Email Address"
-          value={email}
-          onChangeText={setEmail}
-          style={{
-            padding: 20,
-            marginBottom: 12,
-            borderRadius: 8,
-            backgroundColor: '#f3f4f6',
-          }}
-        />
-
-        {/* Password Input with Toggle */}
-        <View style={{ position: 'relative', marginBottom: 16 }}>
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            style={{
-              padding: 20,
-              borderRadius: 8,
-              backgroundColor: '#f3f4f6',
-              paddingRight: 60,
-            }}
-          />
-          <Pressable
-            onPress={() => setShowPassword(!showPassword)}
+          <View
             style={{
               position: 'absolute',
-              right: 16,
-              top: 18,
-              padding: 4,
+              top: 50,
+              left: 20,
+              zIndex: 10,
             }}
           >
-            <Text
-              sx={{
-                fontSize: 14,
-                fontFamily: 'Poppins-Regular',
-                color: '#008CFC',
-              }}
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? '#e0e0e0' : '#f3f4f6',
+                padding: 10,
+                borderRadius: 20,
+                elevation: 2,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.2,
+                shadowRadius: 2,
+                height: 40,
+                width: 40,
+              })}
             >
-              {showPassword ? 'Hide' : 'Show'}
-            </Text>
-          </Pressable>
-        </View>
+              <Text
+                sx={{
+                  fontSize: 18,
+                  fontFamily: 'Poppins-Bold',
+                  color: '#001a33',
+                  textAlign: 'center',
+                  lineHeight: 20,
+                }}
+              >
+                ←
+              </Text>
+            </Pressable>
+          </View>
+        </MotiView>
 
-        {/* Login Button */}
-        <Pressable
-          onPress={() => console.log('Login pressed')}
-          sx={{
-            bg: '#008CFC',
-            py: 10,
-            borderRadius: 8,
-            alignItems: 'center',
-            mb: 'md',
-          }}
-        >
-          <Text
-            sx={{
-              textAlign: 'center',
-              color: 'background',
-              fontWeight: 'bold',
-              fontSize: 20,
-              fontFamily: 'Poppins-ExtraBold',
-            }}
+        <View sx={{ flex: 1, justifyContent: 'center', px: 'md' }}>
+          {/* Logo */}
+          <MotiView
+            from={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'timing', duration: 600, delay: 100 }}
           >
-            Login
-          </Text>
-        </Pressable>
+            <Image
+              source={require('../../assets/jdklogo.png')}
+              style={{
+                width: 220,
+                height: 220,
+                alignSelf: 'center',
+                marginBottom: -100,
+                marginTop: -100,
+              }}
+              resizeMode="contain"
+            />
+          </MotiView>
 
-        {/* Divider */}
-        <Text
-          sx={{
-            fontSize: 20,
-            fontWeight: 'extrabold',
-            fontFamily: 'Poppins-Regular',
-            color: 'black',
-            textAlign: 'center',
-          }}
-        >
-          or
-        </Text>
-
-        {/* Google Login */}
-        <Pressable onPress={() => router.push('/signup/clientsignup')}>
-          {({ hovered }) => (
+          <MotiView
+            from={{ opacity: 0, translateY: -20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 200 }}
+          >
             <View
               sx={{
-                flexDirection: 'row',
                 justifyContent: 'center',
-                alignItems: 'center',
-                bg: hovered ? '#008CFC' : 'transparent',
-                py: 10,
-                borderRadius: 8,
-                mb: 'md',
-                borderWidth: 1,
-                borderColor: '#008CFC',
+                alignItems: 'left',
+                mb: 5,
+                mt: 'lg'
               }}
             >
-              <Image
-                source={require('../../assets/google.png')}
-                style={{
-                  width: 24,
-                  height: 24,
-                  marginRight: 8,
+              <Text
+                sx={{
+                  fontSize: 26,
+                  fontWeight: '400',
+                  fontFamily: 'Poppins-Bold',
+                  textAlign: 'left',
                 }}
-                resizeMode="contain"
-              />
+              >
+                Login
+              </Text>
+            </View>
+          </MotiView>
+
+
+          {/* Email */}
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 300 }}
+          >
+            <View style={{ marginBottom: 12 }}>
+              <Text
+                sx={{
+                  fontSize: 14,
+                  fontFamily: 'Poppins-Medium',
+                  color: '#001a33',
+                  mb: 'sm',
+                }}
+              >
+                Email
+              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: '#f3f4f6',
+                  borderRadius: 8,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                }}
+              >
+                <TextInput
+                  placeholder="Email Address"
+                  value={email}
+                  onChangeText={setEmail}
+                  style={{
+                    flex: 1,
+                    fontSize: 16,
+                    fontFamily: 'Poppins-Regular',
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+          </MotiView>
+
+
+          {/* Password */}
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 400 }}
+          >
+            <View sx={{ mb: 'lg' }}>
+              <Text
+                sx={{
+                  fontSize: 14,
+                  fontFamily: 'Poppins-Medium',
+                  color: '#001a33',
+                  mb: 'sm',
+                }}
+              >
+                Password
+              </Text>
+              <View style={{ marginBottom: 2 }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#f3f4f6',
+                    borderRadius: 8,
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                  }}
+                >
+                  <TextInput
+                    placeholder="Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    style={{
+                      flex: 1,
+                      fontSize: 16,
+                      fontFamily: 'Poppins-Regular',
+                    }}
+                  />
+                  <Pressable onPress={() => setShowPassword(!showPassword)}>
+                    <Text
+                      sx={{
+                        fontSize: 14,
+                        fontFamily: 'Poppins-Regular',
+                        color: '#008CFC',
+                      }}
+                    >
+                      {showPassword ? 'Hide' : 'Show'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* Forgot Password */}
+              <View sx={{ alignItems: 'flex-end', mt: 'md' }}>
+                <Pressable onPress={() => console.log('Forgot password')}>
+                  <Text
+                    sx={{
+                      fontSize: 14,
+                      color: '#0685f4',
+                      fontFamily: 'Poppins-Medium',
+                    }}
+                  >
+                    Forgot password?
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </MotiView>
+
+          {/* Login Button */}
+          <MotiView
+            from={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'timing', duration: 500, delay: 500 }}
+          >
+            <Pressable
+              onPress={() => console.log('Login pressed')}
+              sx={{
+                bg: '#008CFC',
+                py: 10,
+                borderRadius: 8,
+                alignItems: 'center',
+                mb: 4
+              }}
+            >
               <Text
                 sx={{
                   textAlign: 'center',
-                  color: hovered ? 'background' : '#008CFC',
+                  color: 'background',
                   fontWeight: 'bold',
                   fontSize: 20,
                   fontFamily: 'Poppins-ExtraBold',
                 }}
               >
-                Continue with Google
+                Login
               </Text>
-            </View>
-          )}
-        </Pressable>
+            </Pressable>
+          </MotiView>
 
-        {/* Signup Prompt */}
-        <View
-          sx={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            mb: 'md',
-            mt: 'md',
-          }}
-        >
-          <Text
-            sx={{
-              fontSize: 14,
-              fontWeight: 'Regular',
-              fontFamily: 'Poppins-Regular',
-            }}
+          {/* Divider */}
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 400, delay: 600 }}
           >
-            Don’t have an account?{' '}
-          </Text>
-          <Pressable onPress={() => router.push('/signup/roles')}>
             <Text
               sx={{
-                fontSize: 14,
-                fontWeight: 'Regular',
+                fontSize: 20,
+                fontWeight: 'extrabold',
                 fontFamily: 'Poppins-Regular',
-                color: '#008CFC',
-                textDecorationLine: 'underline',
+                color: 'black',
+                textAlign: 'center',
               }}
             >
-              Sign Up
+              or
             </Text>
-          </Pressable>
+          </MotiView>
+
+          {/* Google Login */}
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 700 }}
+          >
+            <Pressable onPress={() => router.push('/signup/clientsignup')}>
+              {({ hovered }) => (
+                <View
+                  sx={{
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    bg: hovered ? '#008CFC' : 'transparent',
+                    py: 10,
+                    borderRadius: 8,
+                    mb: 'md',
+                    borderWidth: 1,
+                    borderColor: '#008CFC',
+                  }}
+                >
+                  <Image
+                    source={require('../../assets/google.png')}
+                    style={{
+                      width: 24,
+                      height: 24,
+                      marginRight: 8,
+                    }}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    sx={{
+                      textAlign: 'center',
+                      color: hovered ? 'background' : '#008CFC',
+                      fontWeight: 'bold',
+                      fontSize: 20,
+                      fontFamily: 'Poppins-ExtraBold',
+                    }}
+                  >
+                    Continue with Google
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          </MotiView>
+
+          {/* Signup */}
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 500, delay: 800 }}
+          >
+            <View
+              sx={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                mb: 'md',
+                mt: 'md',
+              }}
+            >
+              <Text
+                sx={{
+                  fontSize: 14,
+                  fontFamily: 'Poppins-Regular',
+                  color: '#001a33',
+                }}
+              >
+                Don’t have an account?{' '}
+              </Text>
+              <Pressable onPress={() => router.push('/signup/roles')}>
+                <Text
+                  sx={{
+                    fontSize: 14,
+                    fontFamily: 'Poppins-Regular',
+                    color: '#008CFC',
+                  }}
+                >
+                  Sign Up
+                </Text>
+              </Pressable>
+            </View>
+          </MotiView>
         </View>
-      </View>
+      </MotiView>
     </ImageBackground>
   )
-}
+  }
+  
