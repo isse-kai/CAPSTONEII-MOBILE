@@ -1,11 +1,11 @@
-import { DripsyProvider } from 'dripsy'
-import { Slot } from 'expo-router'
-import { theme } from '../theme'
+import { DripsyProvider } from 'dripsy';
+import { Slot } from 'expo-router';
+import { theme } from '../theme';
 
-export default function Layout() {
+export default function Nav() {
   return (
     <DripsyProvider theme={theme}>
       <Slot />
     </DripsyProvider>
-  )
+  );
 }

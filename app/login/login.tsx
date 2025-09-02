@@ -8,7 +8,6 @@ export default function Login() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
 
   // Animation ref
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -30,23 +29,12 @@ export default function Login() {
     }).start()
   }, [fadeAnim])
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      return
-    }
-
-    setIsLoading(true)
-    
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false)
-      console.log('Login successful')
-      // Navigate to dashboard/home
-    }, 1500)
+  const handleLogin = () => {
+    if (!email || !password) return
+    router.push('/home/home') // 👈 instantly navigate to Home
   }
 
   const handleSignUp = () => {
-    console.log('Navigate to sign up')
     router.push('/signup/signup')
   }
 
@@ -75,7 +63,7 @@ export default function Login() {
             pt: 'xl',
             pb: 'lg',
           }}>
-            {/* Back button positioned absolutely */}
+            {/* Back button */}
             <View sx={{
               position: 'absolute',
               left: 20,
@@ -98,7 +86,7 @@ export default function Login() {
               </Pressable>
             </View>
             
-            {/* Centered Logo */}
+            {/* Logo */}
             <View sx={{
               alignItems: 'center',
               shadowColor: '#000',
@@ -125,7 +113,7 @@ export default function Login() {
             px: 'xxl',
             mx: 'lg',
           }}>
-            {/* Title Section */}
+            {/* Title */}
             <View sx={{ mb: 'xl', alignItems: 'center' }}>
               <Text sx={{
                 fontSize: 32,
@@ -147,7 +135,6 @@ export default function Login() {
                 Log in to JDK HOMECARE
               </Text>
 
-              {/* Simple brand identifier */}
               <View sx={{
                 width: 40,
                 height: 4,
@@ -158,7 +145,7 @@ export default function Login() {
 
             {/* Form */}
             <View sx={{ mb: 'xl' }}>
-              {/* Email Input */}
+              {/* Email */}
               <View sx={{ mb: 'lg' }}>
                 <Text sx={{
                   fontSize: 14,
@@ -190,7 +177,7 @@ export default function Login() {
                 />
               </View>
 
-              {/* Password Input */}
+              {/* Password */}
               <View sx={{ mb: 'lg' }}>
                 <Text sx={{
                   fontSize: 14,
@@ -237,10 +224,10 @@ export default function Login() {
               {/* Login Button */}
               <Pressable
                 onPress={handleLogin}
-                disabled={isLoading || !email || !password}
+                disabled={!email || !password}
                 sx={{
                   height: 56,
-                  backgroundColor: (!email || !password) ? '#e4e7ec' : (isLoading ? '#9aa4b2' : '#0685f4'),
+                  backgroundColor: (!email || !password) ? '#e4e7ec' : '#0685f4',
                   borderRadius: 12,
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -248,8 +235,8 @@ export default function Login() {
                 }}
                 style={({ pressed }) => [
                   {
-                    opacity: pressed && email && password && !isLoading ? 0.9 : 1,
-                    transform: [{ scale: pressed && email && password && !isLoading ? 0.98 : 1 }],
+                    opacity: pressed && email && password ? 0.9 : 1,
+                    transform: [{ scale: pressed && email && password ? 0.98 : 1 }],
                   }
                 ]}
               >
@@ -258,12 +245,12 @@ export default function Login() {
                   fontFamily: 'Poppins-SemiBold',
                   color: (!email || !password) ? '#9aa4b2' : '#ffffff',
                 }}>
-                  {isLoading ? 'Logging in...' : 'Log in'}
+                  Log in
                 </Text>
               </Pressable>
             </View>
 
-            {/* Sign Up Section */}
+            {/* Sign Up */}
             <View sx={{
               alignItems: 'center',
               py: 'lg',
