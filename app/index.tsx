@@ -4,43 +4,20 @@ import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import { useRef, useState } from 'react'
 import {
+  Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
   ScrollView,
-  useWindowDimensions,
 } from 'react-native'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
-const carouselData = [
-  {
-    key: '1',
-    vector: require('../assets/1.jpg'),
-    title: 'Welcome to',
-    description: 'Reliable home services for a safer, better home.',
-    showLogo: true,
-  },
-  {
-    key: '2',
-    vector: require('../assets/2.png'),
-    title: 'JDK HOMECARE: Home Service and Maintenance',
-    description:
-      'Connects clients with skilled workers to get their home services done. Whether you’re looking for a plumber, electrician, cleaner, or handyman, our platform makes it easy to find trusted workers. For workers, it’s a great opportunity to offer your skills and connect with clients in need of your expertise. Everyone’s home deserves the best care, and we’re here to make it happen.',
-    showLogo: false,
-  },
-  {
-    key: '3',
-    vector: require('../assets/3.jpg'),
-    title: 'Why Choose JDK HOMECARE?',
-    description:
-      'Home services and maintenance to keep your home in top shape. Whether it’s routine upkeep or unexpected repairs, our expert team is here to deliver fast, trusted solutions for all your needs.',
-    showLogo: false,
-  },
-]
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
 
 export default function Index() {
   const router = useRouter()
-  const { width, height } = useWindowDimensions()
   const [currentIndex, setCurrentIndex] = useState(0)
   const scrollRef = useRef<ScrollView>(null)
+  const insets = useSafeAreaInsets()
 
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('../assets/fonts/Poppins/Poppins-Regular.ttf'),
@@ -51,12 +28,12 @@ export default function Index() {
   if (!fontsLoaded) return null
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const page = Math.round(event.nativeEvent.contentOffset.x / width)
+    const page = Math.round(event.nativeEvent.contentOffset.x / screenWidth)
     setCurrentIndex(page)
   }
 
   return (
-    <View sx={{ flex: 1, bg: 'white' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
       <ScrollView
         ref={scrollRef}
         horizontal
@@ -66,80 +43,188 @@ export default function Index() {
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        {carouselData.map((item, idx) => (
-          <View
-            key={item.key}
-            style={{
-              width,
-              height,
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingHorizontal: 24,
-            }}
+        {/* Slide 1 */}
+        <SafeAreaView
+          style={{
+            width: screenWidth,
+            height: screenHeight,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 200 }}
+            style={{ alignItems: 'center', justifyContent: 'center' }}
           >
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: 'timing', duration: 500, delay: 200 }}
-              style={{ alignItems: 'center' }}
+            <Image
+              source={require('../assets/1.jpg')}
+              style={{
+                width: 240,
+                height: 160,
+                marginBottom: 16,
+                marginTop: 50,
+              }}
+              resizeMode="cover"
+            />
+            <Text
+              sx={{
+                fontSize: 26,
+                fontFamily: 'Poppins-ExtraBold',
+                color: '#008cfd',
+                textAlign: 'center',
+              }}
             >
-              <Image
-                source={item.vector}
-                style={{
-                  width: width * 0.7,
-                  height: width * 0.5,
-                  marginBottom: 20,
-                }}
-                resizeMode="contain"
-              />
+              Welcome to
+            </Text>
+            <Image
+              source={require('../assets/jdklogo.png')}
+              style={{
+                width: 250,
+                height: 250,
+                marginTop: -80,
+              }}
+              resizeMode="contain"
+            />
+            <Text
+              sx={{
+                fontSize: 16,
+                fontFamily: 'Poppins-Regular',
+                color: '#4e6075',
+                textAlign: 'center',
+                maxWidth: 300,
+                mb: 100,
+              }}
+            >
+              Reliable home services for a safer, better home.
+            </Text>
+          </MotiView>
+        </SafeAreaView>
 
-              <Text
-                sx={{
-                  fontSize: 24,
-                  fontWeight: '300',
-                  color: '#008cfd',
-                  fontFamily: 'Poppins-ExtraBold',
-                  mb: 'sm',
-                  textAlign: 'center',
-                  maxWidth: 320,
-                }}
-              >
-                {item.title}
-              </Text>
+        {/* Slide 2 */}
+        <SafeAreaView
+          style={{
+            width: screenWidth,
+            height: screenHeight,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 200 }}
+            style={{ alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Image
+              source={require('../assets/2.png')}
+              style={{
+                width: 280,
+                height: 200,
+                marginLeft: -26,
+                marginTop: -80,
+              }}
+              resizeMode="contain"
+            />
+            <Text
+              sx={{
+                fontSize: 26,
+                fontFamily: 'Poppins-ExtraBold',
+                color: '#008cfd',
+                textAlign: 'center',
+                mb: -20,
+              }}
+            >
+              JDK Homecare:
+            </Text>
+            <Text
+              sx={{
+                fontSize: 26,
+                fontFamily: 'Poppins-ExtraBold',
+                color: '#008cfd',
+                textAlign: 'center',
+                mb: -20,
+              }}
+            >
+              Home Service and
+            </Text>
+            <Text
+              sx={{
+                fontSize: 26,
+                fontFamily: 'Poppins-ExtraBold',
+                color: '#008cfd',
+                textAlign: 'center',
+                mb: 'sm',
+              }}
+            >
+              Maintenance
+            </Text>
+            <Text
+              sx={{
+                fontSize: 12,
+                fontFamily: 'Poppins-Regular',
+                color: '#4e6075',
+                textAlign: 'center',
+                maxWidth: 320,
+                mt: 12,
+              }}
+            >
+              Connects clients with skilled workers to get their home services done. Whether you’re looking for a plumber, electrician, cleaner, or handyman, our platform makes it easy to find trusted workers. For workers, it’s a great opportunity to offer your skills and connect with clients in need of your expertise. Everyone’s home deserves the best care, and we’re here to make it happen.
+            </Text>
+          </MotiView>
+        </SafeAreaView>
 
-              {item.showLogo && (
-                <Image
-                  source={require('../assets/jdklogo.png')}
-                  style={{
-                    width: width * 0.6,
-                    height: width * 0.6,
-                    marginTop: -80,
-                    marginBottom: 20,
-                  }}
-                  resizeMode="contain"
-                />
-              )}
-
-              <Text
-                sx={{
-                  fontSize: idx === 1 ? 12 : idx === 2 ? 14 : 16,
-                  color: '#4e6075',
-                  textAlign: 'center',
-                  fontFamily: 'Poppins-Regular',
-                  maxWidth: 320,
-                  mt: item.showLogo ? 0 : 20,
-                }}
-              >
-                {item.description}
-              </Text>
-            </MotiView>
-          </View>
-        ))}
+        {/* Slide 3 */}
+        <SafeAreaView
+          style={{
+            width: screenWidth,
+            height: screenHeight,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 200 }}
+            style={{ alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Image
+              source={require('../assets/3.jpg')}
+              style={{ width: 260, height: 160, marginBottom: 16 }}
+              resizeMode="cover"
+            />
+            <Text
+              sx={{
+                fontSize: 22,
+                fontFamily: 'Poppins-ExtraBold',
+                color: '#008cfd',
+                textAlign: 'center',
+                mb: 'sm',
+              }}
+            >
+              Why Choose JDK HOMECARE?
+            </Text>
+            <Text
+              sx={{
+                fontSize: 14,
+                fontFamily: 'Poppins-Regular',
+                color: '#4e6075',
+                textAlign: 'center',
+                maxWidth: 300,
+                mt: 16,
+              }}
+            >
+              Home services and maintenance to keep your home in top shape. Whether it’s routine upkeep or unexpected repairs, our expert team is here to deliver fast, trusted solutions for all your needs.
+            </Text>
+          </MotiView>
+        </SafeAreaView>
       </ScrollView>
 
       {/* Carousel Indicator */}
       <View
-        sx={{
+        style={{
           position: 'absolute',
           bottom: 140,
           left: 0,
@@ -147,9 +232,10 @@ export default function Index() {
           flexDirection: 'row',
           justifyContent: 'center',
           alignItems: 'center',
+          paddingHorizontal: insets.left + insets.right,
         }}
       >
-        {carouselData.map((_, idx) => (
+        {[0, 1, 2].map((idx) => (
           <View
             key={idx}
             sx={{
@@ -175,15 +261,14 @@ export default function Index() {
       >
         <Pressable
           onPress={() => router.push('/login/login')}
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? '#003255ff' : '#008cfd',
-            paddingVertical: 16,
-            paddingHorizontal: 32,
+          sx={{
+            bg: '#008cfd',
+            py: 16,
+            px: 32,
             borderRadius: 30,
-            minWidth: width * 0.5,
+            minWidth: 180,
             alignItems: 'center',
-            opacity: pressed ? 0.85 : 1,
-          })}
+          }}
         >
           <Text
             sx={{
@@ -197,6 +282,6 @@ export default function Index() {
           </Text>
         </Pressable>
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
