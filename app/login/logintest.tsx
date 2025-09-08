@@ -1,3 +1,27 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import { Image, Pressable, Text, TextInput, View } from 'dripsy'
 // import { useFonts } from 'expo-font'
 // import { useRouter } from 'expo-router'
