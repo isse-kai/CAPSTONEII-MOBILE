@@ -1,58 +1,78 @@
-import { Image, Pressable, Text, View } from 'dripsy'
-import { useFonts } from 'expo-font'
-import { useRouter } from 'expo-router'
-import { useEffect, useRef } from 'react'
-import { Animated, Dimensions, SafeAreaView, StatusBar } from 'react-native'
-
-const { width } = Dimensions.get('window')
+import { Image, Pressable, Text, View } from 'dripsy';
+import { useFonts } from 'expo-font';
+import { useRouter } from 'expo-router';
+import { useEffect, useRef } from 'react';
+import { Animated, SafeAreaView, StatusBar } from 'react-native';
 
 export default function Signup() {
-  const router = useRouter()
-  
-  // Animation ref
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(50)).current
+  const router = useRouter();
 
-  // Load Poppins fonts
+  // Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
+  // Fonts
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
     'Poppins-Medium': require('../../assets/fonts/Poppins/Poppins-Medium.ttf'),
     'Poppins-SemiBold': require('../../assets/fonts/Poppins/Poppins-SemiBold.ttf'),
     'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
     'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
-  })
+  });
 
+  // Animate in
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      })
-    ]).start()
-  }, [fadeAnim, slideAnim])
+      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 800, useNativeDriver: true }),
+    ]).start();
+  }, [fadeAnim, slideAnim]);
 
-  const handleClientSignup = () => {
-    router.push('/signas/client')
-  }
+  // Navigation handlers
+  const goLogin = () => {
+    router.replace('/login/login'); // change if your login route differs (e.g., '/auth/login')
+  };
+  const handleClientSignup = () => router.push('/signas/client');
+  const handleWorkerSignup = () => router.push('/signas/worker');
 
-  const handleWorkerSignup = () => {
-    router.push('/signas/worker')
-  }
-
-  if (!fontsLoaded) {
-    return null
-  }
+  if (!fontsLoaded) return null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
+
+      {/* Sticky top-right Back */}
+      <View
+        sx={{
+          position: 'absolute',
+          right: 20,
+          top: 20,
+          zIndex: 10,
+        }}
+      >
+        <Pressable
+          onPress={goLogin}
+          accessibilityRole="button"
+          accessibilityLabel="Go to login"
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: '#f1f5f9',
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 6,
+            elevation: 2,
+          }}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+        >
+          <Text sx={{ fontSize: 16, color: '#001a33', fontFamily: 'Poppins-Bold' }}>Back</Text>
+        </Pressable>
+      </View>
+
       <Animated.View
         style={{
           flex: 1,
@@ -61,102 +81,84 @@ export default function Signup() {
         }}
       >
         {/* Header */}
-        <View sx={{
-          alignItems: 'center',
-          px: 'lg',
-          pt: 'xl',
-          pb: 'xl',
-        }}>
-          {/* Back button positioned absolutely */}
-          <View sx={{
-            position: 'absolute',
-            left: 20,
-            top: 24,
-            zIndex: 1,
-          }}>
-            <Pressable
-              onPress={() => router.back()}
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: '#f8f9fa',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-              style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-            >
-              <Text sx={{ fontSize: 18, color: '#001a33' }}>←</Text>
-            </Pressable>
-          </View>
-          
-          {/* Centered Logo */}
-          <View sx={{
+        <View
+          sx={{
             alignItems: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 5,
-          }}>
+            px: 'lg',
+            pt: '2xl',
+            pb: 'xl',
+          }}
+        >
+          {/* Centered Logo */}
+          <View
+            sx={{
+              alignItems: 'center',
+            }}
+          >
             <Image
               source={require('../../assets/jdklogo.png')}
-              style={{
-                width: 100,
-                height: 100,
-              }}
+              style={{ width: 100, height: 100 }}
               resizeMode="contain"
             />
           </View>
         </View>
 
         {/* Main Content */}
-        <View sx={{
-          flex: 1,
-          justifyContent: 'center',
-          px: 'xl',
-          mx: 'lg',
-        }}>
-          {/* Title Section */}
+        <View
+          sx={{
+            flex: 1,
+            justifyContent: 'center',
+            px: 'xl',
+            mx: 'lg',
+          }}
+        >
+          {/* Title */}
           <View sx={{ mb: '2xl', alignItems: 'center' }}>
-            <Text sx={{
-              fontSize: 32,
-              fontFamily: 'Poppins-ExtraBold',
-              color: '#001a33',
-              mb: 'sm',
-              textAlign: 'center',
-            }}>
+            <Text
+              sx={{
+                fontSize: 32,
+                fontFamily: 'Poppins-ExtraBold',
+                color: '#001a33',
+                mb: 'sm',
+                textAlign: 'center',
+              }}
+            >
               Join JDK HOMECARE
             </Text>
-            
-            <Text sx={{
-              fontSize: 16,
-              fontFamily: 'Poppins-Regular',
-              color: '#4e6075',
-              textAlign: 'center',
-              mb: 'lg',
-              lineHeight: 24,
-            }}>
+
+            <Text
+              sx={{
+                fontSize: 16,
+                fontFamily: 'Poppins-Regular',
+                color: '#4e6075',
+                textAlign: 'center',
+                mb: 'lg',
+                lineHeight: 24,
+              }}
+            >
               Choose how you'd like to get started
             </Text>
 
-            {/* Brand accent */}
-            <View sx={{
-              width: 50,
-              height: 4,
-              margin: 10,
-              backgroundColor: '#0685f4',
-              borderRadius: 2,
-            }} />
+            <View
+              sx={{
+                width: 50,
+                height: 4,
+                mt: 2,
+                backgroundColor: '#0685f4',
+                borderRadius: 2,
+              }}
+            />
           </View>
 
-          {/* Role Selection Buttons */}
+          {/* Role Selection */}
           <View sx={{ mb: '2xl' }}>
-            <View sx={{ 
-              flexDirection: 'row', 
-              justifyContent: 'space-between',
-            }}>
-              {/* Client Button */}
+            <View
+              sx={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+              }}
+            >
+              {/* Client */}
               <Pressable
                 onPress={handleClientSignup}
                 sx={{
@@ -174,49 +176,52 @@ export default function Signup() {
                   shadowOpacity: 0.1,
                   shadowRadius: 8,
                   elevation: 4,
-                  mr: 'md', // spacing between buttons
+                  mr: 'md',
                 }}
                 style={({ pressed }) => [
-                  {
-                    opacity: pressed ? 0.9 : 1,
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  }
+                  { opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
                 ]}
               >
-                <View sx={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: 25,
-                  backgroundColor: '#0685f4',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 'lg',
-                }}>
+                <View
+                  sx={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: 25,
+                    backgroundColor: '#0685f4',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 'lg',
+                  }}
+                >
                   <Text sx={{ fontSize: 24, color: '#ffffff' }}>🏠</Text>
                 </View>
-                
-                <Text sx={{
-                  fontSize: 16,
-                  fontFamily: 'Poppins-Bold',
-                  color: '#001a33',
-                  mb: 'sm',
-                  textAlign: 'center',
-                }}>
+
+                <Text
+                  sx={{
+                    fontSize: 16,
+                    fontFamily: 'Poppins-Bold',
+                    color: '#001a33',
+                    mb: 'sm',
+                    textAlign: 'center',
+                  }}
+                >
                   Sign as Client
                 </Text>
-                
-                <Text sx={{
-                  fontSize: 12,
-                  fontFamily: 'Poppins-Regular',
-                  color: '#4e6075',
-                  textAlign: 'center',
-                  lineHeight: 16,
-                }}>
+
+                <Text
+                  sx={{
+                    fontSize: 12,
+                    fontFamily: 'Poppins-Regular',
+                    color: '#4e6075',
+                    textAlign: 'center',
+                    lineHeight: 16,
+                  }}
+                >
                   Book home{'\n'}services
                 </Text>
               </Pressable>
 
-              {/* Worker Button */}
+              {/* Worker */}
               <Pressable
                 onPress={handleWorkerSignup}
                 sx={{
@@ -232,90 +237,98 @@ export default function Signup() {
                   shadowOpacity: 0.3,
                   shadowRadius: 12,
                   elevation: 8,
-                  ml: 'md', // spacing between buttons
+                  ml: 'md',
                 }}
                 style={({ pressed }) => [
-                  {
-                    opacity: pressed ? 0.9 : 1,
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  }
+                  { opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
                 ]}
               >
-                <View sx={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: 25,
-                  backgroundColor: '#ffffff',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 'lg',
-                }}>
+                <View
+                  sx={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: 25,
+                    backgroundColor: '#ffffff',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 'lg',
+                  }}
+                >
                   <Text sx={{ fontSize: 24, color: '#0685f4' }}>🔧</Text>
                 </View>
-                
-                <Text sx={{
-                  fontSize: 16,
-                  fontFamily: 'Poppins-Bold',
-                  color: '#ffffff',
-                  mb: 'sm',
-                  textAlign: 'center',
-                }}>
+
+                <Text
+                  sx={{
+                    fontSize: 16,
+                    fontFamily: 'Poppins-Bold',
+                    color: '#ffffff',
+                    mb: 'sm',
+                    textAlign: 'center',
+                  }}
+                >
                   Sign as Worker
                 </Text>
-                
-                <Text sx={{
-                  fontSize: 12,
-                  fontFamily: 'Poppins-Regular',
-                  color: '#ffffff',
-                  textAlign: 'center',
-                  lineHeight: 16,
-                  opacity: 0.9,
-                }}>
+
+                <Text
+                  sx={{
+                    fontSize: 12,
+                    fontFamily: 'Poppins-Regular',
+                    color: '#ffffff',
+                    textAlign: 'center',
+                    lineHeight: 16,
+                    opacity: 0.9,
+                  }}
+                >
                   Offer your{'\n'}services
                 </Text>
               </Pressable>
             </View>
           </View>
 
-          {/* Additional Info */}
+          {/* Already have an account */}
           <View sx={{ alignItems: 'center', mb: '2xl' }}>
-            <Text sx={{
-              margin: 10,
-              fontSize: 14,
-              fontFamily: 'Poppins-Regular',
-              color: '#4e6075',
-              textAlign: 'center',
-              lineHeight: 20,
-            }}>
+            <Text
+              sx={{
+                margin: 10,
+                fontSize: 14,
+                fontFamily: 'Poppins-Regular',
+                color: '#4e6075',
+                textAlign: 'center',
+                lineHeight: 20,
+              }}
+            >
               Already have an account?{' '}
-              <Text sx={{
-                color: '#0685f4',
-                fontFamily: 'Poppins-SemiBold',
-              }}>
-                Sign in
+              <Text
+                onPress={goLogin}
+                sx={{ color: '#0685f4', fontFamily: 'Poppins-SemiBold' }}
+              >
+                Log in
               </Text>
             </Text>
           </View>
         </View>
 
         {/* Footer */}
-        <View sx={{
-          px: 'xl',
-          pb: '2xl',
-          alignItems: 'center',
-        }}>
-          <Text sx={{
-            fontSize: 12,
-            color: '#9aa4b2',
-            textAlign: 'center',
-            lineHeight: 18,
-            fontFamily: 'Poppins-Regular',
-          }}>
-            By continuing, you agree to our Terms of Service{'\n'}
-            and Privacy Policy
+        <View
+          sx={{
+            px: 'xl',
+            pb: '2xl',
+            alignItems: 'center',
+          }}
+        >
+          <Text
+            sx={{
+              fontSize: 12,
+              color: '#9aa4b2',
+              textAlign: 'center',
+              lineHeight: 18,
+              fontFamily: 'Poppins-Regular',
+            }}
+          >
+            By continuing, you agree to our Terms of Service{'\n'}and Privacy Policy
           </Text>
         </View>
       </Animated.View>
     </SafeAreaView>
-  )
+  );
 }

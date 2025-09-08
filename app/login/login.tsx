@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
 import { Animated, KeyboardAvoidingView, Platform, SafeAreaView, StatusBar } from 'react-native'
 
-export default function Login() {
+export default function ClientLogin() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,20 +22,18 @@ export default function Login() {
   })
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start()
-  }, [fadeAnim])
+    if (fontsLoaded) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start()
+    }
+  }, [fadeAnim, fontsLoaded])
 
   const handleLogin = () => {
-    if (!email || !password) return
-    router.push('/home/home') // 👈 instantly navigate to Home
-  }
-
-  const handleSignUp = () => {
-    router.push('/signup/signup')
+    if (!email?.trim() || !password?.trim()) return
+    router.push('/home/home')
   }
 
   if (!fontsLoaded) {
@@ -63,29 +61,6 @@ export default function Login() {
             pt: 'xl',
             pb: 'lg',
           }}>
-            {/* Back button */}
-            <View sx={{
-              position: 'absolute',
-              left: 20,
-              top: 24,
-              zIndex: 1,
-            }}>
-              <Pressable
-                onPress={() => router.back()}
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: '#f8f9fa',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-                style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-              >
-                <Text sx={{ fontSize: 18, color: '#001a33' }}>←</Text>
-              </Pressable>
-            </View>
-            
             {/* Logo */}
             <View sx={{
               alignItems: 'center',
@@ -98,8 +73,8 @@ export default function Login() {
               <Image
                 source={require('../../assets/jdklogo.png')}
                 style={{
-                  width: 100,
-                  height: 100,
+                  width: 80,
+                  height: 80,
                 }}
                 resizeMode="contain"
               />
@@ -116,13 +91,13 @@ export default function Login() {
             {/* Title */}
             <View sx={{ mb: 'xl', alignItems: 'center' }}>
               <Text sx={{
-                fontSize: 32,
-                fontFamily: 'Poppins-ExtraBold',
+                fontSize: 28,
+                fontFamily: 'Poppins-Bold',
                 color: '#001a33',
                 mb: 'xs',
                 textAlign: 'center',
               }}>
-                Welcome back
+                Client Login
               </Text>
               
               <Text sx={{
@@ -132,12 +107,12 @@ export default function Login() {
                 textAlign: 'center',
                 mb: 'sm',
               }}>
-                Log in to JDK HOMECARE
+                Welcome to JDK HOMECARE
               </Text>
 
               <View sx={{
-                width: 40,
-                height: 4,
+                width: 30,
+                height: 3,
                 backgroundColor: '#0685f4',
                 borderRadius: 2,
               }} />
@@ -163,9 +138,9 @@ export default function Login() {
                   autoCapitalize="none"
                   autoComplete="email"
                   style={{
-                    height: 56,
-                    paddingHorizontal: 20,
-                    borderRadius: 12,
+                    height: 50,
+                    paddingHorizontal: 16,
+                    borderRadius: 10,
                     backgroundColor: '#f8f9fa',
                     fontSize: 16,
                     borderWidth: 1,
@@ -194,9 +169,9 @@ export default function Login() {
                   secureTextEntry
                   autoComplete="password"
                   style={{
-                    height: 56,
-                    paddingHorizontal: 20,
-                    borderRadius: 12,
+                    height: 50,
+                    paddingHorizontal: 16,
+                    borderRadius: 10,
                     backgroundColor: '#f8f9fa',
                     fontSize: 16,
                     borderWidth: 1,
@@ -208,27 +183,14 @@ export default function Login() {
                 />
               </View>
 
-              {/* Forgot Password */}
-              <View sx={{ alignItems: 'flex-end', mb: 'xl' }}>
-                <Pressable onPress={() => console.log('Forgot password')}>
-                  <Text sx={{
-                    fontSize: 14,
-                    color: '#0685f4',
-                    fontFamily: 'Poppins-Medium',
-                  }}>
-                    Forgot password?
-                  </Text>
-                </Pressable>
-              </View>
-
               {/* Login Button */}
               <Pressable
                 onPress={handleLogin}
-                disabled={!email || !password}
+                disabled={!email?.trim() || !password?.trim()}
                 sx={{
-                  height: 56,
-                  backgroundColor: (!email || !password) ? '#e4e7ec' : '#0685f4',
-                  borderRadius: 12,
+                  height: 50,
+                  backgroundColor: (!email?.trim() || !password?.trim()) ? '#e4e7ec' : '#0685f4',
+                  borderRadius: 10,
                   alignItems: 'center',
                   justifyContent: 'center',
                   mb: 'lg',
@@ -243,64 +205,66 @@ export default function Login() {
                 <Text sx={{
                   fontSize: 16,
                   fontFamily: 'Poppins-SemiBold',
-                  color: (!email || !password) ? '#9aa4b2' : '#ffffff',
+                  color: (!email?.trim() || !password?.trim()) ? '#9aa4b2' : '#ffffff',
                 }}>
-                  Log in
+                  Login
                 </Text>
               </Pressable>
             </View>
 
-            {/* Sign Up */}
+            {/* Support + Sign In Links */}
             <View sx={{
               alignItems: 'center',
               py: 'lg',
             }}>
               <Text sx={{
-                fontSize: 15,
+                fontSize: 14,
                 color: '#4e6075',
                 fontFamily: 'Poppins-Regular',
-                mb: 'md',
+                mb: 'sm',
               }}>
-                Don't have an account?
+                Need help?
               </Text>
               
+              {/* Contact Support */}
               <Pressable
-                onPress={handleSignUp}
+                onPress={() => console.log('Contact support')}
                 sx={{
-                  paddingVertical: 'md',
-                  paddingHorizontal: 'lg',
+                  paddingVertical: 'sm',
+                  paddingHorizontal: 'md',
                 }}
                 style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
               >
                 <Text sx={{
-                  fontSize: 16,
+                  fontSize: 14,
                   color: '#0685f4',
                   fontFamily: 'Poppins-SemiBold',
                   textAlign: 'center',
                 }}>
-                  Create account
+                  Contact Support
+                </Text>
+              </Pressable>
+
+              {/* Sign In Button */}
+              <Pressable
+                onPress={() => router.push('/signup/signup')} // adjust the route here
+                sx={{
+                  paddingVertical: 'sm',
+                  paddingHorizontal: 'md',
+                  mt: 'md',
+                }}
+                style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+              >
+                <Text sx={{
+                  fontSize: 14,
+                  color: '#0685f4',
+                  fontFamily: 'Poppins-SemiBold',
+                  textAlign: 'center',
+                }}>
+                  Sign In
                 </Text>
               </Pressable>
             </View>
-          </View>
-
-          {/* Footer */}
-          <View sx={{
-            px: 'xxl',
-            mx: 'lg',
-            pb: 'xl',
-            alignItems: 'center',
-          }}>
-            <Text sx={{
-              fontSize: 12,
-              color: '#9aa4b2',
-              textAlign: 'center',
-              lineHeight: 18,
-              fontFamily: 'Poppins-Regular',
-            }}>
-              By signing in, you agree to our Terms of Service{'\n'}
-              and Privacy Policy
-            </Text>
           </View>
         </Animated.View>
       </KeyboardAvoidingView>
