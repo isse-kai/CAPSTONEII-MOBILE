@@ -3,15 +3,18 @@ import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import { useState } from 'react'
-import { Image, ImageBackground } from 'react-native'
+import { Alert, Image, ImageBackground } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { loginUser } from '../../supabase/auth'
 
 export default function Login() {
   const router = useRouter()
+  const insets = useSafeAreaInsets()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const insets = useSafeAreaInsets()
+  const [isLoading, setIsLoading] = useState(false)
 
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
@@ -20,6 +23,29 @@ export default function Login() {
   })
 
   if (!fontsLoaded) return null
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Missing Fields', 'Please enter both email and password')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const { token, role, profile } = await loginUser(email, password)
+      console.log('Logged in:', { token, role, profile })
+
+      if (role === 'client') {
+        router.push('/client/clienthome')
+      } else {
+        router.push('/')
+      }
+    } catch (err: any) {
+      Alert.alert('Login Failed', err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <ImageBackground
@@ -99,7 +125,7 @@ export default function Login() {
               />
             </MotiView>
 
-            {/* Login */}
+            {/* Login Title */}
             <MotiView
               from={{ opacity: 0, translateY: -20 }}
               animate={{ opacity: 1, translateY: 0 }}
@@ -152,7 +178,7 @@ export default function Login() {
                   style={{
                     flex: 1,
                     fontSize: 16,
-                    fontFamily: 'Poppins-Regular'
+                    fontFamily: 'Poppins-Regular',
                   }}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -233,7 +259,7 @@ export default function Login() {
               transition={{ type: 'timing', duration: 500, delay: 500 }}
             >
               <Pressable
-                onPress={() => console.log('Login pressed')}
+                onPress={handleLogin}
                 sx={{
                   bg: '#008CFC',
                   py: 10,
@@ -252,81 +278,81 @@ export default function Login() {
                     fontFamily: 'Poppins-ExtraBold',
                   }}
                 >
-                  Login
+                  {isLoading ? 'Logging in...' : 'Login'}
                 </Text>
               </Pressable>
             </MotiView>
 
             {/* Divider */}
             <MotiView
-              from={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ type: 'timing', duration: 400, delay: 600 }}
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 400, delay: 600 }}
             >
-              <Text
+            <Text
                 sx={{
-                  fontSize: 20,
-                  fontWeight: 'extrabold',
-                  fontFamily: 'Poppins-Regular',
-                  color: 'black',
-                  textAlign: 'center',
+                fontSize: 20,
+                fontWeight: 'extrabold',
+                fontFamily: 'Poppins-Regular',
+                color: 'black',
+                textAlign: 'center',
                 }}
-              >
+            >
                 or
-              </Text>
+            </Text>
             </MotiView>
 
             {/* Google Login */}
             <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: 'timing', duration: 500, delay: 700 }}
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 500, delay: 700 }}
             >
-              <Pressable onPress={() => router.push('/signup/clientsignup')}>
+            <Pressable onPress={() => router.push('/signup/clientsignup')}>
                 {({ hovered }) => (
-                  <View
+                <View
                     sx={{
-                      flexDirection: 'row',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      bg: hovered ? '#008CFC' : 'transparent',
-                      py: 10,
-                      borderRadius: 8,
-                      mb: 'md',
-                      borderWidth: 1,
-                      borderColor: '#008CFC',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    bg: hovered ? '#008CFC' : 'transparent',
+                    py: 10,
+                    borderRadius: 8,
+                    mb: 'md',
+                    borderWidth: 1,
+                    borderColor: '#008CFC',
                     }}
-                  >
+                >
                     <Image
-                      source={require('../../assets/google.png')}
-                      style={{
+                    source={require('../../assets/google.png')}
+                    style={{
                         width: 24,
                         height: 24,
                         marginRight: 8,
-                      }}
-                      resizeMode="contain"
+                    }}
+                    resizeMode="contain"
                     />
                     <Text
-                      sx={{
+                    sx={{
                         textAlign: 'center',
                         color: hovered ? 'background' : '#008CFC',
                         fontWeight: 'bold',
                         fontSize: 20,
                         fontFamily: 'Poppins-ExtraBold',
-                      }}
+                    }}
                     >
-                      Continue with Google
+                    Continue with Google
                     </Text>
-                  </View>
+                </View>
                 )}
-              </Pressable>
+            </Pressable>
             </MotiView>
 
             {/* Signup Prompt */}
             <MotiView
               from={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ type: 'timing', duration: 500, delay: 800 }}
+              transition={{ type: 'timing', duration: 500, delay: 600 }}
             >
               <View
                 sx={{

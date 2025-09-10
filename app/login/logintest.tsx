@@ -1,336 +1,393 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import { Image, Pressable, Text, TextInput, View } from 'dripsy'
+// import { Pressable, Text, TextInput, View } from 'dripsy'
 // import { useFonts } from 'expo-font'
 // import { useRouter } from 'expo-router'
-// import { useEffect, useRef, useState } from 'react'
-// import {
-//     Animated,
-//     KeyboardAvoidingView,
-//     Platform,
-//     SafeAreaView,
-//     ScrollView,
-//     StatusBar,
-// } from 'react-native'
+// import { MotiView } from 'moti'
+// import { useState } from 'react'
+// import { Alert, Image, ImageBackground } from 'react-native'
+// import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+// import { loginUser } from '../../supabase/auth'
 
 // export default function Login() {
 //   const router = useRouter()
+//   const insets = useSafeAreaInsets()
+
 //   const [email, setEmail] = useState('')
 //   const [password, setPassword] = useState('')
+//   const [showPassword, setShowPassword] = useState(false)
 //   const [isLoading, setIsLoading] = useState(false)
-
-//   const fadeAnim = useRef(new Animated.Value(0)).current
 
 //   const [fontsLoaded] = useFonts({
 //     'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
-//     'Poppins-Medium': require('../../assets/fonts/Poppins/Poppins-Medium.ttf'),
-//     'Poppins-SemiBold': require('../../assets/fonts/Poppins/Poppins-SemiBold.ttf'),
 //     'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
 //     'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
 //   })
 
-//   useEffect(() => {
-//     Animated.timing(fadeAnim, {
-//       toValue: 1,
-//       duration: 800,
-//       useNativeDriver: true,
-//     }).start()
-//   }, [fadeAnim])
-
-//   const handleLogin = async () => {
-//     if (!email || !password) return
-//     setIsLoading(true)
-//     setTimeout(() => {
-//       setIsLoading(false)
-//       console.log('Login successful')
-//       // router.push('/home') // Add navigation if needed
-//     }, 1500)
-//   }
-
-//   const handleSignUp = () => {
-//     router.push('../signup/index')
-//   }
-
 //   if (!fontsLoaded) return null
 
+//   const handleLogin = async () => {
+//     if (!email || !password) {
+//       Alert.alert('Missing Fields', 'Please enter both email and password')
+//       return
+//     }
+
+//     setIsLoading(true)
+//     try {
+//       const { token, role, profile } = await loginUser(email, password)
+//       console.log('Logged in:', { token, role, profile })
+
+//       if (role === 'client') {
+//         router.push('/client/clienthome')
+//       } else {
+//         router.push('/')
+//       }
+//     } catch (err: any) {
+//       Alert.alert('Login Failed', err.message)
+//     } finally {
+//       setIsLoading(false)
+//     }
+//   }
+
 //   return (
-//     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
-//       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-
-//       <KeyboardAvoidingView
-//         style={{ flex: 1 }}
-//         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+//     <ImageBackground
+//       source={require('../../assets/login.jpg')}
+//       style={{ flex: 1 }}
+//       resizeMode="cover"
+//     >
+//       <SafeAreaView
+//         style={{
+//           flex: 1,
+//           paddingTop: insets.top + 8,
+//           paddingBottom: insets.bottom + 8,
+//           paddingHorizontal: 16,
+//         }}
 //       >
-//         <ScrollView
-//           contentContainerStyle={{ flexGrow: 1 }}
-//           keyboardShouldPersistTaps="handled"
-//           showsVerticalScrollIndicator={false}
+//         <MotiView
+//           from={{ opacity: 0 }}
+//           animate={{ opacity: 1 }}
+//           transition={{ type: 'timing', duration: 600 }}
+//           style={{ flex: 1 }}
 //         >
-//           <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-//             {/* Header */}
-//             <View sx={{ alignItems: 'center', px: 'lg', pt: 'xl', pb: 'lg' }}>
-//               <View sx={{ position: 'absolute', left: 20, top: 24, zIndex: 1 }}>
-//                 <Pressable
-//                   onPress={() => router.back()}
-//                   sx={{
-//                     width: 40,
-//                     height: 40,
-//                     borderRadius: 20,
-//                     backgroundColor: '#f8f9fa',
-//                     justifyContent: 'center',
-//                     alignItems: 'center',
-//                   }}
-//                   style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-//                 >
-//                   <Text sx={{ fontSize: 18, color: '#001a33' }}>←</Text>
-//                 </Pressable>
-//               </View>
-
-//               <View sx={{ alignItems: 'center', elevation: 5 }}>
-//                 <Image
-//                   source={require('../../assets/jdklogo.png')}
-//                   style={{ width: 100, height: 100 }}
-//                   resizeMode="contain"
-//                 />
-//               </View>
-//             </View>
-
-//             {/* Content */}
-//             <View sx={{ px: 'lg', py: 'xl', flex: 1 }}>
-//               {/* Title */}
-//               <View sx={{ mb: 'xl', alignItems: 'center' }}>
-//                 <Text
-//                   sx={{
-//                     fontSize: 32,
-//                     fontFamily: 'Poppins-ExtraBold',
-//                     color: '#001a33',
-//                     mb: 'xs',
-//                     textAlign: 'center',
-//                   }}
-//                 >
-//                   Welcome back
-//                 </Text>
-//                 <Text
-//                   sx={{
-//                     fontSize: 16,
-//                     fontFamily: 'Poppins-Regular',
-//                     color: '#4e6075',
-//                     textAlign: 'center',
-//                     mb: 'sm',
-//                   }}
-//                 >
-//                   Log in to JDK HOMECARE
-//                 </Text>
-//                 <View
-//                   sx={{
-//                     width: 40,
-//                     height: 4,
-//                     backgroundColor: '#0685f4',
-//                     borderRadius: 2,
-//                   }}
-//                 />
-//               </View>
-
-//               {/* Form */}
-//               <View sx={{ mb: 'xl' }}>
-//                 {/* Email */}
-//                 <View sx={{ mb: 'lg' }}>
-//                   <Text
-//                     sx={{
-//                       fontSize: 14,
-//                       fontFamily: 'Poppins-Medium',
-//                       color: '#001a33',
-//                       mb: 'sm',
-//                     }}
-//                   >
-//                     Email
-//                   </Text>
-//                   <TextInput
-//                     placeholder="your@email.com"
-//                     value={email}
-//                     onChangeText={setEmail}
-//                     keyboardType="email-address"
-//                     autoCapitalize="none"
-//                     autoComplete="email"
-//                     style={{
-//                       height: 56,
-//                       paddingHorizontal: 20,
-//                       borderRadius: 12,
-//                       backgroundColor: '#f8f9fa',
-//                       fontSize: 16,
-//                       borderWidth: 1,
-//                       borderColor: email ? '#0685f4' : 'transparent',
-//                       color: '#001a33',
-//                       fontFamily: 'Poppins-Regular',
-//                     }}
-//                     placeholderTextColor="#9aa4b2"
-//                   />
-//                 </View>
-
-//                 {/* Password */}
-//                 <View sx={{ mb: 'lg' }}>
-//                   <Text
-//                     sx={{
-//                       fontSize: 14,
-//                       fontFamily: 'Poppins-Medium',
-//                       color: '#001a33',
-//                       mb: 'sm',
-//                     }}
-//                   >
-//                     Password
-//                   </Text>
-//                   <TextInput
-//                     placeholder="Enter your password"
-//                     value={password}
-//                     onChangeText={setPassword}
-//                     secureTextEntry
-//                     autoComplete="password"
-//                     style={{
-//                       height: 56,
-//                       paddingHorizontal: 20,
-//                       borderRadius: 12,
-//                       backgroundColor: '#f8f9fa',
-//                       fontSize: 16,
-//                       borderWidth: 1,
-//                       borderColor: password ? '#0685f4' : 'transparent',
-//                       color: '#001a33',
-//                       fontFamily: 'Poppins-Regular',
-//                     }}
-//                     placeholderTextColor="#9aa4b2"
-//                   />
-//                 </View>
-
-//                 {/* Forgot Password */}
-//                 <View sx={{ alignItems: 'flex-end', mb: 'xl' }}>
-//                   <Pressable onPress={() => console.log('Forgot password')}>
-//                     <Text
-//                       sx={{
-//                         fontSize: 14,
-//                         color: '#0685f4',
-//                         fontFamily: 'Poppins-Medium',
-//                       }}
-//                     >
-//                       Forgot password?
-//                     </Text>
-//                   </Pressable>
-//                 </View>
-
-//                 {/* Login Button */}
-//                 <Pressable
-//                   onPress={handleLogin}
-//                   disabled={isLoading || !email || !password}
-//                   sx={{
-//                     height: 56,
-//                     backgroundColor:
-//                       !email || !password
-//                         ? '#e4e7ec'
-//                         : isLoading
-//                         ? '#9aa4b2'
-//                         : '#0685f4',
-//                     borderRadius: 12,
-//                     alignItems: 'center',
-//                     justifyContent: 'center',
-//                     mb: 'lg',
-//                   }}
-//                   style={({ pressed }) => [
-//                     {
-//                       opacity:
-//                         pressed && email && password && !isLoading ? 0.9 : 1,
-//                       transform: [
-//                         {
-//                           scale:
-//                             pressed && email && password && !isLoading
-//                               ? 0.98
-//                               : 1,
-//                         },
-//                       ],
-//                     },
-//                   ]}
-//                 >
-//                   <Text
-//                     sx={{
-//                       fontSize: 16,
-//                       fontFamily: 'Poppins-SemiBold',
-//                       color:
-//                         !email || !password ? '#9aa4b2' : '#ffffff',
-//                     }}
-//                   >
-//                     {isLoading ? 'Logging in...' : 'Log in'}
-//                   </Text>
-//                 </Pressable>
-//               </View>
-
-//               {/* Sign Up */}
-//               <View sx={{ alignItems: 'center', py: 'lg' }}>
-//                 <Text
-//                   sx={{
-//                     fontSize: 15,
-//                     color: '#4e6075',
-//                     fontFamily: 'Poppins-Regular',
-//                     mb: 'md',
-//                   }}
-//                 >
-//                   Don’t have an account?
-//                 </Text>
-//                 <Pressable
-//                   onPress={handleSignUp}
-//                   sx={{ paddingVertical: 'md', paddingHorizontal: 'lg' }}
-//                   style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-//                 >
-//                   <Text
-//                     sx={{
-//                       fontSize: 16,
-//                       color: '#0685f4',
-//                       fontFamily: 'Poppins-SemiBold',
-//                       textAlign: 'center',
-//                     }}
-//                   >
-//                     Create account
-//                   </Text>
-//                 </Pressable>
-//               </View>
-//             </View>
-
-//             {/* Footer */}
-//             <View sx={{ px: 'lg', pb: 'xl', alignItems: 'center' }}>
-//             <Text
+//           {/* Back Button */}
+//           <MotiView
+//             from={{ opacity: 0, translateX: -20 }}
+//             animate={{ opacity: 1, translateX: 0 }}
+//             transition={{ type: 'timing', duration: 500, delay: 50 }}
+//           >
+//             <View sx={{ position: 'absolute', top: 0, left: 0 }}>
+//               <Pressable
+//                 onPress={() => router.back()}
 //                 sx={{
-//                   fontSize: 12,
-//                   color: '#9aa4b2',
-//                   textAlign: 'center',
-//                   lineHeight: 18,
-//                   fontFamily: 'Poppins-Regular',
+//                   bg: '#f3f4f6',
+//                   p: 10,
+//                   borderRadius: 20,
+//                   elevation: 2,
+//                   shadowColor: '#000',
+//                   shadowOffset: { width: 0, height: 1 },
+//                   shadowOpacity: 0.2,
+//                   shadowRadius: 2,
+//                   height: 40,
+//                   width: 40,
+//                   ml: 8,
+//                   mt: 8,
 //                 }}
 //               >
-//                 By signing in, you agree to our Terms of Service{'\n'}
-//                 and Privacy Policy
-//               </Text>
+//                 <Text
+//                   sx={{
+//                     fontSize: 18,
+//                     fontFamily: 'Poppins-Bold',
+//                     color: '#001a33',
+//                     textAlign: 'center',
+//                     lineHeight: 20,
+//                   }}
+//                 >
+//                   ←
+//                 </Text>
+//               </Pressable>
 //             </View>
-//           </Animated.View>
-//         </ScrollView>
-//       </KeyboardAvoidingView>
-//     </SafeAreaView>
+//           </MotiView>
+
+//           <View sx={{ flex: 1, justifyContent: 'center' }}>
+//             {/* Logo */}
+//             <MotiView
+//               from={{ opacity: 0, scale: 0.8 }}
+//               animate={{ opacity: 1, scale: 1 }}
+//               transition={{ type: 'timing', duration: 600, delay: 100 }}
+//             >
+//               <Image
+//                 source={require('../../assets/jdklogo.png')}
+//                 style={{
+//                   width: 180,
+//                   height: 180,
+//                   alignSelf: 'center',
+//                   marginBottom: -10,
+//                 }}
+//                 resizeMode="contain"
+//               />
+//             </MotiView>
+
+//             {/* Login Title */}
+//             <MotiView
+//               from={{ opacity: 0, translateY: -20 }}
+//               animate={{ opacity: 1, translateY: 0 }}
+//               transition={{ type: 'timing', duration: 500, delay: 200 }}
+//             >
+//               <Text
+//                 sx={{
+//                   fontSize: 26,
+//                   fontWeight: '400',
+//                   fontFamily: 'Poppins-Bold',
+//                   textAlign: 'left',
+//                   mb: 'md',
+//                 }}
+//               >
+//                 Login
+//               </Text>
+//             </MotiView>
+
+//             {/* Email Input */}
+//             <MotiView
+//               from={{ opacity: 0, translateY: 20 }}
+//               animate={{ opacity: 1, translateY: 0 }}
+//               transition={{ type: 'timing', duration: 500, delay: 300 }}
+//             >
+//               <Text
+//                 sx={{
+//                   fontSize: 14,
+//                   fontFamily: 'Poppins-Medium',
+//                   color: '#001a33',
+//                   mb: 'sm',
+//                 }}
+//               >
+//                 Email
+//               </Text>
+//               <View
+//                 sx={{
+//                   flexDirection: 'row',
+//                   alignItems: 'center',
+//                   bg: '#f3f4f6',
+//                   borderRadius: 8,
+//                   px: 16,
+//                   py: 12,
+//                   mb: 'md',
+//                 }}
+//               >
+//                 <TextInput
+//                   placeholder="Email Address"
+//                   value={email}
+//                   onChangeText={setEmail}
+//                   style={{
+//                     flex: 1,
+//                     fontSize: 16,
+//                     fontFamily: 'Poppins-Regular',
+//                   }}
+//                   keyboardType="email-address"
+//                   autoCapitalize="none"
+//                 />
+//               </View>
+//             </MotiView>
+
+//             {/* Password Input */}
+//             <MotiView
+//               from={{ opacity: 0, translateY: 20 }}
+//               animate={{ opacity: 1, translateY: 0 }}
+//               transition={{ type: 'timing', duration: 500, delay: 400 }}
+//             >
+//               <Text
+//                 sx={{
+//                   fontSize: 14,
+//                   fontFamily: 'Poppins-Medium',
+//                   color: '#001a33',
+//                   mb: 'sm',
+//                 }}
+//               >
+//                 Password
+//               </Text>
+//               <View
+//                 sx={{
+//                   flexDirection: 'row',
+//                   alignItems: 'center',
+//                   bg: '#f3f4f6',
+//                   borderRadius: 8,
+//                   px: 16,
+//                   py: 12,
+//                 }}
+//               >
+//                 <TextInput
+//                   placeholder="Password"
+//                   value={password}
+//                   onChangeText={setPassword}
+//                   secureTextEntry={!showPassword}
+//                   style={{
+//                     flex: 1,
+//                     fontSize: 16,
+//                     fontFamily: 'Poppins-Regular',
+//                   }}
+//                 />
+//                 <Pressable onPress={() => setShowPassword(!showPassword)}>
+//                   <Text
+//                     sx={{
+//                       fontSize: 14,
+//                       fontFamily: 'Poppins-Regular',
+//                       color: '#008CFC',
+//                     }}
+//                   >
+//                     {showPassword ? 'Hide' : 'Show'}
+//                   </Text>
+//                 </Pressable>
+//               </View>
+
+//               {/* Forgot Password */}
+//               <View sx={{ alignItems: 'flex-end', mt: 'md' }}>
+//                 <Pressable onPress={() => console.log('Forgot password')}>
+//                   <Text
+//                     sx={{
+//                       fontSize: 14,
+//                       color: '#0685f4',
+//                       fontFamily: 'Poppins-Medium',
+//                     }}
+//                   >
+//                     Forgot password?
+//                   </Text>
+//                 </Pressable>
+//               </View>
+//             </MotiView>
+
+//             {/* Login Button */}
+//             <MotiView
+//               from={{ opacity: 0, scale: 0.9 }}
+//               animate={{ opacity: 1, scale: 1 }}
+//               transition={{ type: 'timing', duration: 500, delay: 500 }}
+//             >
+//               <Pressable
+//                 onPress={handleLogin}
+//                 sx={{
+//                   bg: '#008CFC',
+//                   py: 10,
+//                   borderRadius: 8,
+//                   alignItems: 'center',
+//                   mt: 'lg',
+//                   mb: 4,
+//                 }}
+//               >
+//                 <Text
+//                   sx={{
+//                     textAlign: 'center',
+//                     color: 'background',
+//                     fontWeight: 'bold',
+//                     fontSize: 20,
+//                     fontFamily: 'Poppins-ExtraBold',
+//                   }}
+//                 >
+//                   {isLoading ? 'Logging in...' : 'Login'}
+//                 </Text>
+//               </Pressable>
+//             </MotiView>
+
+//             {/* Divider */}
+//             <MotiView
+//             from={{ opacity: 0 }}
+//             animate={{ opacity: 1 }}
+//             transition={{ type: 'timing', duration: 400, delay: 600 }}
+//             >
+//             <Text
+//                 sx={{
+//                 fontSize: 20,
+//                 fontWeight: 'extrabold',
+//                 fontFamily: 'Poppins-Regular',
+//                 color: 'black',
+//                 textAlign: 'center',
+//                 }}
+//             >
+//                 or
+//             </Text>
+//             </MotiView>
+
+//             {/* Google Login */}
+//             <MotiView
+//             from={{ opacity: 0, translateY: 20 }}
+//             animate={{ opacity: 1, translateY: 0 }}
+//             transition={{ type: 'timing', duration: 500, delay: 700 }}
+//             >
+//             <Pressable onPress={() => router.push('/signup/clientsignup')}>
+//                 {({ hovered }) => (
+//                 <View
+//                     sx={{
+//                     flexDirection: 'row',
+//                     justifyContent: 'center',
+//                     alignItems: 'center',
+//                     bg: hovered ? '#008CFC' : 'transparent',
+//                     py: 10,
+//                     borderRadius: 8,
+//                     mb: 'md',
+//                     borderWidth: 1,
+//                     borderColor: '#008CFC',
+//                     }}
+//                 >
+//                     <Image
+//                     source={require('../../assets/google.png')}
+//                     style={{
+//                         width: 24,
+//                         height: 24,
+//                         marginRight: 8,
+//                     }}
+//                     resizeMode="contain"
+//                     />
+//                     <Text
+//                     sx={{
+//                         textAlign: 'center',
+//                         color: hovered ? 'background' : '#008CFC',
+//                         fontWeight: 'bold',
+//                         fontSize: 20,
+//                         fontFamily: 'Poppins-ExtraBold',
+//                     }}
+//                     >
+//                     Continue with Google
+//                     </Text>
+//                 </View>
+//                 )}
+//             </Pressable>
+//             </MotiView>
+
+//             {/* Signup Prompt */}
+//             <MotiView
+//               from={{ opacity: 0 }}
+//               animate={{ opacity: 1 }}
+//               transition={{ type: 'timing', duration: 500, delay: 600 }}
+//             >
+//               <View
+//                 sx={{
+//                   flexDirection: 'row',
+//                   justifyContent: 'center',
+//                   alignItems: 'center',
+//                   mb: insets.bottom + 16,
+//                   mt: 'md',
+//                 }}
+//               >
+//                 <Text
+//                   sx={{
+//                     fontSize: 14,
+//                     fontFamily: 'Poppins-Regular',
+//                     color: '#001a33',
+//                   }}
+//                 >
+//                   Don’t have an account?{' '}
+//                 </Text>
+//                 <Pressable onPress={() => router.push('/signup/roles')}>
+//                   <Text
+//                     sx={{
+//                       fontSize: 14,
+//                       fontFamily: 'Poppins-Regular',
+//                       color: '#008CFC',
+//                     }}
+//                   >
+//                     Sign Up
+//                   </Text>
+//                 </Pressable>
+//               </View>
+//             </MotiView>
+//           </View>
+//         </MotiView>
+//       </SafeAreaView>
+//     </ImageBackground>
 //   )
 // }
