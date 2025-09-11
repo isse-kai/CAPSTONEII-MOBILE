@@ -97,7 +97,7 @@ export default function ClientLogin() {
                 mb: 'xs',
                 textAlign: 'center',
               }}>
-                Client Login
+                Login Now
               </Text>
               
               <Text sx={{
