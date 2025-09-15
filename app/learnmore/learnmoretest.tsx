@@ -9,7 +9,6 @@ export default function LearnMore() {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(50)).current
 
-  // Load Poppins fonts
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
     'Poppins-Medium': require('../../assets/fonts/Poppins/Poppins-Medium.ttf'),
@@ -114,7 +113,6 @@ const FeatureItem = ({ title, description }: FeatureItemProps) => (
     </View>
   </View>
 )
-
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
