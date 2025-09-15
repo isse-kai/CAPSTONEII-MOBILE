@@ -1,251 +1,213 @@
-import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useRouter, type Href } from "expo-router";
+import { Home, Menu, Search } from "lucide-react-native";
+import React, { useState } from "react";
 import {
-    Animated,
-    Platform,
-    Pressable,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    View,
-    ViewStyle,
+  Dimensions,
+  Image,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
-export default function HomeScreen() {
-  const router = useRouter();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+const { width } = Dimensions.get("window");
+const LOGO = require("../../assets/jdklogo.png");
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+const C = {
+  bg: "#ffffff",
+  text: "#0f172a",
+  sub: "#475569",
+  blue: "#1e86ff",
+  blueDark: "#0c62c9",
+  inputBg: "#ffffff",
+  inputBorder: "#d9e3f0",
+  inputIcon: "#7b8aa0",
+  placeholder: "#93a3b5",
+};
+
+export default function ClientWelcome() {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+
+  const handleSearch = () => {
+    const query = q.trim();
+    if (!query) return;
+    // Push to a real route you already have so TS is happy. Pass the query as a param.
+    router.push({ pathname: "/home/home", params: { q: query } } as Href);
+  };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <Animated.View style={[styles.animatedWrapper, { opacity: fadeAnim }]}>
-        {/* Hero Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Welcome to JDK Homecare 👋</Text>
-          <Text style={styles.headerSubtitle}>
-            Your trusted partner for home services and care
-          </Text>
-
-          {/* Logout Button (Top Right) */}
-          <Pressable
-            style={styles.logoutButton}
-            onPress={() => router.push("/login/login")}
-          >
-            <Text style={styles.logoutText}>Logout</Text>
-          </Pressable>
-        </View>
-
-        {/* Scrollable Content */}
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      {/* HEADER */}
+      <View
+        style={{
+          paddingHorizontal: 14,
+          paddingTop: 6,
+          paddingBottom: 10,
+          borderBottomWidth: 1,
+          borderBottomColor: "#eef2f7",
+          position: "relative",
+        }}
+      >
+        {/* Centered BIG logo */}
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 6,
+            alignItems: "center",
+          }}
+          pointerEvents="none"
         >
-          {/* Welcome / CTA */}
-          <Text style={styles.sectionTitle}>What You Need to Know</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoText}>
-              We provide reliable and affordable homecare services to make your
-              life easier. From cleaning and repairs to health & safety
-              assistance — we’ve got you covered.
-            </Text>
-          </View>
-
-          {/* Advantages */}
-          <Text style={styles.sectionTitle}>Why Choose Us</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoText}>✔ Professional & trained staff</Text>
-            <Text style={styles.infoText}>✔ Affordable, transparent pricing</Text>
-            <Text style={styles.infoText}>✔ Available 24/7 for emergencies</Text>
-            <Text style={styles.infoText}>✔ 100% satisfaction guaranteed</Text>
-          </View>
-
-          {/* Services */}
-          <Text style={styles.sectionTitle}>Our Services</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoText}>🧹 House Cleaning</Text>
-            <Text style={styles.infoText}>🔧 Plumbing & Repairs</Text>
-            <Text style={styles.infoText}>💡 Electrical Support</Text>
-            <Text style={styles.infoText}>🏡 General Home Maintenance</Text>
-          </View>
-
-          {/* Testimonials */}
-          <Text style={styles.sectionTitle}>What Our Clients Say</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoText}>
-              ⭐⭐⭐⭐⭐ “JDK Homecare made my life so much easier! Highly
-              recommended.”
-            </Text>
-            <Text style={styles.infoText}>
-              ⭐⭐⭐⭐⭐ “Professional team, quick service, and affordable rates.”
-            </Text>
-          </View>
-
-          {/* Call to Action */}
-          <Text style={styles.sectionTitle}>Ready to Get Started?</Text>
-          <Pressable
-            onPress={() => router.push("/screen/bookscreen")}
-            style={styles.bookCard}
-          >
-            <Text style={styles.bookCardText}>📅 Book a Service Now</Text>
-          </Pressable>
-        </ScrollView>
-
-        {/* Floating Navigation */}
-        <View style={styles.floatingNav}>
-          <Pressable
-            onPress={() => router.push("/screen/homescreen")}
-            style={styles.navButton}
-          >
-            <Text style={styles.navText}>🏠</Text>
-            <Text style={styles.navLabel}>Home</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.push("/screen/notificationscreen")}
-            style={styles.navButton}
-          >
-            <Text style={styles.navText}>🔔</Text>
-            <Text style={styles.navLabel}>Notifications</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.push("/screen/profilescreen")}
-            style={styles.navButton}
-          >
-            <Text style={styles.navText}>👤</Text>
-            <Text style={styles.navLabel}>Profile</Text>
-          </Pressable>
+          <Image
+            source={LOGO}
+            style={{
+              width: Math.min(width * 0.7, 280), // larger logo
+              height: 56,
+              resizeMode: "contain",
+            }}
+          />
         </View>
-      </Animated.View>
-    </View>
+
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* Hamburger */}
+          <Pressable
+            onPress={() => {
+              /* open drawer */
+            }}
+            hitSlop={8}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Menu color={C.text} size={26} strokeWidth={2.5} />
+          </Pressable>
+
+          {/* Search input with icon (like your screenshot) */}
+          {/* Search input with icon */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: C.inputBg,
+                borderWidth: 1,
+                borderColor: C.inputBorder,
+                borderRadius: 999,
+                height: 38,
+                maxWidth: width * 0.58,
+                paddingLeft: 20,          // ⬅️ was 10
+                paddingRight: 20,
+              }}
+            >
+              {/* Left icon nudged left */}
+              <Search
+                color={C.inputIcon}
+                size={18}
+                strokeWidth={2.25}
+                style={{ marginLeft: -2 }}   // ⬅️ subtle left shift
+              />
+
+              <TextInput
+                value={q}
+                onChangeText={setQ}
+                placeholder="Search"
+                placeholderTextColor={C.placeholder}
+                style={{
+                  flex: 1,
+                  color: C.text,
+                  paddingVertical: 0,
+                  paddingLeft: 6,          // ⬅️ keep text away from icon
+                  fontSize: 14,
+                  minWidth: 120,
+                }}
+                returnKeyType="search"
+                onSubmitEditing={handleSearch}
+              />
+
+              {/* Tap-to-search icon */}
+              <Pressable hitSlop={8} onPress={handleSearch} style={{ marginLeft: 6, paddingHorizontal: 4 }}>
+                <Search color={C.inputIcon} size={18} strokeWidth={2.25} />
+              </Pressable>
+            </View>
+        </View>
+      </View>
+
+      {/* CENTERED HERO */}
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          paddingHorizontal: 24,
+        }}
+      >
+        <Home color={C.blue} size={88} strokeWidth={2.5} style={{ marginBottom: 28 }} />
+
+        <Text
+          style={{
+            color: C.text,
+            fontSize: 30,
+            fontWeight: "900",
+            textAlign: "center",
+            marginBottom: 8,
+          }}
+        >
+          Welcome, <Text style={{ color: C.blue }}>john doe</Text>!
+        </Text>
+
+        <Text
+          style={{
+            color: C.sub,
+            fontSize: 16,
+            textAlign: "center",
+            lineHeight: 24,
+            maxWidth: width * 0.88,
+            marginBottom: 32,
+          }}
+        >
+          Your home, your schedule. Book trusted professionals quickly and easily. We’ll make sure
+          the right expert is on the way.
+        </Text>
+
+        <Pressable
+          onPress={() => router.push({ pathname: "/forms/request" } as Href)} // change to '/request' once it exists
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? C.blueDark : C.blue,
+            paddingVertical: 14,
+            paddingHorizontal: 36,
+            borderRadius: 14,
+            shadowColor: C.blue,
+            shadowOpacity: Platform.OS === "android" ? 0.18 : 0.28,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 3,
+          })}
+        >
+          <Text
+            style={{
+              color: "#fff",
+              fontWeight: "800",
+              fontSize: 16,
+              textAlign: "center",
+            }}
+          >
+            Request Service Now
+          </Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  animatedWrapper: {
-    flex: 1,
-  },
-  header: {
-    paddingTop: Platform.OS === "ios" ? 60 : 40,
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-    backgroundColor: "#0685f4",
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    position: "relative",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontFamily: "Poppins-ExtraBold",
-    color: "#fff",
-    marginBottom: 6,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    fontFamily: "Poppins-Regular",
-    color: "#e6f0ff",
-  },
-  logoutButton: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 50 : 30,
-    right: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  logoutText: {
-    fontFamily: "Poppins-SemiBold",
-    fontSize: 14,
-    color: "#0685f4",
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 140,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontFamily: "Poppins-SemiBold",
-    color: "#001a33",
-    marginBottom: 12,
-  },
-  bookCard: {
-    height: 120,
-    backgroundColor: "#0685f4",
-    borderRadius: 16,
-    justifyContent: "center" as ViewStyle["justifyContent"],
-    alignItems: "center" as ViewStyle["alignItems"],
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  bookCardText: {
-    fontFamily: "Poppins-SemiBold",
-    fontSize: 18,
-    color: "#fff",
-  },
-  infoCard: {
-    backgroundColor: "#f8f9fa",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  infoText: {
-    fontFamily: "Poppins-Regular",
-    color: "#001a33",
-    marginBottom: 6,
-  },
-  floatingNav: {
-    position: "absolute",
-    bottom: 20,
-    left: 20,
-    right: 20,
-    backgroundColor: "#ffffff",
-    borderRadius: 30,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingVertical: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  navButton: {
-    justifyContent: "center" as ViewStyle["justifyContent"],
-    alignItems: "center" as ViewStyle["alignItems"],
-  },
-  navText: {
-    fontSize: 22,
-    marginBottom: 2,
-  },
-  navLabel: {
-    fontSize: 12,
-    fontFamily: "Poppins-Medium",
-    color: "#001a33",
-  },
-});
