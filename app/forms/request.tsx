@@ -1,19 +1,6 @@
 // app/request.tsx
-import React, { useMemo, useState, useEffect } from "react";
-import {
-  SafeAreaView,
-  View,
-  Text,
-  Image,
-  Pressable,
-  Dimensions,
-  Platform,
-  TextInput,
-  ScrollView,
-  Modal,
-  KeyboardAvoidingView,
-  ActivityIndicator,
-} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter, type Href } from "expo-router";
 import {
   ArrowLeft,
@@ -23,8 +10,21 @@ import {
   Plus,
   Search,
 } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 const { width } = Dimensions.get("window");
 const LOGO = require("../../assets/jdklogo.png");
@@ -42,7 +42,7 @@ const C = {
 };
 
 const STORAGE_KEY = "request_step1";
-const NEXT_ROUTE = "/home/home" as Href; // change to '/request/details' once Step 2 exists
+const NEXT_ROUTE = "/forms/request2" as Href; // change to '/request/details' once Step 2 exists
 
 const ALL_BARANGAYS = [
   "Alijis","Banago","Bata","Cabug","Estefania","Felisa","Granada",
