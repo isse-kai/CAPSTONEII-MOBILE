@@ -1,22 +1,11 @@
-// app/request/details.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import DateTimePicker, {
-    type DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Image, Pressable, ScrollView, Text, TextInput, View } from "dripsy";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter, type Href } from "expo-router";
-import {
-    ArrowLeft,
-    Calendar,
-    ChevronDown,
-    Clock,
-    Image as ImageIcon,
-    Upload,
-    X,
-} from "lucide-react-native";
-import { useMemo, useState } from "react";
-import { Dimensions, Modal, Platform } from "react-native";
+import { ArrowLeft, Calendar, ChevronDown, Clock, Image as ImageIcon, Upload, X } from "lucide-react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Dimensions, Modal, Platform } from "react-native";
 
 const { width } = Dimensions.get("window");
 const LOGO = require("../../assets/jdklogo.png");
@@ -33,16 +22,9 @@ const C = {
 };
 
 const STORAGE_KEY = "request_step2";
-const NEXT_ROUTE = "/home/home" as Href; // change to '/request/rate' when ready
+const NEXT_ROUTE = "/forms/request3" as Href;
 
-const SERVICE_TYPES = [
-  "Plumbing",
-  "Electrical",
-  "Cleaning",
-  "Laundry",
-  "Mechanic",
-  "Carpentry",
-];
+const SERVICE_TYPES = ["Plumbing", "Electrical", "Cleaning", "Laundry", "Mechanic", "Carpentry"];
 
 const TASKS: Record<string, string[]> = {
   Plumbing: ["Leak repair", "Install faucet", "Clog removal", "Pipe replacement"],
@@ -64,13 +46,82 @@ export default function DescribeRequest() {
   const [toolsProvided, setToolsProvided] = useState<null | boolean>(null);
   const [urgent, setUrgent] = useState<null | boolean>(null);
   const [desc, setDesc] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
 
   // pickers visibility
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
 
-  // image upload
-  const [photo, setPhoto] = useState<string | null>(null);
+  // select modals
+  const [openType, setOpenType] = useState(false);
+  const [openTask, setOpenTask] = useState(false);
+
+  // ----- HYDRATE FROM STORAGE ON MOUNT -----
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const v = JSON.parse(raw);
+        setServiceType(v.serviceType ?? null);
+        setServiceTask(v.serviceTask ?? null);
+        setDate(v.date ? new Date(v.date) : null);
+        setTime(v.time ? new Date(v.time) : null);
+        setToolsProvided(typeof v.toolsProvided === "boolean" ? v.toolsProvided : null);
+        setUrgent(typeof v.urgent === "boolean" ? v.urgent : null);
+        setDesc(v.desc ?? "");
+        setPhoto(v.photo ?? null);
+      } catch {}
+    })();
+  }, []);
+
+  // ----- AUTO-SAVE DRAFT (DEBOUNCED) -----
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const payload = {
+        serviceType,
+        serviceTask,
+        date: date ? date.toISOString() : null,
+        time: time ? time.toISOString() : null,
+        toolsProvided,
+        urgent,
+        desc,
+        photo,
+      };
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload)).catch(() => {});
+    }, 400);
+    return () => clearTimeout(id);
+  }, [serviceType, serviceTask, date, time, toolsProvided, urgent, desc, photo]);
+
+  const tasksForType = useMemo(() => (serviceType ? TASKS[serviceType] || [] : []), [serviceType]);
+
+  // --- validation & "Next" gating ---
+  const errors = useMemo(
+    () => ({
+      serviceType: !serviceType,
+      serviceTask: !serviceTask,
+      date: !date,
+      time: !time,
+      toolsProvided: toolsProvided === null,
+      urgent: urgent === null,
+      desc: desc.trim().length < 3, // a bit more forgiving
+    }),
+    [serviceType, serviceTask, date, time, toolsProvided, urgent, desc]
+  );
+
+  const canNext = useMemo(() => Object.values(errors).every((v) => !v), [errors]);
+
+  // Date/Time handlers
+  const handleDateChange = (_ev: DateTimePickerEvent, selected?: Date) => {
+    setShowDate(false);
+    if (selected) setDate(selected);
+  };
+  const handleTimeChange = (_ev: DateTimePickerEvent, selected?: Date) => {
+    setShowTime(false);
+    if (selected) setTime(selected);
+  };
+
+  // Image picker
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") return;
@@ -83,52 +134,22 @@ export default function DescribeRequest() {
     if (!res.canceled) setPhoto(res.assets[0].uri);
   };
 
-  // select modals
-  const [openType, setOpenType] = useState(false);
-  const [openTask, setOpenTask] = useState(false);
-
-  const tasksForType = useMemo(
-    () => (serviceType ? TASKS[serviceType] || [] : []),
-    [serviceType]
-  );
-
-  const canNext = useMemo(
-    () =>
-      !!serviceType &&
-      !!serviceTask &&
-      !!date &&
-      !!time &&
-      toolsProvided !== null &&
-      urgent !== null &&
-      desc.trim().length > 5,
-    [serviceType, serviceTask, date, time, toolsProvided, urgent, desc]
-  );
-
-  // ---- Typed handlers fix for DateTimePicker ----
-  const handleDateChange = (_ev: DateTimePickerEvent, selected?: Date) => {
-    setShowDate(false);
-    if (selected) setDate(selected);
-  };
-  const handleTimeChange = (_ev: DateTimePickerEvent, selected?: Date) => {
-    setShowTime(false);
-    if (selected) setTime(selected);
-  };
-
   const onNext = async () => {
-    if (!canNext) return;
-    await AsyncStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        serviceType,
-        serviceTask,
-        date: date?.toISOString(),
-        time: time?.toISOString(),
-        toolsProvided,
-        urgent,
-        desc: desc.trim(),
-        photo,
-      })
-    );
+    if (!canNext) {
+      Alert.alert("Incomplete", "Please complete all required fields to continue.");
+      return;
+    }
+    const payload = {
+      serviceType,
+      serviceTask,
+      date: date?.toISOString(),
+      time: time?.toISOString(),
+      toolsProvided,
+      urgent,
+      desc: desc.trim(),
+      photo,
+    };
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     router.push(NEXT_ROUTE);
   };
 
@@ -145,17 +166,11 @@ export default function DescribeRequest() {
           position: "relative",
         }}
       >
-        <View
-          sx={{ position: "absolute", left: 0, right: 0, top: 4, alignItems: "center" }}
-          pointerEvents="none"
-        >
+        <View sx={{ position: "absolute", left: 0, right: 0, top: 4, alignItems: "center" }} pointerEvents="none">
           <Image source={LOGO} sx={{ width: Math.min(width * 0.78, 340), height: 66 }} resizeMode="contain" />
         </View>
 
-        <Pressable
-          onPress={() => router.back()}
-          sx={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-        >
+        <Pressable onPress={() => router.back()} sx={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}>
           <ArrowLeft color={C.text} size={26} strokeWidth={2.4} />
         </Pressable>
       </View>
@@ -163,15 +178,10 @@ export default function DescribeRequest() {
       <ScrollView contentContainerStyle={{ paddingBottom: 96 }} showsVerticalScrollIndicator={false}>
         <View sx={{ px: 14, pt: 12 }}>
           <Text sx={{ color: C.sub, fontSize: 12, mb: 6 }}>2 of 4 | Post a Service Request</Text>
-          <Text sx={{ color: C.text, fontSize: 24, fontWeight: "900", mb: 14 }}>
-            Step 2: Describe Your Request
-          </Text>
+          <Text sx={{ color: C.text, fontSize: 24, fontWeight: "900", mb: 14 }}>Step 2: Describe Your Request</Text>
 
-          {/* SECTION: Service Request Details */}
           <Text sx={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Service Request Details</Text>
-          <Text sx={{ color: C.sub, mt: 4, mb: 12 }}>
-            Please fill in the service request details to proceed.
-          </Text>
+          <Text sx={{ color: C.sub, mt: 4, mb: 12 }}>Please fill in the service request details to proceed.</Text>
 
           {/* Service Type / Task */}
           <Row>
@@ -194,18 +204,14 @@ export default function DescribeRequest() {
             <Col>
               <Label>Preferred Date</Label>
               <Pressable onPress={() => setShowDate(true)} sx={fieldBox}>
-                <Text sx={{ color: date ? C.text : C.placeholder }}>
-                  {date ? formatDate(date) : "dd/mm/yyyy"}
-                </Text>
+                <Text sx={{ color: date ? C.text : C.placeholder }}>{date ? formatDate(date) : "dd/mm/yyyy"}</Text>
                 <Calendar color={C.sub} size={18} />
               </Pressable>
             </Col>
             <Col>
               <Label>Preferred Time</Label>
               <Pressable onPress={() => setShowTime(true)} sx={fieldBox}>
-                <Text sx={{ color: time ? C.text : C.placeholder }}>
-                  {time ? formatTime(time) : "--:-- --"}
-                </Text>
+                <Text sx={{ color: time ? C.text : C.placeholder }}>{time ? formatTime(time) : "--:-- --"}</Text>
                 <Clock color={C.sub} size={18} />
               </Pressable>
             </Col>
@@ -246,7 +252,7 @@ export default function DescribeRequest() {
             />
           </View>
 
-          {/* SECTION: Upload Image */}
+          {/* Upload Image */}
           <View sx={{ mt: 22 }}>
             <Text sx={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Upload Image</Text>
             <Text sx={{ color: C.sub, mt: 4, mb: 12 }}>
@@ -295,6 +301,9 @@ export default function DescribeRequest() {
               )}
             </View>
           </View>
+
+          {/* What's missing (if any) */}
+          <MissingHint errors={errors} />
         </View>
       </ScrollView>
 
@@ -512,6 +521,19 @@ function PickerModal({
       </Pressable>
     </Modal>
   );
+}
+
+function MissingHint({ errors }: { errors: Record<string, boolean> }) {
+  const missing: string[] = [];
+  if (errors.serviceType) missing.push("Service Type");
+  if (errors.serviceTask) missing.push("Service Task");
+  if (errors.date) missing.push("Preferred Date");
+  if (errors.time) missing.push("Preferred Time");
+  if (errors.toolsProvided) missing.push("Tools Provided");
+  if (errors.urgent) missing.push("Urgent");
+  if (errors.desc) missing.push("Description");
+  if (missing.length === 0) return null;
+  return <Text sx={{ color: C.sub, fontSize: 12, mt: 10 }}>Missing: {missing.join(", ")}</Text>;
 }
 
 function formatDate(d: Date) {
