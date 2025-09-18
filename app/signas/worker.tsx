@@ -52,7 +52,7 @@ export default function SignUp() {
     setTimeout(() => {
       setIsLoading(false)
       Alert.alert('Success', `Account created for ${fullName}`)
-      router.replace('/login/login')
+      router.replace('/_sitemap')
     }, 1100)
   }
 
