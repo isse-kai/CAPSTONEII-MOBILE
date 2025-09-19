@@ -33,7 +33,7 @@ export default function ClientLogin() {
 
   const handleLogin = () => {
     if (!email?.trim() || !password?.trim()) return
-    router.push('/home/home')
+    router.push('/_sitemap')
   }
 
   if (!fontsLoaded) {
