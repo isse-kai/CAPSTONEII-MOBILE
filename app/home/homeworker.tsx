@@ -2,14 +2,14 @@ import { useRouter, type Href } from "expo-router";
 import { Briefcase, Menu, Search } from "lucide-react-native";
 import { useState } from "react";
 import {
-    Dimensions,
-    Image,
-    Platform,
-    Pressable,
-    SafeAreaView,
-    Text,
-    TextInput,
-    View,
+  Dimensions,
+  Image,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 const { width } = Dimensions.get("window");
@@ -192,7 +192,7 @@ export default function WorkerHome() {
 
         <Pressable
           onPress={() =>
-            router.push({ pathname: "/home/home" } as Href) // change to '/worker/requests' later
+            router.push({ pathname: "/WokerForms/WorkerForms1" } as Href) // change to '/worker/requests' later
           }
           style={({ pressed }) => ({
             backgroundColor: pressed ? C.blueDark : C.blue,
