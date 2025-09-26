@@ -10,9 +10,21 @@ export default function ClientNavbar() {
   const pathname = usePathname()
 
   const navItems = [
-    { label: 'Home', route: '/client/home', icon: require('../../assets/home-icon.png') },
-    { label: 'Schedule', route: '/client/schedule', icon: require('../../assets/calendar-icon.png') },
-    { label: 'Profile', route: '/client/profile', icon: require('../../assets/profile-icon.png') },
+    {
+      label: 'Home',
+      route: '/client/clienthome',
+      icon: require('../../assets/home-icon.png'),
+    },
+    {
+      label: 'Messages',
+      route: '/client/clientchat',
+      icon: require('../../assets/chat-icon.png'),
+    },
+    {
+      label: 'Profile',
+      route: '/client/profile/dashboard',
+      icon: require('../../assets/profile-icon.png'),
+    },
   ]
 
   return (

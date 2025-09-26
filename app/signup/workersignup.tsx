@@ -5,12 +5,12 @@ import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import {
-    Image,
-    ImageBackground,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
 } from 'react-native'
 
 export default function WorkerSignup() {

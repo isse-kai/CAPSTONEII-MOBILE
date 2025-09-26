@@ -4,14 +4,16 @@ import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import React, { useState } from 'react'
 import {
-    Alert,
-    Image,
-    ImageBackground,
-    KeyboardAvoidingView,
-    Platform,
-    View as RNView,
-    TextInput,
-    TouchableOpacity,
+  Alert,
+  Dimensions,
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  View as RNView,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { loginUser } from '../../supabase/auth'
@@ -19,6 +21,7 @@ import { loginUser } from '../../supabase/auth'
 export default function Login() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const screenHeight = Dimensions.get('window').height
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -47,7 +50,7 @@ export default function Login() {
       if (role === 'client') {
         router.push('/client/clienthome')
       } else {
-        router.push('/worker/home')
+        router.push('/worker/workerhome')
       }
     } catch (err: any) {
       Alert.alert('Login Failed', err.message)
@@ -73,12 +76,15 @@ export default function Login() {
             paddingBottom: insets.bottom + 12,
           }}
         >
-          <View
-            style={{
-              flex: 1,
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              minHeight: screenHeight - insets.top - insets.bottom - 24,
               paddingHorizontal: 16,
               justifyContent: 'center',
             }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
             <MotiView
               from={{ opacity: 0, translateY: 20 }}
@@ -87,15 +93,16 @@ export default function Login() {
               style={{ gap: 20 }}
             >
               {/* Logo */}
-              <View sx={{ alignItems: 'center', mb: -8 }}>
+                <View sx={{ alignItems: 'center', mt: -150, mb: -60 }}>
                 <Image
-                  source={require('../../assets/jdklogo.png')}
-                  style={{ width: 120, height: 120, resizeMode: 'contain' }}
+                    source={require('../../assets/jdklogo.png')}
+                    style={{ width: 250, height: 250, resizeMode: 'contain' }}
                 />
-              </View>
+                </View>
+
 
               {/* Title */}
-              <View sx={{ alignItems: 'center', mt: -10, mb: 4 }}>
+              <View sx={{ alignItems: 'left', mt: -10, mb: 4 }}>
                 <Text
                   sx={{
                     fontSize: 22,
@@ -178,6 +185,7 @@ export default function Login() {
                     fontSize: 18,
                     fontFamily: 'Poppins-Bold',
                     color: '#fff',
+                    lineHeight: 22,
                   }}
                 >
                   {isLoading ? 'Logging in...' : 'Login'}
@@ -196,7 +204,7 @@ export default function Login() {
                 <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>
                   Don’t have an account?{' '}
                 </Text>
-                <Pressable onPress={() => router.push('/signup')}>
+                <Pressable onPress={() => router.push('./signup/clientsignup')}>
                   <Text
                     sx={{
                       fontSize: 14,
@@ -210,7 +218,7 @@ export default function Login() {
                 </Pressable>
               </View>
             </MotiView>
-          </View>
+          </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
     </ImageBackground>
