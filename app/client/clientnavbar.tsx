@@ -20,9 +20,14 @@ export default function ClientNavbar() {
       route: '/client/clientchat',
       icon: require('../../assets/chat-icon.png'),
     },
+     {
+      label: 'Request Service',
+      route: './forms/request',
+      icon: require('../../assets/add-icon.png'),
+    },
     {
       label: 'Profile',
-      route: '/client/profile/dashboard',
+      route: '/client/clientprofile',
       icon: require('../../assets/profile-icon.png'),
     },
   ]
