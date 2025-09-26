@@ -4,7 +4,7 @@
     "slug": "CAPSTONEII-MOBILE",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/jdklogo.png",
+    "icon": "./assets/jdklogo2.png",
     "scheme": "capstoneiimobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/jdklogo.png",
+        "foregroundImage": "./assets/jdklogo2.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true

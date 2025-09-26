@@ -48,9 +48,9 @@ export default function Login() {
       console.log('Logged in:', { token, role, profile })
 
       if (role === 'client') {
-        router.push('/client/clienthome')
+        router.push('/clientpage/clienthome')
       } else {
-        router.push('/worker/workerhome')
+        router.push('/workerpage/workerhome')
       }
     } catch (err: any) {
       Alert.alert('Login Failed', err.message)
@@ -204,7 +204,7 @@ export default function Login() {
                 <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>
                   Don’t have an account?{' '}
                 </Text>
-                <Pressable onPress={() => router.push('./signup/clientsignup')}>
+                <Pressable onPress={() => router.push('./signup/roles')}>
                   <Text
                     sx={{
                       fontSize: 14,

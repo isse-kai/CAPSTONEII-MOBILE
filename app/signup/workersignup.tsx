@@ -1,6 +1,6 @@
 import { Picker } from '@react-native-picker/picker'
 import { Pressable, Text, TextInput, View } from 'dripsy'
-import Checkbox from 'expo-checkbox'
+import { Checkbox } from 'expo-checkbox'
 import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'

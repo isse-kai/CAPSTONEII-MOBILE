@@ -7,7 +7,6 @@ export async function loginUser(email: string, password: string) {
   if (error) throw new Error(error.message)
 
   const token = data.session?.access_token
-  const userId = data.user?.id
 
   // Check profile tables
   let profile = await getClientByEmail(email)
@@ -61,3 +60,6 @@ export async function signupClient({
 
   return data
 }
+
+export { supabase }
+
