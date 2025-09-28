@@ -1,20 +1,35 @@
-import { Picker } from '@react-native-picker/picker'
-import { Pressable, Text, TextInput, View } from 'dripsy'
-import { Checkbox } from 'expo-checkbox'
+import { Pressable, Text, View } from 'dripsy'
 import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
-import { useState } from 'react'
+import { MotiView } from 'moti'
+import React, { useState } from 'react'
 import {
-  Image,
-  ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
+    Alert,
+    Dimensions,
+    Image,
+    ImageBackground,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    TextInput
 } from 'react-native'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { signupWorker } from '../../supabase/auth'
 
 export default function WorkerSignup() {
   const router = useRouter()
+  const insets = useSafeAreaInsets()
+  const screenHeight = Dimensions.get('window').height
+
+  const [first_name, setFirstName] = useState('')
+  const [last_name, setLastName] = useState('')
+  const [sex, setSex] = useState('')
+  const [email_address, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm_password, setConfirmPassword] = useState('')
+  const [is_email_opt_in, setIsEmailOptIn] = useState(false)
+  const [is_agreed_to_terms, setIsAgreedToTerms] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
@@ -22,26 +37,49 @@ export default function WorkerSignup() {
     'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
   })
 
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    sex: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    agreedToTerms: false,
-  })
-
-  const isFormValid =
-    form.firstName &&
-    form.lastName &&
-    form.sex &&
-    form.email &&
-    form.password.length >= 8 &&
-    form.password === form.confirmPassword &&
-    form.agreedToTerms
-
   if (!fontsLoaded) return null
+
+  const handleSignup = async () => {
+    if (
+      !first_name ||
+      !last_name ||
+      !sex ||
+      !email_address ||
+      !password ||
+      !confirm_password
+    ) {
+      Alert.alert('Missing Fields', 'Please fill out all required fields.')
+      return
+    }
+
+    if (password !== confirm_password) {
+      Alert.alert('Password Mismatch', 'Passwords do not match.')
+      return
+    }
+
+    if (!is_agreed_to_terms) {
+      Alert.alert('Terms Required', 'You must agree to the terms and conditions.')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      await signupWorker({
+        email: email_address,
+        password,
+        first_name,
+        last_name,
+        sex,
+        is_email_opt_in,
+      })
+
+      router.push('./workerpage/home')
+    } catch (err: any) {
+      Alert.alert('Signup Failed', err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <ImageBackground
@@ -49,273 +87,135 @@ export default function WorkerSignup() {
       style={{ flex: 1 }}
       resizeMode="cover"
     >
-      <SafeAreaView style={{ flex: 1 }}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <SafeAreaView
+          style={{
+            flex: 1,
+            paddingTop: insets.top + 12,
+            paddingBottom: insets.bottom + 12,
+          }}
         >
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1 }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              minHeight: screenHeight - insets.top - insets.bottom - 24,
+              paddingHorizontal: 16,
+              justifyContent: 'center',
+            }}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
-            <View
-              sx={{
-                flexGrow: 1,
-                justifyContent: 'center',
-                paddingHorizontal: 16,
-                paddingVertical: 16,
-                bg: 'transparent',
-              }}
+            <MotiView
+              from={{ opacity: 0, translateY: 20 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: 'timing', duration: 500 }}
+              style={{ gap: 20 }}
             >
               {/* Logo */}
-              <Image
-                source={require('../../assets/jdklogo.png')}
-                style={{
-                  width: 250,
-                  height: 250,
-                  alignSelf: 'center',
-                  marginBottom: -80,
-                  marginTop: -90,
-                }}
-                resizeMode="contain"
-              />
-
-              {/* Google Login */}
-              <Pressable onPress={() => router.push('/signup/workersignup')}>
-                {({ hovered }) => (
-                  <View
-                    sx={{
-                      flexDirection: 'row',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      bg: hovered ? '#008CFC' : 'transparent',
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      marginBottom: 16,
-                      borderWidth: 1,
-                      borderColor: '#008CFC',
-                    }}
-                  >
-                    <Image
-                      source={require('../../assets/google.png')}
-                      style={{ width: 24, height: 24, marginRight: 8 }}
-                      resizeMode="contain"
-                    />
-                    <Text
-                      sx={{
-                        textAlign: 'center',
-                        color: hovered ? 'background' : '#008CFC',
-                        fontWeight: 'bold',
-                        fontSize: 18,
-                        fontFamily: 'Poppins-ExtraBold',
-                      }}
-                    >
-                      Continue with Google
-                    </Text>
-                  </View>
-                )}
-              </Pressable>
-
-              {/* Name */}
-              <Text sx={{ fontFamily: 'Poppins-Bold', fontSize: 16, marginBottom: 4 }}>
-                Name
-              </Text>
-              <View sx={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
-                <TextInput
-                  placeholder="First Name"
-                  value={form.firstName}
-                  onChangeText={text => setForm({ ...form, firstName: text })}
-                  sx={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: '#ccc',
-                    borderRadius: 8,
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    fontSize: 15,
-                    fontFamily: 'Poppins-Regular',
-                  }}
-                />
-                <TextInput
-                  placeholder="Last Name"
-                  value={form.lastName}
-                  onChangeText={text => setForm({ ...form, lastName: text })}
-                  sx={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: '#ccc',
-                    borderRadius: 8,
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    fontSize: 15,
-                    fontFamily: 'Poppins-Regular',
-                  }}
+              <View sx={{ alignItems: 'center', mt: -24, mb: -8 }}>
+                <Image
+                  source={require('../../assets/jdklogo.png')}
+                  style={{ width: 120, height: 120, resizeMode: 'contain' }}
                 />
               </View>
 
-              {/* Sex */}
-              <Text sx={{ fontFamily: 'Poppins-Bold', fontSize: 16, marginBottom: 4 }}>
-                Sex
-              </Text>
-              <View
-                sx={{
-                  borderWidth: 1,
-                  borderColor: '#ccc',
-                  borderRadius: 8,
-                  marginBottom: 16,
-                  overflow: 'hidden',
-                }}
-              >
-                <Picker
-                  selectedValue={form.sex}
-                  onValueChange={value => setForm({ ...form, sex: value })}
-                  style={{ height: 50, fontSize: 15 }}
-                >
-                  <Picker.Item label="Select Sex" value="" />
-                  <Picker.Item label="Male" value="male" />
-                  <Picker.Item label="Female" value="female" />
-                </Picker>
-              </View>
-
-              {/* Email */}
-              <Text sx={{ fontFamily: 'Poppins-Bold', fontSize: 16, marginBottom: 4 }}>
-                Email Address
-              </Text>
-              <TextInput
-                placeholder="Email Address"
-                value={form.email}
-                onChangeText={text => setForm({ ...form, email: text })}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                sx={{
-                  borderWidth: 1,
-                  borderColor: '#ccc',
-                  borderRadius: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 10,
-                  marginBottom: 16,
-                  fontSize: 15,
-                  fontFamily: 'Poppins-Regular',
-                }}
-              />
-
-              {/* Password */}
-              <Text sx={{ fontFamily: 'Poppins-Bold', fontSize: 16, marginBottom: 4 }}>
-                Password
-              </Text>
-              <TextInput
-                placeholder="Password (8 or more characters)"
-                value={form.password}
-                onChangeText={text => setForm({ ...form, password: text })}
-                secureTextEntry
-                sx={{
-                  borderWidth: 1,
-                  borderColor: '#ccc',
-                  borderRadius: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 10,
-                  marginBottom: 16,
-                  fontSize: 15,
-                  fontFamily: 'Poppins-Regular',
-                }}
-              />
-
-              {/* Confirm Password */}
-              <Text sx={{ fontFamily: 'Poppins-Bold', fontSize: 16, marginBottom: 4 }}>
-                Confirm Password
-              </Text>
-              <TextInput
-                placeholder="Confirm Password"
-                value={form.confirmPassword}
-                onChangeText={text => setForm({ ...form, confirmPassword: text })}
-                secureTextEntry
-                sx={{
-                  borderWidth: 1,
-                  borderColor: '#ccc',
-                  borderRadius: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 10,
-                  marginBottom: 16,
-                  fontSize: 15,
-                  fontFamily: 'Poppins-Regular',
-                }}
-              />
-
-              {/* Terms and Conditions */}
-              <View
-                sx={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginBottom: 16,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <Checkbox
-                  value={form.agreedToTerms}
-                  onValueChange={value => setForm({ ...form, agreedToTerms: value })}
-                  color={form.agreedToTerms ? '#008CFC' : undefined}
-                  style={{ marginTop: 2 }}
-                />
+              {/* Title */}
+              <View sx={{ alignItems: 'center', mt: -10, mb: 4 }}>
                 <Text
                   sx={{
-                    marginLeft: 8,
-                    fontSize: 15,
-                    fontFamily: 'Poppins-Regular',
-                    color: 'text',
-                    flex: 1,
-                    flexWrap: 'wrap',
+                    fontSize: 22,
+                    fontFamily: 'Poppins-ExtraBold',
+                    color: '#000000',
                   }}
                 >
-                  I agree to JDK HOMECARE’s{' '}
-                  <Pressable onPress={() => router.push('/terms')}>
-                    <Text
-                      sx={{
-                        fontSize: 15,
-                        fontFamily: 'Poppins-Regular',
-                        color: '#008CFC',
-                        textDecorationLine: 'underline',
-                        marginBottom: -8,
-                      }}
-                    >
-                      Terms of Service
-                    </Text>
-                  </Pressable>{' '}
-                  and{' '}
-                  <Pressable onPress={() => router.push('/privacy')}>
-                    <Text
-                      sx={{
-                        fontSize: 15,
-                        fontFamily: 'Poppins-Regular',
-                        color: '#008CFC',
-                        textDecorationLine: 'underline',
-                        marginBottom: -8,
-                      }}
-                    >
-                      Privacy Policy
-                    </Text>
-                  </Pressable>
-                  .
+                  SIGN UP
                 </Text>
               </View>
 
-              {/* Create Account Button */}
-              <Pressable
+              {/* Input Fields */}
+              {[
+                { label: 'First Name', value: first_name, setter: setFirstName },
+                { label: 'Last Name', value: last_name, setter: setLastName },
+                { label: 'Sex', value: sex, setter: setSex },
+                { label: 'Email Address', value: email_address, setter: setEmail },
+                { label: 'Password', value: password, setter: setPassword, secure: true },
+                {
+                  label: 'Confirm Password',
+                  value: confirm_password,
+                  setter: setConfirmPassword,
+                  secure: true,
+                },
+              ].map(({ label, value, setter, secure }) => (
+                <View key={label}>
+                  <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>{label}</Text>
+                  <TextInput
+                    value={value}
+                    onChangeText={setter}
+                    placeholder={`Enter ${label.toLowerCase()}`}
+                    placeholderTextColor="#ccc"
+                    secureTextEntry={secure}
+                    style={{
+                      backgroundColor: '#ffffffcc',
+                      borderRadius: 10,
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      fontSize: 16,
+                    }}
+                  />
+                </View>
+              ))}
+
+            <Pressable
                 onPress={() => {
-                  if (isFormValid) {
-                    console.log('Create account with:', form)
-                    // router.push('/worker/dashboard')
-                  }
+                    const next = !(is_email_opt_in && is_agreed_to_terms)
+                    setIsEmailOptIn(next)
+                    setIsAgreedToTerms(next)
                 }}
+                sx={{ flexDirection: 'row', alignItems: 'center', mt: 12 }}
+                >
+                <View
+                    sx={{
+                    width: 18,
+                    height: 18,
+                    borderWidth: 1,
+                    borderColor: '#000',
+                    borderRadius: 4,
+                    bg: is_email_opt_in && is_agreed_to_terms ? '#008CFC' : 'transparent',
+                    mr: 10,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    }}
+                >
+                    {is_email_opt_in && is_agreed_to_terms && (
+                    <Text sx={{ color: '#fff', fontSize: 12 }}>✓</Text>
+                    )}
+                </View>
+
+                <Text
+                    sx={{
+                    fontSize: 14,
+                    fontFamily: 'Poppins-Regular',
+                    color: is_email_opt_in && is_agreed_to_terms ? '#008CFC' : '#000',
+                    textDecorationLine: is_email_opt_in && is_agreed_to_terms ? 'underline' : 'none',
+                    }}
+                >
+                    I agree to the Terms and Conditions and subscribe to email updates
+                </Text>
+                </Pressable>
+
+              {/* Signup Button */}
+              <Pressable
+                onPress={handleSignup}
+                disabled={isLoading}
                 sx={{
-                  backgroundColor: isFormValid ? '#008CFC' : '#ccc',
-                  paddingVertical: 10,
-                  borderRadius: 8,
+                  bg: '#008CFC',
+                  borderRadius: 10,
+                  py: 14,
                   alignItems: 'center',
-                  marginBottom: 16,
-                  opacity: isFormValid ? 1 : 0.6,
                 }}
-                disabled={!isFormValid}
               >
                 <Text
                   sx={{
@@ -324,33 +224,27 @@ export default function WorkerSignup() {
                     color: '#fff',
                   }}
                 >
-                  Create My Account
+                  {isLoading ? 'Signing up...' : 'Sign Up'}
                 </Text>
               </Pressable>
 
-              {/* Login Prompt */}
+              {/* Already have account */}
               <View
                 sx={{
                   flexDirection: 'row',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  marginTop: 12,
+                  mt: 8,
                 }}
               >
-                <Text
-                  sx={{
-                    fontSize: 15,
-                    fontFamily: 'Poppins-Regular',
-                    color: 'text',
-                  }}
-                >
+                <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>
                   Already have an account?{' '}
                 </Text>
-                <Pressable onPress={() => router.push('/login/login')}>
+                <Pressable onPress={() => router.push('../login/login')}>
                   <Text
                     sx={{
-                      fontSize: 15,
-                      fontFamily: 'Poppins-Regular',
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Bold',
                       color: '#008CFC',
                       textDecorationLine: 'underline',
                     }}
@@ -359,10 +253,10 @@ export default function WorkerSignup() {
                   </Text>
                 </Pressable>
               </View>
-            </View>
+            </MotiView>
           </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </ImageBackground>
   )
 }

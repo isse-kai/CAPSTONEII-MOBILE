@@ -4,14 +4,14 @@ import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import React, { useState } from 'react'
 import {
-    Alert,
-    Dimensions,
-    Image,
-    ImageBackground,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    TextInput
+  Alert,
+  Dimensions,
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TextInput
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { signupClient } from '../../supabase/auth'

@@ -3,9 +3,9 @@ import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import { useEffect, useState } from 'react'
-import { SafeAreaView, ScrollView } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import ClientNavbar from './clientnavbar'
+import { ScrollView } from 'react-native'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import ClientNavbar from './clientnavbar/navbar'
 
 export default function ClientHome() {
   const router = useRouter()
@@ -95,7 +95,7 @@ export default function ClientHome() {
                 Let’s get started by setting up your preferences and exploring available services.
               </Text>
               <Pressable
-                onPress={() => router.push('/client/getting-started')}
+                onPress={() => router.push('./gettingstarted')}
                 sx={{
                   mt: 12,
                   bg: '#0284c7',

@@ -61,5 +61,40 @@ export async function signupClient({
   return data
 }
 
+// Worker Signup
+export async function signupWorker({
+  email,
+  password,
+  first_name,
+  last_name,
+  sex,
+  is_email_opt_in,
+}: {
+  email: string
+  password: string
+  first_name: string
+  last_name: string
+  sex: string
+  is_email_opt_in: boolean
+}) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        role: 'worker',
+        first_name,
+        last_name,
+        sex,
+        is_email_opt_in,
+      },
+    },
+  })
+
+  if (error) throw new Error(error.message)
+
+  return data
+}
+
 export { supabase }
 
