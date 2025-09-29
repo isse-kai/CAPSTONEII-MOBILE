@@ -73,7 +73,7 @@ export default function ClientSignup() {
         is_email_opt_in,
       })
 
-      router.push('/client/clienthome')
+      router.push('./client/home')
     } catch (err: any) {
       Alert.alert('Signup Failed', err.message)
     } finally {

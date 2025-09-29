@@ -48,7 +48,7 @@ export default function Login() {
       console.log('Logged in:', { token, role, profile })
 
       if (role === 'client') {
-        router.push('/clientpage/clienthome')
+        router.push('/clientpage/home')
       } else {
         router.push('/workerpage/workerhome')
       }

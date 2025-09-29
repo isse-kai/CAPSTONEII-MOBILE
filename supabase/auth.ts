@@ -1,5 +1,5 @@
-import { supabase } from './client'
-import { getClientByEmail, getWorkerByEmail } from './db'
+import { getClientByEmail, getWorkerByEmail } from './client'
+import { supabase } from './db'
 
 // User Login
 export async function loginUser(email: string, password: string) {
@@ -19,11 +19,7 @@ export async function loginUser(email: string, password: string) {
 
   if (!profile) throw new Error('User not found in profile table')
 
-  return {
-    token,
-    role,
-    profile,
-  }
+  return { token, role, profile }
 }
 
 // Client Signup
@@ -57,7 +53,6 @@ export async function signupClient({
   })
 
   if (error) throw new Error(error.message)
-
   return data
 }
 
@@ -92,8 +87,34 @@ export async function signupWorker({
   })
 
   if (error) throw new Error(error.message)
-
   return data
+}
+
+// Get current user
+export async function getCurrentUser() {
+  const { data, error } = await supabase.auth.getUser()
+  if (error || !data?.user) throw new Error('User not authenticated')
+  return data.user
+}
+
+// Logout
+export async function logoutUser() {
+  const { error } = await supabase.auth.signOut()
+  if (error) throw new Error('Logout failed')
+}
+
+// Get session
+export async function getSession() {
+  const { data, error } = await supabase.auth.getSession()
+  if (error) throw new Error('Failed to get session')
+  return data.session
+}
+
+// Update metadata
+export async function updateUserMetadata(updates: Record<string, any>) {
+  const { data, error } = await supabase.auth.updateUser({ data: updates })
+  if (error) throw new Error('Failed to update user metadata')
+  return data.user
 }
 
 export { supabase }

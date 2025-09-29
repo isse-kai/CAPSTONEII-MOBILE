@@ -12,23 +12,23 @@ export default function ClientNavbar() {
   const navItems = [
     {
       label: 'Home',
-      route: '/client/clienthome',
-      icon: require('../../assets/home-icon.png'),
+      route: './home',
+      icon: require('../../../assets/home-icon.png'),
     },
     {
       label: 'Messages',
       route: '/client/clientchat',
-      icon: require('../../assets/chat-icon.png'),
+      icon: require('../../../assets/chat-icon.png'),
     },
      {
       label: 'Add Service',
       route: './forms/request',
-      icon: require('../../assets/add-icon.png'),
+      icon: require('../../../assets/add-icon.png'),
     },
     {
       label: 'Profile',
-      route: '/client/clientprofile',
-      icon: require('../../assets/profile-icon.png'),
+      route: './clientsidebar/profile',
+      icon: require('../../../assets/profile-icon.png'),
     },
   ]
 

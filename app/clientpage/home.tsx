@@ -5,6 +5,8 @@ import { MotiView } from 'moti'
 import { useEffect, useState } from 'react'
 import { ScrollView } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { getCurrentUser } from '../../supabase/auth'
+import { getClientByAuthUid } from '../../supabase/client'
 import ClientNavbar from './clientnavbar/navbar'
 
 export default function ClientHome() {
@@ -16,14 +18,20 @@ export default function ClientHome() {
     'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
   })
 
-  const [isNewClient, setIsNewClient] = useState(true) // Replace with real logic
+  const [firstName, setFirstName] = useState('')
 
   useEffect(() => {
-    const checkClientStatus = async () => {
-      const result = await fetchClientStatus()
-      setIsNewClient(result.isNew)
+    const loadUserProfile = async () => {
+      try {
+        const user = await getCurrentUser()
+        const client = await getClientByAuthUid(user.id)
+        if (client?.first_name) setFirstName(client.first_name)
+      } catch (err) {
+        console.warn('Failed to load client profile:', err)
+      }
     }
-    checkClientStatus()
+
+    loadUserProfile()
   }, [])
 
   if (!fontsLoaded) return null
@@ -60,63 +68,8 @@ export default function ClientHome() {
               mb: 24,
             }}
           >
-            Welcome back 👋
+            Welcome, {firstName ? `, ${firstName}` : ''}
           </Text>
-
-          {isNewClient && (
-            <MotiView
-              from={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 400 }}
-              style={{
-                backgroundColor: '#e0f2fe',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 20,
-              }}
-            >
-              <Text
-                sx={{
-                  fontSize: 16,
-                  fontFamily: 'Poppins-Bold',
-                  color: '#0369a1',
-                  marginBottom: 6,
-                }}
-              >
-                Welcome to JDK Homecare!
-              </Text>
-              <Text
-                sx={{
-                  fontSize: 14,
-                  fontFamily: 'Poppins-Regular',
-                  color: '#0369a1',
-                }}
-              >
-                Let’s get started by setting up your preferences and exploring available services.
-              </Text>
-              <Pressable
-                onPress={() => router.push('./gettingstarted')}
-                sx={{
-                  mt: 12,
-                  bg: '#0284c7',
-                  borderRadius: 8,
-                  py: 10,
-                  px: 16,
-                  alignSelf: 'flex-start',
-                }}
-              >
-                <Text
-                  sx={{
-                    fontSize: 14,
-                    fontFamily: 'Poppins-Bold',
-                    color: '#fff',
-                  }}
-                >
-                  Get Started
-                </Text>
-              </Pressable>
-            </MotiView>
-          )}
 
           <View sx={{ gap: 16 }}>
             <Text
@@ -196,8 +149,6 @@ export default function ClientHome() {
                 Submit a new service request and connect with providers.
               </Text>
             </Pressable>
-
-
           </View>
         </MotiView>
       </ScrollView>
@@ -206,9 +157,4 @@ export default function ClientHome() {
       <ClientNavbar />
     </SafeAreaView>
   )
-}
-
-// Mock function — replace with real logic
-async function fetchClientStatus() {
-  return { isNew: true }
 }

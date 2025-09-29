@@ -1,31 +1,24 @@
-import { Text } from 'dripsy'
-import { TextInput, View } from 'react-native'
+import { Text, View } from 'dripsy';
+import { TextInput } from 'react-native';
 
-type Props = {
-  label: string
-  value: string
-  onChange: (text: string) => void
-  placeholder?: string
-  keyboardType?: 'default' | 'email-address'
-}
+type FormFieldProps = {
+  label: string;
+  value: string;
+  onChange: (text: string) => void;
+  placeholder?: string;
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+};
 
-export default function ProfileField({
+export default function FormField({
   label,
   value,
   onChange,
   placeholder,
   keyboardType = 'default',
-}: Props) {
+}: FormFieldProps) {
   return (
-    <View style={{ marginBottom: 16 }}>
-      <Text
-        sx={{
-          fontSize: 16,
-          fontFamily: 'Poppins-Bold',
-          color: '#0284c7',
-          mb: 6,
-        }}
-      >
+    <View sx={{ mb: 16 }}>
+      <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#0284c7', mb: 6 }}>
         {label}
       </Text>
       <TextInput
@@ -33,7 +26,6 @@ export default function ProfileField({
         onChangeText={onChange}
         placeholder={placeholder}
         keyboardType={keyboardType}
-        autoCapitalize="none"
         style={{
           borderWidth: 1,
           borderColor: '#d1d5db',
