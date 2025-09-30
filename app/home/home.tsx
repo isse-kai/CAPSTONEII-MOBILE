@@ -1,20 +1,16 @@
 // app/home/index.tsx
 import { useRouter, type Href } from "expo-router";
-import { Home, Menu, MessageCircle, Search } from "lucide-react-native";
-import { useState } from "react";
+import { Bell, Home, Menu, MessageCircle, Search, User } from "lucide-react-native";
 import {
   Dimensions,
-  Image,
   Platform,
   Pressable,
   SafeAreaView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
 const { width } = Dimensions.get("window");
-const LOGO = require("../../assets/jdklogo.png");
 
 const C = {
   bg: "#ffffff",
@@ -22,21 +18,19 @@ const C = {
   sub: "#475569",
   blue: "#1e86ff",
   blueDark: "#0c62c9",
-  inputBg: "#ffffff",
-  inputBorder: "#d9e3f0",
-  inputIcon: "#7b8aa0",
-  placeholder: "#93a3b5",
+  border: "#eef2f7",
+};
+
+const ROUTES = {
+  search: "/search" as Href,
+  notifications: "/notification/Notification" as Href,
+  profile: "/profile" as Href,
+  request: "/forms/request" as Href,
+  messages: "/chat/Messaging" as Href,
 };
 
 export default function ClientWelcome() {
   const router = useRouter();
-  const [q, setQ] = useState("");
-
-  const handleSearch = () => {
-    const query = q.trim();
-    if (!query) return;
-    router.push({ pathname: "/home/home", params: { q: query } } as Href);
-  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
@@ -47,31 +41,10 @@ export default function ClientWelcome() {
           paddingTop: 6,
           paddingBottom: 10,
           borderBottomWidth: 1,
-          borderBottomColor: "#eef2f7",
-          position: "relative",
+          borderBottomColor: C.border,
+          backgroundColor: "#fff",
         }}
       >
-        {/* Centered BIG logo */}
-        <View
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: 6,
-            alignItems: "center",
-          }}
-          pointerEvents="none"
-        >
-          <Image
-            source={LOGO}
-            style={{
-              width: Math.min(width * 0.7, 280),
-              height: 56,
-              resizeMode: "contain",
-            }}
-          />
-        </View>
-
         <View
           style={{
             flexDirection: "row",
@@ -79,70 +52,76 @@ export default function ClientWelcome() {
             justifyContent: "space-between",
           }}
         >
-          {/* Hamburger */}
+          {/* Left: Hamburger (bigger touch target) */}
           <Pressable
             onPress={() => {
               /* open drawer */
             }}
-            hitSlop={8}
+            hitSlop={12}
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
+              width: 52,
+              height: 52,
+              borderRadius: 26,
               alignItems: "center",
               justifyContent: "center",
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
           >
-            <Menu color={C.text} size={26} strokeWidth={2.5} />
+            <Menu color={C.text} size={30} strokeWidth={2.6} />
           </Pressable>
 
-          {/* Search input with icon */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: C.inputBg,
-              borderWidth: 1,
-              borderColor: C.inputBorder,
-              borderRadius: 999,
-              height: 38,
-              maxWidth: width * 0.58,
-              paddingLeft: 20,
-              paddingRight: 20,
-            }}
-          >
-            {/* Left icon nudged left */}
-            <Search
-              color={C.inputIcon}
-              size={18}
-              strokeWidth={2.25}
-              style={{ marginLeft: -2 }}
-            />
-
-            <TextInput
-              value={q}
-              onChangeText={setQ}
-              placeholder="Search"
-              placeholderTextColor={C.placeholder}
-              style={{
-                flex: 1,
-                color: C.text,
-                paddingVertical: 0,
-                paddingLeft: 6,
-                fontSize: 14,
-                minWidth: 120,
-              }}
-              returnKeyType="search"
-              onSubmitEditing={handleSearch}
-            />
-
-            {/* Tap-to-search icon */}
+          {/* Right: 3 big icons (Search • Bell • Profile) */}
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Pressable
-              hitSlop={8}
-              onPress={handleSearch}
-              style={{ marginLeft: 6, paddingHorizontal: 4 }}
+              onPress={() => router.push(ROUTES.search)}
+              hitSlop={12}
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 26,
+                alignItems: "center",
+                justifyContent: "center",
+                marginLeft: 2,
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Search"
             >
-              <Search color={C.inputIcon} size={18} strokeWidth={2.25} />
+              <Search color={C.text} size={26} strokeWidth={2.6} />
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push(ROUTES.notifications)}
+              hitSlop={12}
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 26,
+                alignItems: "center",
+                justifyContent: "center",
+                marginLeft: 4,
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Notifications"
+            >
+              <Bell color={C.text} size={26} strokeWidth={2.6} />
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push(ROUTES.profile)}
+              hitSlop={12}
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 26,
+                alignItems: "center",
+                justifyContent: "center",
+                marginLeft: 4,
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Profile"
+            >
+              <User color={C.text} size={26} strokeWidth={2.6} />
             </Pressable>
           </View>
         </View>
@@ -157,7 +136,7 @@ export default function ClientWelcome() {
           paddingHorizontal: 24,
         }}
       >
-        <Home color={C.blue} size={88} strokeWidth={2.5} style={{ marginBottom: 28 }} />
+        <Home color={C.blue} size={92} strokeWidth={2.6} style={{ marginBottom: 28 }} />
 
         <Text
           style={{
@@ -186,24 +165,26 @@ export default function ClientWelcome() {
         </Text>
 
         <Pressable
-          onPress={() => router.push({ pathname: "/forms/request" } as Href)}
+          onPress={() => router.push(ROUTES.request)}
           style={({ pressed }) => ({
             backgroundColor: pressed ? C.blueDark : C.blue,
-            paddingVertical: 14,
-            paddingHorizontal: 36,
-            borderRadius: 14,
+            paddingVertical: 16,
+            paddingHorizontal: 40,
+            borderRadius: 16,
             shadowColor: C.blue,
             shadowOpacity: Platform.OS === "android" ? 0.18 : 0.28,
             shadowRadius: 8,
             shadowOffset: { width: 0, height: 4 },
             elevation: 3,
           })}
+          accessibilityRole="button"
+          accessibilityLabel="Request Service Now"
         >
           <Text
             style={{
               color: "#fff",
               fontWeight: "800",
-              fontSize: 16,
+              fontSize: 17,
               textAlign: "center",
             }}
           >
@@ -212,35 +193,32 @@ export default function ClientWelcome() {
         </Pressable>
       </View>
 
-      {/* FLOATING MESSAGE BUTTON */}
-      <View
-        // so the overlay doesn't block other touches except the button
-        pointerEvents="box-none"
-        style={{ position: "absolute", right: 0, bottom: 0, left: 0 }}
-      >
+      {/* FLOATING MESSAGE BUTTON (bigger) */}
+      <View pointerEvents="box-none" style={{ position: "absolute", right: 0, bottom: 0, left: 0 }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open messages"
-          onPress={() => router.push({ pathname: "/chat/Messaging" } as Href)}
+          onPress={() => router.push(ROUTES.messages)}
+          hitSlop={12}
           style={({ pressed }) => ({
             position: "absolute",
             right: 18,
             bottom: 24,
-            width: 58,
-            height: 58,
-            borderRadius: 29,
+            width: 64,
+            height: 64,
+            borderRadius: 32,
             backgroundColor: C.blue,
             alignItems: "center",
             justifyContent: "center",
             transform: [{ scale: pressed ? 0.98 : 1 }],
             shadowColor: C.blue,
             shadowOpacity: Platform.OS === "android" ? 0.22 : 0.28,
-            shadowRadius: 10,
+            shadowRadius: 12,
             shadowOffset: { width: 0, height: 6 },
-            elevation: 6,
+            elevation: 7,
           })}
         >
-          <MessageCircle color="#fff" size={26} strokeWidth={2.5} />
+          <MessageCircle color="#fff" size={28} strokeWidth={2.6} />
         </Pressable>
       </View>
     </SafeAreaView>
