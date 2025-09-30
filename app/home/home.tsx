@@ -24,7 +24,7 @@ const C = {
 const ROUTES = {
   search: "/search" as Href,
   notifications: "/notification/Notification" as Href,
-  profile: "/profile" as Href,
+  profile: "/profile/Profile" as Href,
   request: "/forms/request" as Href,
   messages: "/chat/Messaging" as Href,
 };
