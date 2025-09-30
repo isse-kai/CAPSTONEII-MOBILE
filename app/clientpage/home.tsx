@@ -161,7 +161,7 @@ export default function ClientHome() {
                   source={banners[bannerIndex].image}
                   style={{
                     width: '100%',
-                    height: '100%',
+                    height: '200%',
                     resizeMode: 'contain',
                     position: 'absolute',
                   }}
