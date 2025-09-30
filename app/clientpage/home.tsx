@@ -143,8 +143,8 @@ export default function ClientHome() {
                 key={banners[bannerIndex].id}
                 source={banners[bannerIndex].image}
                 style={{
-                  width: 180, // fixed width
-                  height: 180, // fixed height
+                  width: '100%',
+                  height: '100%',
                   resizeMode: 'contain',
                   alignSelf: 'center',
                   marginBottom: 16,
