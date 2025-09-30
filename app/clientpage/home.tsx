@@ -113,37 +113,39 @@ export default function ClientHome() {
             </View>
 
             {/* Fade Banner Slideshow */}
-              <View
-                sx={{
-                  width: width - 32,
-                  height: 160,
-                  borderRadius: 12,
-                  overflow: 'hidden',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 2,
-                  elevation: 2,
-                }}
-              >
-                <AnimatePresence>
-                  <MotiImage
-                    key={banners[bannerIndex].id}
-                    source={banners[bannerIndex].image}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      resizeMode: 'cover',
-                      position: 'absolute',
-                    }}
-                    from={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ type: 'timing', duration: 800 }}
-                  />
-                </AnimatePresence>
-              </View>
+            <View
+              sx={{
+                width: width - 32,
+                height: 160,
+                borderRadius: 12,
+                overflow: 'hidden',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+                elevation: 2,
+                mb: 16,
+              }}
+            >
+              <AnimatePresence>
+                <MotiImage
+                  key={banners[bannerIndex].id}
+                  source={banners[bannerIndex].image}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    resizeMode: 'contain',
+                    position: 'absolute',
+                  }}
+                  from={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: 'timing', duration: 800 }}
+                />
+              </AnimatePresence>
+            </View>
 
+            {/* Service Request Section */}
             <View sx={{ gap: 16 }}>
               <Text
                 sx={{
@@ -158,18 +160,14 @@ export default function ClientHome() {
               <Pressable
                 onPress={() => router.push('./postrequest')}
                 sx={{
-                  bg: '#fff',
+                  borderWidth: 2,
+                  borderColor: '#008CFC',
                   borderRadius: 12,
                   p: 16,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 2,
-                  elevation: 2,
+                  bg: 'transparent',
                 }}
               >
                 <View sx={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  {/* Logo */}
                   <Image
                     source={require('../../assets/add-icon.png')}
                     style={{
@@ -178,8 +176,6 @@ export default function ClientHome() {
                       resizeMode: 'contain',
                     }}
                   />
-
-                  {/* Text Block */}
                   <View sx={{ flex: 1 }}>
                     <Text
                       sx={{
