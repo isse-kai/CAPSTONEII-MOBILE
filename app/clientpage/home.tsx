@@ -4,11 +4,20 @@ import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import { useEffect, useState } from 'react'
-import { ScrollView } from 'react-native'
+import { Dimensions, Image, ImageBackground, ScrollView } from 'react-native'
+import Carousel from 'react-native-reanimated-carousel'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getCurrentUser } from '../../supabase/auth'
 import { getClientByAuthUid } from '../../supabase/client'
 import ClientNavbar from './clientnavbar/navbar'
+
+const { width } = Dimensions.get('window')
+
+const banners = [
+  { id: 1, image: require('../../assets/banner.png') },
+  { id: 2, image: require('../../assets/banner-2.png') },
+  { id: 3, image: require('../../assets/banner-3.png') },
+]
 
 export default function ClientHome() {
   const router = useRouter()
@@ -38,6 +47,12 @@ export default function ClientHome() {
   if (!fontsLoaded) return null
 
   return (
+
+    <ImageBackground
+      source={require('../../assets/backgrounds/client-home-bg.jpg')} // replace with your actual image path
+      resizeMode="cover"
+      style={{ flex: 1 }}
+    >
     <SafeAreaView
       style={{
         flex: 1,
@@ -81,11 +96,11 @@ export default function ClientHome() {
             </Text>
 
             <View sx={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-              <Pressable onPress={() => router.push('../../assets/search.png')}>
+              <Pressable onPress={() => router.push('/search')}>
                 <Ionicons name="search" size={24} color="#001a33" />
               </Pressable>
 
-              <Pressable onPress={() => router.push('../../assets/notification.png')}>
+              <Pressable onPress={() => router.push('/notifications')}>
                 <Ionicons name="notifications-outline" size={24} color="#001a33" />
               </Pressable>
             </View>
@@ -99,11 +114,11 @@ export default function ClientHome() {
                 color: '#001a33',
               }}
             >
-              Services for You
+              Service Request Post
             </Text>
 
             <Pressable
-              onPress={() => router.push('/client/schedule')}
+              onPress={() => router.push('./postrequest')}
               sx={{
                 bg: '#fff',
                 borderRadius: 12,
@@ -123,7 +138,7 @@ export default function ClientHome() {
                   marginBottom: 4,
                 }}
               >
-                View Schedule
+                Post a Service Request
               </Text>
               <Text
                 sx={{
@@ -132,43 +147,43 @@ export default function ClientHome() {
                   color: '#4b5563',
                 }}
               >
-                See upcoming appointments and manage your bookings.
+                Describe your needs and connect with available workers.
               </Text>
             </Pressable>
 
-            <Pressable
-              onPress={() => router.push('./forms/request')}
-              sx={{
-                bg: '#fff',
-                borderRadius: 12,
-                p: 16,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.1,
-                shadowRadius: 2,
-                elevation: 2,
-              }}
-            >
-              <Text
-                sx={{
-                  fontSize: 16,
-                  fontFamily: 'Poppins-Bold',
-                  color: '#008CFC',
-                  marginBottom: 4,
-                }}
-              >
-                Request Service
-              </Text>
-              <Text
-                sx={{
-                  fontSize: 14,
-                  fontFamily: 'Poppins-Regular',
-                  color: '#4b5563',
-                }}
-              >
-                Submit a new service request and connect with providers.
-              </Text>
-            </Pressable>
+            {/* Banner Carousel */}
+            <Carousel
+              loop
+              width={width - 32}
+              height={160}
+              autoPlay={true}
+              autoPlayInterval={4000}
+              data={banners}
+              scrollAnimationDuration={1000}
+              renderItem={({ item }: { item: { id: number; image: any } }) => (
+                <View
+                  key={item.id}
+                  sx={{
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 2,
+                    elevation: 2,
+                  }}
+                >
+                  <Image
+                    source={item.image}
+                    style={{
+                      width: '100%',
+                      height: 160,
+                      resizeMode: 'cover',
+                    }}
+                  />
+                </View>
+              )}
+            />
           </View>
         </MotiView>
       </ScrollView>
@@ -176,5 +191,6 @@ export default function ClientHome() {
       {/* Sticky Bottom Navbar */}
       <ClientNavbar />
     </SafeAreaView>
+    </ImageBackground>
   )
 }

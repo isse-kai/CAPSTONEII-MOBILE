@@ -17,17 +17,17 @@ export default function ClientNavbar() {
     },
     {
       label: 'Messages',
-      route: '/client/clientchat',
+      route: '/clientnavbar/chat',
       icon: require('../../../assets/chat-icon.png'),
     },
      {
-      label: 'Add Service',
-      route: './forms/request',
+      label: 'Services',
+      route: './clientnavbar/services',
       icon: require('../../../assets/add-icon.png'),
     },
     {
       label: 'Profile',
-      route: './clientsidebar/profile',
+      route: './clientnavbar/profile',
       icon: require('../../../assets/profile-icon.png'),
     },
   ]
