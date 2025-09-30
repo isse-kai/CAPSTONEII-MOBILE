@@ -1,9 +1,10 @@
+import { Ionicons } from '@expo/vector-icons'
 import { Pressable, Text, View } from 'dripsy'
 import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import { useEffect, useState } from 'react'
-import { ScrollView, TextInput } from 'react-native'
+import { ScrollView } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getCurrentUser } from '../../supabase/auth'
 import { getClientByAuthUid } from '../../supabase/client'
@@ -60,44 +61,34 @@ export default function ClientHome() {
           transition={{ type: 'timing', duration: 500 }}
           style={{ flex: 1 }}
         >
-          <Text
-            sx={{
-              fontSize: 22,
-              fontFamily: 'Poppins-Bold',
-              color: '#001a33',
-              mb: 12,
-            }}
-          >
-            Welcome{firstName ? `, ${firstName}` : ''}
-          </Text>
-
-          {/* Search Field */}
+          {/* Header Row */}
           <View
             sx={{
-              bg: '#fff',
-              borderRadius: 12,
-              px: 16,
-              py: 10,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.1,
-              shadowRadius: 2,
-              elevation: 2,
-              mb: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 24,
             }}
           >
-            <TextInput
-              placeholder="Search Workers"
-              placeholderTextColor="#9ca3af"
-              style={{
-                fontSize: 16,
-                fontFamily: 'Poppins-Regular',
+            <Text
+              sx={{
+                fontSize: 22,
+                fontFamily: 'Poppins-Bold',
                 color: '#001a33',
               }}
-              onChangeText={text => {
-                // handle search logic here
-              }}
-            />
+            >
+              Welcome{firstName ? `, ${firstName}` : ''}
+            </Text>
+
+            <View sx={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+              <Pressable onPress={() => router.push('../../assets/search.png')}>
+                <Ionicons name="search" size={24} color="#001a33" />
+              </Pressable>
+
+              <Pressable onPress={() => router.push('../../assets/notification.png')}>
+                <Ionicons name="notifications-outline" size={24} color="#001a33" />
+              </Pressable>
+            </View>
           </View>
 
           <View sx={{ gap: 16 }}>
@@ -110,7 +101,6 @@ export default function ClientHome() {
             >
               Services for You
             </Text>
-
 
             <Pressable
               onPress={() => router.push('/client/schedule')}
