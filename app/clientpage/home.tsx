@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router'
 import { AnimatePresence, MotiImage, MotiView } from 'moti'
 import { useEffect, useRef, useState } from 'react'
 import {
+  Dimensions,
   Image,
   ImageBackground,
   NativeScrollEvent,
@@ -15,6 +16,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getCurrentUser } from '../../supabase/auth'
 import { getClientByAuthUid } from '../../supabase/client'
 import ClientNavbar from './clientnavbar/navbar'
+
+const { width } = Dimensions.get('window')
 
 const banners = [
   { id: 1, image: require('../../assets/banner.png') },
@@ -143,8 +146,8 @@ export default function ClientHome() {
                 key={banners[bannerIndex].id}
                 source={banners[bannerIndex].image}
                 style={{
-                  width: '100%',
-                  height: '100%',
+                  width: width,            // full screen width
+                  height: 180,             // optional: fixed height or use 'auto'
                   resizeMode: 'contain',
                   alignSelf: 'center',
                   marginBottom: 16,
