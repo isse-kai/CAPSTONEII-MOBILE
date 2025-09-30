@@ -231,16 +231,30 @@ export default function ClientHome() {
 
             {/* Worker Carousel */}
             <View sx={{ mt: 24 }}>
-              <View sx={{ flexDirection: 'row', justifyContent: 'space-between', mb: 8 }}>
-                <Text
-                  sx={{
-                    fontSize: 18,
-                    fontFamily: 'Poppins-Bold',
-                    color: '#001a33',
-                  }}
-                >
-                  Available Workers
-                </Text>
+              {/* Header with title + browse + arrows */}
+              <View sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mb: 8 }}>
+                <View sx={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <Text
+                    sx={{
+                      fontSize: 18,
+                      fontFamily: 'Poppins-Bold',
+                      color: '#001a33',
+                    }}
+                  >
+                    Available Workers
+                  </Text>
+                  <Pressable onPress={() => router.push('/workers')}>
+                    <Text
+                      sx={{
+                        fontSize: 14,
+                        fontFamily: 'Poppins-Regular',
+                        color: '#008CFC',
+                      }}
+                    >
+                      Browse
+                    </Text>
+                  </Pressable>
+                </View>
 
                 <View sx={{ flexDirection: 'row', gap: 12 }}>
                   <Pressable onPress={() => scrollBy(-160)}>
@@ -252,6 +266,7 @@ export default function ClientHome() {
                 </View>
               </View>
 
+              {/* Scrollable worker cards */}
               <ScrollView
                 ref={scrollRef}
                 horizontal
@@ -313,7 +328,29 @@ export default function ClientHome() {
                   </View>
                 ))}
               </ScrollView>
+
+              {/* Scroll indicator dots */}
+              <View sx={{ flexDirection: 'row', justifyContent: 'center', mt: 12 }}>
+                {workers.map((_, index) => {
+                  const isActive = Math.round(scrollX / 160) === index
+                  return (
+                    <View
+                      key={index}
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        bg: isActive ? '#008CFC' : '#d1d5db',
+                        mx: 4,
+                      }}
+                    />
+                  )
+                })}
+              </View>
             </View>
+
+
+
           </MotiView>
         </ScrollView>
 
