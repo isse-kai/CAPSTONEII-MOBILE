@@ -6,12 +6,11 @@ import { AnimatePresence, MotiImage, MotiView } from 'moti'
 import { useEffect, useRef, useState } from 'react'
 import {
   Dimensions,
-  Easing,
   Image,
   ImageBackground,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  ScrollView,
+  ScrollView
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getCurrentUser } from '../../supabase/auth'
@@ -142,27 +141,38 @@ export default function ClientHome() {
             </View>
 
             {/* Banner Slideshow */}
-            <AnimatePresence>
-              <MotiImage
-                key={banners[bannerIndex].id}
-                source={banners[bannerIndex].image}
-                style={{
-                  width: width,
-                  height: 250,
-                  resizeMode: 'contain',
-                  alignSelf: 'center',
-                  marginBottom: 16,
-                }}
-                from={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  type: 'timing',
-                  duration: 600,
-                  easing: Easing.inOut(Easing.ease),
-                }}
-              />
-            </AnimatePresence>
+            {/* Fade Banner Slideshow */}
+            <View
+              sx={{
+                width: width - 32,
+                height: 160,
+                borderRadius: 12,
+                overflow: 'hidden',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+                elevation: 2,
+                mb: 16,
+              }}
+            >
+              <AnimatePresence>
+                <MotiImage
+                  key={banners[bannerIndex].id}
+                  source={banners[bannerIndex].image}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    resizeMode: 'contain',
+                    position: 'absolute',
+                  }}
+                  from={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: 'timing', duration: 800 }}
+                />
+              </AnimatePresence>
+            </View>
 
 
             {/* Service Request Section */}
