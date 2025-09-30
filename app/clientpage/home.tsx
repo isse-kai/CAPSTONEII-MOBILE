@@ -141,11 +141,10 @@ export default function ClientHome() {
             </View>
 
             {/* Banner Slideshow */}
-            {/* Fade Banner Slideshow */}
             <View
               sx={{
                 width: width - 32,
-                height: 160,
+                height: 110,
                 borderRadius: 12,
                 overflow: 'hidden',
                 shadowColor: '#000',
