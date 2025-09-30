@@ -1,6 +1,6 @@
 // app/home/index.tsx
 import { useRouter, type Href } from "expo-router";
-import { Home, Menu, Search } from "lucide-react-native";
+import { Home, Menu, MessageCircle, Search } from "lucide-react-native";
 import { useState } from "react";
 import {
   Dimensions,
@@ -35,7 +35,6 @@ export default function ClientWelcome() {
   const handleSearch = () => {
     const query = q.trim();
     if (!query) return;
-    // Push to a real route you already have so TS is happy. Pass the query as a param.
     router.push({ pathname: "/home/home", params: { q: query } } as Href);
   };
 
@@ -66,7 +65,7 @@ export default function ClientWelcome() {
           <Image
             source={LOGO}
             style={{
-              width: Math.min(width * 0.7, 280), // larger logo
+              width: Math.min(width * 0.7, 280),
               height: 56,
               resizeMode: "contain",
             }}
@@ -97,52 +96,55 @@ export default function ClientWelcome() {
             <Menu color={C.text} size={26} strokeWidth={2.5} />
           </Pressable>
 
-          {/* Search input with icon (like your screenshot) */}
           {/* Search input with icon */}
-            <View
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: C.inputBg,
+              borderWidth: 1,
+              borderColor: C.inputBorder,
+              borderRadius: 999,
+              height: 38,
+              maxWidth: width * 0.58,
+              paddingLeft: 20,
+              paddingRight: 20,
+            }}
+          >
+            {/* Left icon nudged left */}
+            <Search
+              color={C.inputIcon}
+              size={18}
+              strokeWidth={2.25}
+              style={{ marginLeft: -2 }}
+            />
+
+            <TextInput
+              value={q}
+              onChangeText={setQ}
+              placeholder="Search"
+              placeholderTextColor={C.placeholder}
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: C.inputBg,
-                borderWidth: 1,
-                borderColor: C.inputBorder,
-                borderRadius: 999,
-                height: 38,
-                maxWidth: width * 0.58,
-                paddingLeft: 20,          // ⬅️ was 10
-                paddingRight: 20,
+                flex: 1,
+                color: C.text,
+                paddingVertical: 0,
+                paddingLeft: 6,
+                fontSize: 14,
+                minWidth: 120,
               }}
+              returnKeyType="search"
+              onSubmitEditing={handleSearch}
+            />
+
+            {/* Tap-to-search icon */}
+            <Pressable
+              hitSlop={8}
+              onPress={handleSearch}
+              style={{ marginLeft: 6, paddingHorizontal: 4 }}
             >
-              {/* Left icon nudged left */}
-              <Search
-                color={C.inputIcon}
-                size={18}
-                strokeWidth={2.25}
-                style={{ marginLeft: -2 }}   // ⬅️ subtle left shift
-              />
-
-              <TextInput
-                value={q}
-                onChangeText={setQ}
-                placeholder="Search"
-                placeholderTextColor={C.placeholder}
-                style={{
-                  flex: 1,
-                  color: C.text,
-                  paddingVertical: 0,
-                  paddingLeft: 6,          // ⬅️ keep text away from icon
-                  fontSize: 14,
-                  minWidth: 120,
-                }}
-                returnKeyType="search"
-                onSubmitEditing={handleSearch}
-              />
-
-              {/* Tap-to-search icon */}
-              <Pressable hitSlop={8} onPress={handleSearch} style={{ marginLeft: 6, paddingHorizontal: 4 }}>
-                <Search color={C.inputIcon} size={18} strokeWidth={2.25} />
-              </Pressable>
-            </View>
+              <Search color={C.inputIcon} size={18} strokeWidth={2.25} />
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -179,12 +181,12 @@ export default function ClientWelcome() {
             marginBottom: 32,
           }}
         >
-          Your home, your schedule. Book trusted professionals quickly and easily. We’ll make sure
-          the right expert is on the way.
+          Your home, your schedule. Book trusted professionals quickly and easily.
+          We’ll make sure the right expert is on the way.
         </Text>
 
         <Pressable
-          onPress={() => router.push({ pathname: "/forms/request" } as Href)} // change to '/request' once it exists
+          onPress={() => router.push({ pathname: "/forms/request" } as Href)}
           style={({ pressed }) => ({
             backgroundColor: pressed ? C.blueDark : C.blue,
             paddingVertical: 14,
@@ -207,6 +209,38 @@ export default function ClientWelcome() {
           >
             Request Service Now
           </Text>
+        </Pressable>
+      </View>
+
+      {/* FLOATING MESSAGE BUTTON */}
+      <View
+        // so the overlay doesn't block other touches except the button
+        pointerEvents="box-none"
+        style={{ position: "absolute", right: 0, bottom: 0, left: 0 }}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open messages"
+          onPress={() => router.push({ pathname: "/chat/Messaging" } as Href)}
+          style={({ pressed }) => ({
+            position: "absolute",
+            right: 18,
+            bottom: 24,
+            width: 58,
+            height: 58,
+            borderRadius: 29,
+            backgroundColor: C.blue,
+            alignItems: "center",
+            justifyContent: "center",
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+            shadowColor: C.blue,
+            shadowOpacity: Platform.OS === "android" ? 0.22 : 0.28,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 6,
+          })}
+        >
+          <MessageCircle color="#fff" size={26} strokeWidth={2.5} />
         </Pressable>
       </View>
     </SafeAreaView>
