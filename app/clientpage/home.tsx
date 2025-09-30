@@ -4,7 +4,14 @@ import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { AnimatePresence, MotiImage, MotiView } from 'moti'
 import { useEffect, useRef, useState } from 'react'
-import { Dimensions, Image, ImageBackground, ScrollView } from 'react-native'
+import {
+  Dimensions,
+  Image,
+  ImageBackground,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+} from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getCurrentUser } from '../../supabase/auth'
 import { getClientByAuthUid } from '../../supabase/client'
@@ -28,6 +35,7 @@ const workers = [
 export default function ClientHome() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const scrollRef = useRef<ScrollView>(null)
 
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
@@ -36,7 +44,7 @@ export default function ClientHome() {
 
   const [firstName, setFirstName] = useState('')
   const [bannerIndex, setBannerIndex] = useState(0)
-  const scrollRef = useRef<ScrollView>(null)
+  const [scrollX, setScrollX] = useState(0)
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -58,6 +66,18 @@ export default function ClientHome() {
     }, 4000)
     return () => clearInterval(timer)
   }, [])
+
+  const scrollBy = (offset: number) => {
+    const newX = scrollX + offset
+    setScrollX(newX)
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ x: newX, animated: true })
+    }
+  }
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    setScrollX(event.nativeEvent.contentOffset.x)
+  }
 
   if (!fontsLoaded) return null
 
@@ -120,10 +140,11 @@ export default function ClientHome() {
               </View>
             </View>
 
+            {/* Banner Slideshow */}
             <View
               sx={{
                 width: width - 32,
-                height: 200, // ⬅️ updated height
+                height: 200,
                 borderRadius: 12,
                 overflow: 'hidden',
                 shadowColor: '#000',
@@ -140,7 +161,7 @@ export default function ClientHome() {
                   source={banners[bannerIndex].image}
                   style={{
                     width: '100%',
-                    height: '100%', // ⬅️ matches container height
+                    height: '100%',
                     resizeMode: 'contain',
                     position: 'absolute',
                   }}
@@ -208,6 +229,7 @@ export default function ClientHome() {
               </Pressable>
             </View>
 
+            {/* Worker Carousel */}
             <View sx={{ mt: 24 }}>
               <View sx={{ flexDirection: 'row', justifyContent: 'space-between', mb: 8 }}>
                 <Text
@@ -221,18 +243,20 @@ export default function ClientHome() {
                 </Text>
 
                 <View sx={{ flexDirection: 'row', gap: 12 }}>
-                  <Pressable onPress={() => scrollBy(-160)}> {/* scroll left by one card */}
+                  <Pressable onPress={() => scrollBy(-160)}>
                     <Ionicons name="chevron-back" size={24} color="#001a33" />
                   </Pressable>
-                  <Pressable onPress={() => scrollBy(160)}> {/* scroll right by one card */}
+                  <Pressable onPress={() => scrollBy(160)}>
                     <Ionicons name="chevron-forward" size={24} color="#001a33" />
                   </Pressable>
                 </View>
-
+              </View>
 
               <ScrollView
                 ref={scrollRef}
                 horizontal
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: 12 }}
               >
@@ -299,3 +323,4 @@ export default function ClientHome() {
     </ImageBackground>
   )
 }
+
