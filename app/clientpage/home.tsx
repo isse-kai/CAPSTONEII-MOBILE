@@ -6,6 +6,7 @@ import { AnimatePresence, MotiImage, MotiView } from 'moti'
 import { useEffect, useRef, useState } from 'react'
 import {
   Dimensions,
+  Easing,
   Image,
   ImageBackground,
   NativeScrollEvent,
@@ -146,8 +147,8 @@ export default function ClientHome() {
                 key={banners[bannerIndex].id}
                 source={banners[bannerIndex].image}
                 style={{
-                  width: width,            // full screen width
-                  height: 180,             // optional: fixed height or use 'auto'
+                  width: width,
+                  height: 250,
                   resizeMode: 'contain',
                   alignSelf: 'center',
                   marginBottom: 16,
@@ -155,9 +156,14 @@ export default function ClientHome() {
                 from={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ type: 'timing', duration: 800 }}
+                transition={{
+                  type: 'timing',
+                  duration: 600,
+                  easing: Easing.inOut(Easing.ease),
+                }}
               />
             </AnimatePresence>
+
 
             {/* Service Request Section */}
             <View sx={{ gap: 16 }}>
