@@ -153,6 +153,9 @@ export default function ClientHome() {
                 shadowRadius: 2,
                 elevation: 2,
                 mb: 16,
+                justifyContent: 'center',
+                alignItems: 'center',
+                bg: '#fff', // optional: gives contrast if image doesn't fill
               }}
             >
               <AnimatePresence>
@@ -160,10 +163,9 @@ export default function ClientHome() {
                   key={banners[bannerIndex].id}
                   source={banners[bannerIndex].image}
                   style={{
-                    width: '100%',
-                    height: '200%',
+                    width: 180, // fixed width
+                    height: 180, // fixed height
                     resizeMode: 'contain',
-                    position: 'absolute',
                   }}
                   from={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
