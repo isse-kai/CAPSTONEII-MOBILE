@@ -49,7 +49,7 @@ export default function ClientHome() {
   return (
 
     <ImageBackground
-      source={require('../../assets/backgrounds/client-home-bg.jpg')} // replace with your actual image path
+      source={require('../../assets/welcome.jpg')}
       resizeMode="cover"
       style={{ flex: 1 }}
     >
