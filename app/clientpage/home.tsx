@@ -3,7 +3,7 @@ import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import { useEffect, useState } from 'react'
-import { ScrollView } from 'react-native'
+import { ScrollView, TextInput } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getCurrentUser } from '../../supabase/auth'
 import { getClientByAuthUid } from '../../supabase/client'
@@ -65,11 +65,40 @@ export default function ClientHome() {
               fontSize: 22,
               fontFamily: 'Poppins-Bold',
               color: '#001a33',
-              mb: 24,
+              mb: 12,
             }}
           >
-            Welcome, {firstName ? `, ${firstName}` : ''}
+            Welcome{firstName ? `, ${firstName}` : ''}
           </Text>
+
+          {/* Search Field */}
+          <View
+            sx={{
+              bg: '#fff',
+              borderRadius: 12,
+              px: 16,
+              py: 10,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2,
+              elevation: 2,
+              mb: 12,
+            }}
+          >
+            <TextInput
+              placeholder="Search Workers"
+              placeholderTextColor="#9ca3af"
+              style={{
+                fontSize: 16,
+                fontFamily: 'Poppins-Regular',
+                color: '#001a33',
+              }}
+              onChangeText={text => {
+                // handle search logic here
+              }}
+            />
+          </View>
 
           <View sx={{ gap: 16 }}>
             <Text
@@ -81,6 +110,7 @@ export default function ClientHome() {
             >
               Services for You
             </Text>
+
 
             <Pressable
               onPress={() => router.push('/client/schedule')}
