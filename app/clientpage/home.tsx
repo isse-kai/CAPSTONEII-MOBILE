@@ -141,39 +141,23 @@ export default function ClientHome() {
             </View>
 
             {/* Banner Slideshow */}
-            <View
-              sx={{
-                width: width - 32,
-                height: 200,
-                borderRadius: 12,
-                overflow: 'hidden',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.1,
-                shadowRadius: 2,
-                elevation: 2,
-                mb: 16,
-                justifyContent: 'center',
-                alignItems: 'center',
-                bg: '#fff', // optional: gives contrast if image doesn't fill
-              }}
-            >
-              <AnimatePresence>
-                <MotiImage
-                  key={banners[bannerIndex].id}
-                  source={banners[bannerIndex].image}
-                  style={{
-                    width: 180, // fixed width
-                    height: 180, // fixed height
-                    resizeMode: 'contain',
-                  }}
-                  from={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ type: 'timing', duration: 800 }}
-                />
-              </AnimatePresence>
-            </View>
+            <AnimatePresence>
+              <MotiImage
+                key={banners[bannerIndex].id}
+                source={banners[bannerIndex].image}
+                style={{
+                  width: 180, // fixed width
+                  height: 180, // fixed height
+                  resizeMode: 'contain',
+                  alignSelf: 'center',
+                  marginBottom: 16,
+                }}
+                from={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ type: 'timing', duration: 800 }}
+              />
+            </AnimatePresence>
 
             {/* Service Request Section */}
             <View sx={{ gap: 16 }}>
