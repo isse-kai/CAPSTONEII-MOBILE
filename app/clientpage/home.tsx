@@ -13,8 +13,7 @@ import {
   ScrollView
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { getCurrentUser } from '../../supabase/auth'
-import { getClientByAuthUid } from '../../supabase/client'
+import Header from './clientnavbar/header'
 import ClientNavbar from './clientnavbar/navbar'
 
 const { width } = Dimensions.get('window')
@@ -42,23 +41,8 @@ export default function ClientHome() {
     'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
   })
 
-  const [firstName, setFirstName] = useState('')
   const [bannerIndex, setBannerIndex] = useState(0)
   const [scrollX, setScrollX] = useState(0)
-
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      try {
-        const user = await getCurrentUser()
-        const client = await getClientByAuthUid(user.id)
-        if (client?.first_name) setFirstName(client.first_name)
-      } catch (err) {
-        console.warn('Failed to load client profile:', err)
-      }
-    }
-
-    loadUserProfile()
-  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -110,35 +94,7 @@ export default function ClientHome() {
             transition={{ type: 'timing', duration: 500 }}
             style={{ flex: 1 }}
           >
-            {/* Header Row */}
-            <View
-              sx={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                mb: 24,
-              }}
-            >
-              <Text
-                sx={{
-                  fontSize: 22,
-                  fontFamily: 'Poppins-Bold',
-                  color: '#001a33',
-                }}
-              >
-                Welcome{firstName ? `, ${firstName}` : ''}
-              </Text>
-
-              <View sx={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-                <Pressable onPress={() => router.push('/search')}>
-                  <Ionicons name="search" size={24} color="#001a33" />
-                </Pressable>
-
-                <Pressable onPress={() => router.push('/notifications')}>
-                  <Ionicons name="notifications-outline" size={24} color="#001a33" />
-                </Pressable>
-              </View>
-            </View>
+            <Header />
 
             {/* Banner Slideshow */}
             <View
@@ -172,7 +128,6 @@ export default function ClientHome() {
                 />
               </AnimatePresence>
             </View>
-
 
             {/* Service Request Section */}
             <View sx={{ gap: 16 }}>
