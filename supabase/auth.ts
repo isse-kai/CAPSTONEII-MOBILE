@@ -53,7 +53,11 @@ export async function signupClient({
   })
 
   if (error) throw new Error(error.message)
-  return data
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString()
+  console.log(`OTP for ${email}: ${otp}`)
+
+  return { data, otp }
 }
 
 // Worker Signup

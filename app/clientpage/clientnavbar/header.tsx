@@ -8,6 +8,7 @@ const Header = () => {
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [submenuOpen, setSubmenuOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
 
   return (
     <View>
@@ -17,7 +18,7 @@ const Header = () => {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          mb: 24,
+          mb: 20,
         }}
       >
         {/* Logo */}
@@ -25,7 +26,7 @@ const Header = () => {
           source={require('../../../assets/jdklogo.png')}
           style={{
             width: 120,
-            height: 32,
+            height: 50,
             resizeMode: 'contain',
           }}
         />
@@ -35,7 +36,7 @@ const Header = () => {
             <Ionicons name="search" size={24} color="#001a33" />
           </Pressable>
 
-          <Pressable onPress={() => router.push('/notifications')}>
+          <Pressable onPress={() => setNotificationsOpen(prev => !prev)}>
             <Ionicons name="notifications-outline" size={24} color="#001a33" />
           </Pressable>
 
@@ -45,10 +46,14 @@ const Header = () => {
         </View>
       </View>
 
-      {/* Dropdown Menu */}
-      {menuOpen && (
+      {/* Notifications Dropdown (Overlay) */}
+      {notificationsOpen && (
         <View
           sx={{
+            position: 'absolute',
+            top: 72,
+            right: 64,
+            width: 260,
             bg: '#fff',
             borderRadius: 12,
             p: 16,
@@ -56,7 +61,44 @@ const Header = () => {
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.1,
             shadowRadius: 2,
-            elevation: 2,
+            elevation: 4,
+            zIndex: 999,
+            gap: 12,
+          }}
+        >
+          <Text sx={{ fontSize: 16, fontFamily: 'Poppins-Bold', color: '#001a33' }}>
+            Notifications
+          </Text>
+
+          <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563' }}>
+            • Your request for cleaning has been accepted.
+          </Text>
+          <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563' }}>
+            • New worker available in your area.
+          </Text>
+          <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563' }}>
+            • Completed service feedback requested.
+          </Text>
+        </View>
+      )}
+
+      {/* Burger Dropdown Menu (Overlay) */}
+      {menuOpen && (
+        <View
+          sx={{
+            position: 'absolute',
+            top: 60,
+            right: 2,
+            width: 260,
+            bg: '#fff',
+            borderRadius: 12,
+            p: 16,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 2,
+            elevation: 4,
+            zIndex: 999,
             gap: 12,
           }}
         >

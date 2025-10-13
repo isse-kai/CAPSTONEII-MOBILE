@@ -58,39 +58,6 @@ export default function Roles() {
               bg: 'transparent',
             }}
           >
-            {/* Back Button */}
-            <MotiView
-              from={{ opacity: 0, translateX: -20 }}
-              animate={{ opacity: 1, translateX: 0 }}
-              transition={{ type: 'timing', duration: 500, delay: 50 }}
-              style={{ position: 'absolute', top: insets.top + 8, left: 20, zIndex: 10 }}
-            >
-              <Pressable
-                onPress={() => router.back()}
-                sx={{
-                  bg: '#f3f4f6',
-                  borderRadius: 20,
-                  height: 40,
-                  width: 40,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  elevation: 2,
-                }}
-              >
-                <Text
-                  sx={{
-                    fontSize: 18,
-                    fontFamily: 'Poppins-Bold',
-                    color: '#001a33',
-                    textAlign: 'center',
-                    lineHeight: 20,
-                  }}
-                >
-                  ←
-                </Text>
-              </Pressable>
-            </MotiView>
-
             {/* Logo */}
             <MotiView
               from={{ opacity: 0, scale: 0.8 }}
@@ -104,7 +71,7 @@ export default function Roles() {
                   height: 180,
                   alignSelf: 'center',
                   marginBottom: -10,
-                  marginTop: -180
+                  marginTop: -180,
                 }}
                 resizeMode="contain"
               />
@@ -272,4 +239,4 @@ export default function Roles() {
       </SafeAreaView>
     </ImageBackground>
   )
-  }
+}

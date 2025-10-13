@@ -204,7 +204,7 @@ export default function Login() {
                 <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>
                   Don’t have an account?{' '}
                 </Text>
-                <Pressable onPress={() => router.push('./signup/roles')}>
+                <Pressable onPress={() => router.push('/signup/roles')}>
                   <Text
                     sx={{
                       fontSize: 14,
