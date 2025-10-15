@@ -17,7 +17,7 @@ export default function ClientNavbar() {
     },
     {
       label: 'Messages',
-      route: '/clientnavbar/chat',
+      route: './chat',
       icon: require('../../../assets/chat-icon.png'),
     },
      {
