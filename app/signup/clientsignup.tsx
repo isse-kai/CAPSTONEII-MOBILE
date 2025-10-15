@@ -240,7 +240,7 @@ export default function ClientSignup() {
                 <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>
                   Already have an account?{' '}
                 </Text>
-                <Pressable onPress={() => router.push('../login/login')}>
+                <Pressable onPress={() => router.push('/login/login')}>
                   <Text
                     sx={{
                       fontSize: 14,

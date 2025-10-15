@@ -142,7 +142,7 @@ export default function ClientHome() {
               </Text>
 
               <Pressable
-                onPress={() => router.push('./postrequest')}
+                onPress={() => router.push('/_sitemap')}
                 sx={{
                   borderWidth: 2,
                   borderColor: '#008CFC',
@@ -199,7 +199,7 @@ export default function ClientHome() {
                   >
                     Available Workers
                   </Text>
-                  <Pressable onPress={() => router.push('/workers')}>
+                  <Pressable onPress={() => router.push('/_sitemap')}>
                     <Text
                       sx={{
                         fontSize: 14,
