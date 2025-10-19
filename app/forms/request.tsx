@@ -1,715 +1,638 @@
-// app/forms/requestpreview.tsx  (Step 4: Review & Submit)
+// app/forms/request.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Image, Pressable, ScrollView, Text, View } from "dripsy";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter, type Href } from "expo-router";
 import {
   ArrowLeft,
-  Banknote,
-  Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Clock,
+  Camera,
+  ChevronDown,
   Image as ImageIcon,
-  Info,
   Mail,
   MapPin,
-  Pencil,
-  Phone,
-  Wrench,
-  X,
+  Phone as PhoneIcon,
+  User
 } from "lucide-react-native";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Dimensions, Modal, Platform } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Dimensions,
+  FlatList,
+  Image,
+  Modal,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
+/* ---------- Theme / Layout ---------- */
 const { width } = Dimensions.get("window");
-const LOGO = require("../../assets/jdklogo.png");
-
-/* ---------- Theme ---------- */
 const C = {
   bg: "#f7f9fc",
+  card: "#ffffff",
   text: "#0f172a",
   sub: "#64748b",
   blue: "#1e86ff",
   blueDark: "#0c62c9",
   border: "#e6eef7",
-  chip: "#eaf4ff",
-  card: "#fff",
-  muted: "#64748b",
-  track: "#e9f0fb",
-  good: "#16a34a",
+  field: "#f8fafc",
+  placeholder: "#93a3b5",
+  chip: "#eef6ff",
 };
+const PAD = 18;
+const GAP = 14;
 
-const PAD = 20;
-const GAP = 16;
-const BTN_PY = 16;
+/* ---------- Storage / Routes ---------- */
+const STORAGE_KEY = "client_request_step1";
+const NEXT_ROUTE = "/forms/request2" as Href;
+const BACK_ROUTE = "/home/index" as Href; // adjust if your client's home is different
 
-/* ---------- Storage Keys & Routes ---------- */
-const STEP1_KEY = "request_step1";
-const STEP2_KEY = "request_step2";
-const STEP3_KEY = "request_step3";
-const MERGED_KEY = "request_full";
-const CONFIRM_ROUTE = "/home/home" as Href;
-
-// Edit shortcuts
-const EDIT_STEP1 = "/request" as Href;
-const EDIT_STEP2 = "/forms/request2" as Href;
-const EDIT_STEP3 = "/forms/request3" as Href;
-
-/* ---------- Types ---------- */
-type Step1 = {
-  first?: string;
-  last?: string;
-  phone?: string;
-  email?: string;
-  brgy?: string | null;
-  street?: string;
-  addr?: string;
-  photo?: string | null;
-};
-type Step2 = {
-  serviceType?: string | null;
-  serviceTask?: string | null;
-  date?: string | null;
-  time?: string | null;
-  toolsProvided?: boolean | null;
-  urgent?: boolean | null;
-  desc?: string;
-  photo?: string | null;
-};
-type Step3 = {
-  rateType?: "hour" | "job" | null;
-  hourFrom?: string;
-  hourTo?: string;
-  jobFixed?: string;
-};
+/* ---------- Data ---------- */
+const BARANGAYS: string[] = [
+  "Select Barangay",
+  "Barangay 1","Barangay 2","Barangay 3","Barangay 4","Barangay 5","Barangay 6","Barangay 7","Barangay 8","Barangay 9","Barangay 10",
+  "Barangay 11","Barangay 12","Barangay 13","Barangay 14","Barangay 15","Barangay 16","Barangay 17","Barangay 18","Barangay 19","Barangay 20",
+  "Barangay 21","Barangay 22","Barangay 23","Barangay 24","Barangay 25","Barangay 26","Barangay 27","Barangay 28","Barangay 29","Barangay 30",
+  "Barangay 31","Barangay 32","Barangay 33","Barangay 34","Barangay 35","Barangay 36","Barangay 37","Barangay 38","Barangay 39","Barangay 40",
+  "Barangay 41",
+  "Alangilan","Alijis","Banago","Bata","Cabug","Estefanía","Felisa","Granada","Handumanan","Mandalagan",
+  "Mansilingan","Montevista","Pahanocoy","Punta Taytay","Singcang-Airport","Sum-ag","Taculing","Tangub","Villamonte","Vista Alegre",
+];
 
 /* ---------- Screen ---------- */
-export default function ReviewSubmit() {
+export default function ClientRequest1() {
   const router = useRouter();
-  const [p1, setP1] = useState<Step1 | null>(null);
-  const [p2, setP2] = useState<Step2 | null>(null);
-  const [p3, setP3] = useState<Step3 | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [submitted, setSubmitted] = useState(false);
 
-  // Lightbox state
-  const [lightboxUri, setLightboxUri] = useState<string | null>(null);
+  // Form state
+  const [first, setFirst] = useState("");
+  const [last, setLast] = useState("");
+  const [phone, setPhone] = useState(""); // 10 digits after +63
+  const [email, setEmail] = useState("");
+  const [brgy, setBrgy] = useState<string>(BARANGAYS[0]);
+  const [street, setStreet] = useState("");
+  const [moreAddr, setMoreAddr] = useState(""); // Additional Address (Required)
+  const [photo, setPhoto] = useState<string | null>(null);
 
+  // Barangay selector
+  const [brgyOpen, setBrgyOpen] = useState(false);
+  const [brgyQuery, setBrgyQuery] = useState("");
+
+  // Hydrate
   useEffect(() => {
     (async () => {
-      try {
-        const [s1, s2, s3] = await Promise.all([
-          AsyncStorage.getItem(STEP1_KEY),
-          AsyncStorage.getItem(STEP2_KEY),
-          AsyncStorage.getItem(STEP3_KEY),
-        ]);
-        if (s1) setP1(JSON.parse(s1));
-        if (s2) setP2(JSON.parse(s2));
-        if (s3) setP3(JSON.parse(s3));
-      } finally {
-        setLoading(false);
-      }
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const v = JSON.parse(raw);
+      setFirst(v.first ?? "");
+      setLast(v.last ?? "");
+      setPhone(v.phone ?? "");
+      setEmail(v.email ?? "");
+      setBrgy(v.brgy ?? BARANGAYS[0]);
+      setStreet(v.street ?? "");
+      setMoreAddr(v.moreAddr ?? "");
+      setPhoto(v.photo ?? null);
     })();
   }, []);
 
-  const addressLine = useMemo(() => {
-    const street = p1?.street?.trim();
-    const brgy = p1?.brgy?.toString().trim();
-    if (street && brgy) return `${street}, ${brgy}`;
-    return street || brgy || "—";
-  }, [p1]);
+  // Autosave
+  useEffect(() => {
+    const id = setTimeout(() => {
+      AsyncStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ first, last, phone, email, brgy, street, moreAddr, photo })
+      ).catch(() => {});
+    }, 350);
+    return () => clearTimeout(id);
+  }, [first, last, phone, email, brgy, street, moreAddr, photo]);
 
-  const scheduleLine = useMemo(() => formatSchedule(p2?.date, p2?.time), [p2?.date, p2?.time]);
+  // Derived
+  const emailOk = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
+  const phoneOk = useMemo(() => phone.trim().length === 10, [phone]); // after +63
+  const brgyOk = useMemo(() => brgy !== BARANGAYS[0], [brgy]);
+  const canNext = useMemo(() => {
+    return (
+      first.trim() &&
+      last.trim() &&
+      emailOk &&
+      phoneOk &&
+      brgyOk &&
+      street.trim() &&
+      moreAddr.trim()
+    );
+  }, [first, last, emailOk, phoneOk, brgyOk, street, moreAddr]);
 
-  const rateLine = useMemo(() => {
-    if (!p3?.rateType) return "—";
-    if (p3.rateType === "hour") {
-      const f = money(p3.hourFrom);
-      const t = money(p3.hourTo);
-      if (f && t) return `₱${f} – ₱${t} / hr`;
-      if (f) return `₱${f} / hr`;
-      if (t) return `Up to ₱${t} / hr`;
-      return "—";
-    }
-    const j = money(p3.jobFixed);
-    return j ? `₱${j}` : "—";
-  }, [p3]);
+  // Actions
+  const choosePhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") return;
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.9,
+    });
+    if (!res.canceled) setPhoto(res.assets[0].uri);
+  };
 
-  const rateTypeText = useMemo(() => {
-    if (p3?.rateType === "hour") return "By the Hour";
-    if (p3?.rateType === "job") return "By the Job";
-    return "—";
-  }, [p3]);
-
-  const onConfirm = async () => {
-    const merged = { step1: p1, step2: p2, step3: p3, createdAt: new Date().toISOString() };
-    await AsyncStorage.setItem(MERGED_KEY, JSON.stringify(merged));
-    setSubmitted(true);
+  const onNext = async () => {
+    if (!canNext) return;
+    await AsyncStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ first, last, phone, email, brgy, street, moreAddr, photo })
+    );
+    router.push(NEXT_ROUTE);
   };
 
   return (
-    <View sx={{ flex: 1, bg: C.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
       {/* Header */}
       <View
-        sx={{
-          px: PAD,
-          pt: 12,
-          pb: 16,
+        style={{
+          paddingHorizontal: PAD,
+          paddingTop: 8,
+          paddingBottom: 12,
           borderBottomWidth: 1,
           borderBottomColor: C.border,
-          position: "relative",
-          bg: "#fff",
+          backgroundColor: "#fff",
         }}
       >
-        <View sx={{ position: "absolute", left: 0, right: 0, top: 10, alignItems: "center" }} pointerEvents="none">
-          <Image source={LOGO} sx={{ width: Math.min(width * 0.7, 300), height: 56 }} resizeMode="contain" />
-        </View>
-        <Pressable onPress={() => router.back()} sx={{ width: 48, height: 48, alignItems: "center", justifyContent: "center" }}>
-          <ArrowLeft color={C.text} size={28} strokeWidth={2.4} />
-        </Pressable>
-      </View>
-
-      {/* STEP STATUS BAR (4/4) */}
-      <View sx={{ px: PAD, pt: 16, pb: 14, bg: "#fff" }}>
-        <View sx={{ flexDirection: "row", alignItems: "center", mb: 14 }}>
-          <Text sx={{ color: C.text, fontWeight: "900", fontSize: 18 }}>Step 4 of 4</Text>
-          <Text sx={{ color: C.sub, ml: 12, fontSize: 14 }}>Review & Submit</Text>
-        </View>
-        <View sx={{ flexDirection: "row", columnGap: 12 }}>
-          {[1, 2, 3, 4].map((i) => (
-            <View key={i} sx={{ flex: 1, height: 10, borderRadius: 999, bg: C.blue }} />
-          ))}
-        </View>
-      </View>
-
-      <ScrollView contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
-        <View sx={{ px: PAD, pt: 18 }}>
-          {/* Overview Banner */}
-          <InfoBanner text="Review each section carefully. Tap the pencil to make changes instantly." />
-
-          {/* Personal Information */}
-          <Card
-            title="Personal Information"
-            actionLabel="Edit"
-            onAction={() => router.push(EDIT_STEP1)}
-            loading={loading}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Pressable
+            onPress={() => router.push(BACK_ROUTE)}
+            style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
           >
-            <View sx={{ flexDirection: "row", alignItems: "center", mb: GAP }}>
-              <Avatar uri={p1?.photo} onOpen={setLightboxUri} />
-              <View sx={{ ml: 12, flex: 1 }}>
-                <Text sx={{ color: C.text, fontWeight: "900", fontSize: 16 }}>
-                  {fullName(p1?.first, p1?.last) || "—"}
-                </Text>
-                <Text sx={{ color: C.sub }}>{addressLine}</Text>
+            <ArrowLeft color={C.text} size={26} />
+          </Pressable>
+
+          {/* Step indicator right side */}
+          <View style={{ alignItems: "flex-end", flex: 1 }}>
+            <Text style={{ color: C.sub, marginBottom: 6, textAlign: "right" }}>Step 1 of 4</Text>
+            <View
+              style={{
+                width: 140,
+                height: 6,
+                backgroundColor: "#e8eef7",
+                borderRadius: 999,
+                overflow: "hidden",
+                alignSelf: "flex-end",
+              }}
+            >
+              <View style={{ width: "25%", height: "100%", backgroundColor: C.blue }} />
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
+        <View style={{ paddingHorizontal: PAD, paddingTop: 14 }}>
+          {/* Card */}
+          <View
+            style={{
+              backgroundColor: C.card,
+              borderWidth: 1,
+              borderColor: C.border,
+              borderRadius: 20,
+              paddingHorizontal: PAD,
+              paddingVertical: 16,
+              shadowColor: "#000",
+              shadowOpacity: Platform.OS === "android" ? 0 : 0.06,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 1,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+              <Text style={{ color: C.text, fontWeight: "900", fontSize: 18, flex: 1 }}>
+                Personal Information
+              </Text>
+              <View
+                style={{
+                  paddingVertical: 4,
+                  paddingHorizontal: 10,
+                  backgroundColor: C.chip,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: C.border,
+                }}
+              >
+                <Text style={{ color: C.sub, fontWeight: "700" }}>Client</Text>
               </View>
             </View>
 
-            <List>
-              <Row icon={<Phone color={C.sub} size={18} />} label="Phone" value={p1?.phone || "—"} />
-              <Row icon={<Mail color={C.sub} size={18} />} label="Email" value={p1?.email || "—"} />
-              <Row icon={<MapPin color={C.sub} size={18} />} label="Full Address" value={`${addressLine}${p1?.addr ? ` • ${p1.addr}` : ""}`} />
-            </List>
-          </Card>
+            <Text style={{ color: C.sub, marginBottom: 14 }}>
+              Please fill in your personal details to proceed.
+            </Text>
 
-          {/* Request Details */}
-          <Card
-            title="Service Request Details"
-            actionLabel="Edit"
-            onAction={() => router.push(EDIT_STEP2)}
-            loading={loading}
-          >
-            <List>
-              <Row icon={<Wrench color={C.sub} size={18} />} label="Service" value={serviceLine(p2?.serviceType, p2?.serviceTask)} highlight />
-              <Row icon={<Calendar color={C.sub} size={18} />} label="Preferred Date" value={p2?.date ? isoDate(p2.date) : "—"} />
-              <Row icon={<Clock color={C.sub} size={18} />} label="Preferred Time" value={p2?.time ? isoTime(p2.time) : "—"} />
-              <Row icon={<Info color={C.sub} size={18} />} label="Tools Provided" value={yn(p2?.toolsProvided)} />
-              <Row icon={<Info color={C.sub} size={18} />} label="Urgent" value={yn(p2?.urgent)} />
-            </List>
+            {/* Two column on wide phones, stacked on small */}
+            <View style={{ flexDirection: "row", gap: GAP }}>
+              <View style={{ flex: 1 }}>
+                <Label icon={<User color={C.sub} size={16} />}>First Name</Label>
+                <Input
+                  value={first}
+                  onChangeText={setFirst}
+                  placeholder="First name"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Label icon={<User color={C.sub} size={16} />}>Last Name</Label>
+                <Input
+                  value={last}
+                  onChangeText={setLast}
+                  placeholder="Last name"
+                />
+              </View>
+            </View>
 
-            {p2?.desc ? (
-              <View sx={{ mt: GAP }}>
-                <Text sx={{ color: C.sub, fontSize: 12, mb: 6 }}>Notes</Text>
-                <Text
-                  sx={{
-                    color: C.text,
-                    lineHeight: 22,
-                    bg: "#f8fafc",
+            <View style={{ height: 10 }} />
+
+            <View style={{ flexDirection: "row", gap: GAP }}>
+              <View style={{ flex: 1 }}>
+                <Label icon={<PhoneIcon color={C.sub} size={16} />}>Contact Number</Label>
+                <PhoneGroup
+                  value={phone}
+                  onChangeText={(t: string) => setPhone(t.replace(/[^0-9]/g, "").slice(0, 10))}
+                />
+                <Text style={{ color: C.sub, fontSize: 12, marginTop: 6 }}>
+                  Format: +63 <Text style={{ fontWeight: "700" }}>9XXXXXXXXX</Text>
+                </Text>
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Label icon={<Mail color={C.sub} size={16} />}>Email Address</Label>
+                <Input
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Email address"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  borderTint={email ? (emailOk ? "ok" : "bad") : "none"}
+                />
+              </View>
+            </View>
+
+            <View style={{ height: 10 }} />
+
+            <View style={{ flexDirection: "row", gap: GAP }}>
+              <View style={{ flex: 1 }}>
+                <Label icon={<MapPin color={C.sub} size={16} />}>Barangay</Label>
+                <Pressable onPress={() => setBrgyOpen(true)} style={selectBtn}>
+                  <Text style={{ color: brgy === BARANGAYS[0] ? C.placeholder : C.text }}>
+                    {brgy}
+                  </Text>
+                  <ChevronDown color={C.sub} size={18} />
+                </Pressable>
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Label icon={<MapPin color={C.sub} size={16} />}>Street</Label>
+                <Input value={street} onChangeText={setStreet} placeholder="House No. and Street" />
+              </View>
+            </View>
+
+            <View style={{ height: 10 }} />
+
+            <Label>Additional Address (Landmark etc.)</Label>
+            <Multiline
+              value={moreAddr}
+              onChangeText={setMoreAddr}
+              placeholder="Additional Address (Required)"
+            />
+
+            {/* Profile Picture (right column in web -> here stacked) */}
+            <View style={{ marginTop: 18, alignItems: "center" }}>
+              <Text style={{ color: C.text, fontWeight: "900", marginBottom: 6 }}>Profile Picture</Text>
+              <Text style={{ color: C.sub, marginBottom: 12 }}>Upload your profile picture.</Text>
+
+              <Pressable onPress={choosePhoto} style={{ alignItems: "center" }}>
+                <View
+                  style={{
+                    width: 124,
+                    height: 124,
+                    borderRadius: 62,
                     borderWidth: 1,
                     borderColor: C.border,
-                    borderRadius: 14,
-                    px: 14,
-                    py: 12,
+                    backgroundColor: "#f1f5f9",
+                    overflow: "hidden",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  {p2.desc}
-                </Text>
-              </View>
-            ) : null}
+                  {photo ? (
+                    <Image source={{ uri: photo }} style={{ width: "100%", height: "100%" }} />
+                  ) : (
+                    <>
+                      <ImageIcon color="#c2cfdf" size={28} />
+                      <Text style={{ color: C.sub, marginTop: 6 }}>+</Text>
+                    </>
+                  )}
+                </View>
 
-            {/* Attachment preview */}
-            <View sx={{ mt: GAP }}>
-              <Text sx={{ color: C.sub, fontSize: 12, mb: 6 }}>Attachment</Text>
-              <Attachment uri={p2?.photo} onOpen={setLightboxUri} />
+                <View
+                  style={{
+                    marginTop: 12,
+                    paddingVertical: 12,
+                    paddingHorizontal: 18,
+                    borderRadius: 12,
+                    backgroundColor: C.blue,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Camera color="#fff" size={18} />
+                  <Text style={{ color: "#fff", fontWeight: "800" }}>Choose Photo</Text>
+                </View>
+              </Pressable>
             </View>
-          </Card>
-
-          {/* Rate */}
-          <Card
-            title="Service Rate"
-            actionLabel="Edit"
-            onAction={() => router.push(EDIT_STEP3)}
-            loading={loading}
-          >
-            <List>
-              <Row icon={<Banknote color={C.sub} size={18} />} label="Rate Type" value={rateTypeText} />
-              <Row icon={<Banknote color={C.sub} size={18} />} label="Quoted Rate" value={rateLine} highlight />
-              <Row
-                icon={<Info color={C.sub} size={18} />}
-                label="Reminder"
-                value="Final amount can be agreed with the provider after job review."
-              />
-            </List>
-          </Card>
-
-          {/* Final Check */}
-          <ReadyCard ok={isReady(p1, p2, p3)} schedule={scheduleLine} />
+          </View>
         </View>
       </ScrollView>
 
-      {/* Sticky Actions */}
+      {/* Sticky Bottom Bar */}
       <View
-        sx={{
+        style={{
           position: "absolute",
           left: 0,
           right: 0,
           bottom: 0,
-          bg: "#fff",
+          backgroundColor: "#fff",
           borderTopWidth: 1,
           borderTopColor: C.border,
-          p: 14,
+          padding: 14,
           flexDirection: "row",
           columnGap: 12,
         }}
       >
         <Pressable
-          onPress={() => router.back()}
-          sx={{
+          onPress={() => router.push(BACK_ROUTE)}
+          style={{
             flex: 1,
             borderWidth: 1,
             borderColor: C.border,
-            borderRadius: 18,
+            borderRadius: 14,
             alignItems: "center",
             justifyContent: "center",
-            py: BTN_PY,
-            bg: "#fff",
+            paddingVertical: 14,
+            backgroundColor: "#fff",
           }}
         >
-          <Text sx={{ color: C.text, fontWeight: "900", fontSize: 16 }}>Back : Step 3</Text>
+          <Text style={{ color: C.text, fontWeight: "800" }}>Back</Text>
         </Pressable>
 
         <Pressable
-          onPress={onConfirm}
-          sx={{
+          onPress={onNext}
+          disabled={!canNext}
+          style={{
             flex: 1.25,
-            borderRadius: 18,
+            borderRadius: 14,
             alignItems: "center",
             justifyContent: "center",
-            py: BTN_PY,
-            bg: C.blue,
+            paddingVertical: 14,
+            backgroundColor: canNext ? C.blue : "#a7c8ff",
           }}
         >
-          <Text sx={{ color: "#fff", fontWeight: "900", fontSize: 16 }}>Confirm & Submit</Text>
+          <Text style={{ color: "#fff", fontWeight: "800" }}>Next : Service Request Details</Text>
         </Pressable>
       </View>
 
-      {/* Success Modal */}
-      <Modal visible={submitted} animationType="fade" transparent onRequestClose={() => setSubmitted(false)}>
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.35)",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
+      {/* Barangay Modal */}
+      <Modal
+        visible={brgyOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setBrgyOpen(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" }}>
           <View
             style={{
-              width: "88%",
               backgroundColor: "#fff",
-              borderRadius: 20,
-              borderWidth: 2,
-              borderColor: C.blue,
-              paddingVertical: 22,
-              paddingHorizontal: 18,
-              alignItems: "center",
+              borderTopLeftRadius: 22,
+              borderTopRightRadius: 22,
+              maxHeight: "75%",
             }}
           >
+            {/* header */}
             <View
               style={{
-                width: 96,
-                height: 96,
-                borderRadius: 48,
-                borderWidth: 2,
-                borderColor: "#cfe1ff",
+                paddingHorizontal: PAD,
+                paddingVertical: 14,
+                borderBottomWidth: 1,
+                borderBottomColor: C.border,
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 12,
-                backgroundColor: C.chip,
+                justifyContent: "space-between",
               }}
             >
-              <CheckCircle2 color={C.blue} size={48} />
+              <Text style={{ fontWeight: "900", fontSize: 18, color: C.text }}>Select Barangay</Text>
+              <TouchableOpacity onPress={() => setBrgyOpen(false)} style={{ padding: 8 }}>
+                <Text style={{ color: C.blue, fontWeight: "800" }}>Close</Text>
+              </TouchableOpacity>
             </View>
 
-            <Text sx={{ color: C.text, fontWeight: "900", fontSize: 18, mb: 8, textAlign: "center" }}>
-              Request Submitted!
-            </Text>
-            <Text sx={{ color: C.sub, textAlign: "center", lineHeight: 20, mb: 16 }}>
-              You’ll receive a notification once an admin reviews your request.
-            </Text>
+            {/* search */}
+            <View style={{ paddingHorizontal: PAD, paddingVertical: 12 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: C.field,
+                  borderWidth: 1,
+                  borderColor: C.border,
+                  borderRadius: 14,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  columnGap: 8,
+                }}
+              >
+                <SearchIcon />
+                <TextInput
+                  value={brgyQuery}
+                  onChangeText={setBrgyQuery}
+                  placeholder="Search barangay…"
+                  placeholderTextColor={C.placeholder}
+                  style={{ color: C.text, flex: 1 }}
+                />
+              </View>
+            </View>
 
-            <Pressable
-              onPress={() => {
-                setSubmitted(false);
-                router.replace(CONFIRM_ROUTE);
-              }}
-              sx={{ bg: C.blue, borderRadius: 12, px: 16, py: 14, alignSelf: "stretch" }}
-            >
-              <Text sx={{ color: "#fff", fontWeight: "900", textAlign: "center" }}>Go to Dashboard</Text>
-            </Pressable>
+            {/* list */}
+            <FlatList
+              keyboardShouldPersistTaps="handled"
+              data={BARANGAYS.filter((b) =>
+                b.toLowerCase().includes((brgyQuery || "").toLowerCase())
+              ).filter((b) => b !== "Select Barangay")}
+              keyExtractor={(item) => item}
+              ItemSeparatorComponent={() => (
+                <View style={{ height: 1, backgroundColor: C.border }} />
+              )}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    setBrgy(item);
+                    setBrgyOpen(false);
+                  }}
+                  style={{ paddingHorizontal: PAD, paddingVertical: 14 }}
+                >
+                  <Text style={{ color: C.text }}>{item}</Text>
+                </TouchableOpacity>
+              )}
+              style={{ maxHeight: "100%" }}
+            />
           </View>
         </View>
       </Modal>
-
-      {/* LIGHTBOX: full-screen image preview */}
-      <Modal
-        visible={!!lightboxUri}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setLightboxUri(null)}
-      >
-        <Pressable
-          onPress={() => setLightboxUri(null)}
-          sx={{
-            flex: 1,
-            bg: "rgba(0,0,0,0.96)",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {lightboxUri ? (
-            <Image
-              source={{ uri: lightboxUri }}
-              sx={{ width: "100%", height: "100%" }}
-              resizeMode="contain"
-            />
-          ) : null}
-
-          {/* Close button */}
-          <Pressable
-            onPress={() => setLightboxUri(null)}
-            sx={{
-              position: "absolute",
-              top: 22,
-              right: 22,
-              bg: "rgba(0,0,0,0.5)",
-              borderRadius: 999,
-              p: 8,
-            }}
-          >
-            <X color="#fff" size={26} />
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
-/* ---------- UI Bits ---------- */
+/* ---------- UI bits ---------- */
+const Label = ({ children, icon }: any) => (
+  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+    {icon ? <View style={{ width: 18, marginRight: 8 }}>{icon}</View> : null}
+    <Text style={{ color: C.text, fontWeight: "800" }}>{children}</Text>
+  </View>
+);
 
-function Card({
-  title,
-  children,
-  actionLabel,
-  onAction,
-  loading,
-}: {
-  title: string;
-  children: ReactNode;
-  actionLabel?: string;
-  onAction?: () => void;
-  loading?: boolean;
-}) {
-  return (
-    <View
-      sx={{
-        bg: C.card,
-        borderWidth: 1,
-        borderColor: C.border,
-        borderRadius: 24,
-        px: PAD,
-        py: 18,
-        mb: 22,
-        shadowColor: "#000",
-        shadowOpacity: Platform.OS === "android" ? 0 : 0.06,
-        shadowRadius: 14,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 1,
-      }}
-    >
-      <View sx={{ flexDirection: "row", alignItems: "center", mb: 14 }}>
-        <Text sx={{ color: C.text, fontWeight: "900", fontSize: 20, flex: 1 }}>{title}</Text>
-        {actionLabel && onAction ? (
-          <Pressable
-            onPress={onAction}
-            sx={{
-              flexDirection: "row",
-              alignItems: "center",
-              px: 12,
-              py: 8,
-              bg: C.chip,
-              borderRadius: 999,
-              borderWidth: 1,
-              borderColor: C.border,
-            }}
-          >
-            <Pencil color={C.blue} size={16} />
-            <Text sx={{ color: C.blue, fontWeight: "800", ml: 6 }}>{actionLabel}</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {loading ? <Text sx={{ color: C.sub }}>Loading…</Text> : children}
-    </View>
-  );
-}
+const Input = ({
+  borderTint = "none",
+  style,
+  ...props
+}: any & { borderTint?: "ok" | "bad" | "none" }) => (
+  <TextInput
+    {...props}
+    placeholderTextColor={C.placeholder}
+    style={[
+      {
+        height: 48,
+        paddingHorizontal: 14,
+        borderRadius: 14,
+        backgroundColor: C.field,
+        fontSize: 15,
+        borderWidth: 2,
+        borderColor:
+          borderTint === "none" ? C.border : borderTint === "ok" ? "#16a34a" : "#ef4444",
+        color: C.text,
+      },
+      style,
+    ]}
+  />
+);
 
-function InfoBanner({ text }: { text: string }) {
-  return (
-    <View
-      sx={{
-        borderWidth: 1,
-        borderColor: C.border,
-        bg: "#f5f9ff",
-        borderRadius: 16,
-        px: 14,
-        py: 12,
-        mb: 18,
-        flexDirection: "row",
-        alignItems: "flex-start",
-      }}
-    >
-      <Info color={C.blue} size={18} />
-      <Text sx={{ color: C.text, ml: 10, lineHeight: 20, flex: 1 }}>{text}</Text>
-    </View>
-  );
-}
+const Multiline = (props: any) => (
+  <TextInput
+    {...props}
+    multiline
+    textAlignVertical="top"
+    placeholderTextColor={C.placeholder}
+    style={{
+      minHeight: 84,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderRadius: 14,
+      backgroundColor: C.field,
+      fontSize: 15,
+      borderWidth: 2,
+      borderColor: C.border,
+      color: C.text,
+    }}
+  />
+);
 
-function Avatar({ uri, onOpen }: { uri?: string | null; onOpen?: (u: string) => void }) {
-  const canOpen = !!uri && typeof onOpen === "function";
-  const Wrapper = canOpen ? Pressable : View;
-  return (
-    <Wrapper
-      {...(canOpen ? { onPress: () => onOpen!(uri!) } : {})}
-      sx={{
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        borderWidth: 1,
-        borderColor: C.border,
-        bg: "#f1f5f9",
-        overflow: "hidden",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {uri ? (
-        <Image source={{ uri }} sx={{ width: "100%", height: "100%" }} />
-      ) : (
-        <Text sx={{ color: C.sub, fontSize: 12 }}>No Photo</Text>
-      )}
-    </Wrapper>
-  );
-}
+const selectBtn = {
+  height: 48,
+  backgroundColor: C.field,
+  borderWidth: 2,
+  borderColor: C.border,
+  borderRadius: 14,
+  paddingHorizontal: 14,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+} as const;
 
-function List({ children }: { children: ReactNode }) {
-  return (
-    <View
-      sx={{
-        borderWidth: 1,
-        borderColor: C.border,
-        borderRadius: 16,
-        overflow: "hidden",
-      }}
-    >
-      {children}
-    </View>
-  );
-}
-
-function Row({
-  icon,
-  label,
+/** phone with +63 prefix + flag */
+const PhoneGroup = ({
   value,
-  highlight,
+  onChangeText,
 }: {
-  icon: ReactNode;
-  label: string;
   value: string;
-  highlight?: boolean;
-}) {
-  return (
+  onChangeText: (t: string) => void;
+}) => (
+  <View style={{ flexDirection: "row" }}>
     <View
-      sx={{
-        flexDirection: "row",
-        alignItems: "center",
-        px: 14,
-        py: 12,
-        bg: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: C.border,
-      }}
-    >
-      <View sx={{ width: 22, alignItems: "center", mr: 10 }}>{icon}</View>
-      <Text sx={{ color: C.sub, width: 120, fontSize: 12 }}>{label}</Text>
-      <Text
-        sx={{
-          color: highlight ? C.blue : C.text,
-          fontWeight: highlight ? "900" : "700",
-          flex: 1,
-        }}
-        numberOfLines={2}
-      >
-        {value || "—"}
-      </Text>
-    </View>
-  );
-}
-
-function Attachment({ uri, onOpen }: { uri?: string | null; onOpen?: (u: string) => void }) {
-  const canOpen = !!uri && typeof onOpen === "function";
-  const Wrapper = canOpen ? Pressable : View;
-  return (
-    <Wrapper
-      {...(canOpen ? { onPress: () => onOpen!(uri!) } : {})}
-      sx={{
-        height: 160,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: C.border,
-        bg: "#eef3f9",
+      style={{
+        paddingHorizontal: 12,
+        minWidth: 84,
         alignItems: "center",
         justifyContent: "center",
-        overflow: "hidden",
-      }}
-    >
-      {uri ? (
-        <Image source={{ uri }} sx={{ width: "100%", height: "100%" }} resizeMode="cover" />
-      ) : (
-        <View sx={{ alignItems: "center" }}>
-          <ImageIcon color="#9aa9bc" size={28} />
-          <Text sx={{ color: "#9aa9bc", mt: 6 }}>No Attachment</Text>
-        </View>
-      )}
-    </Wrapper>
-  );
-}
-
-function ReadyCard({ ok, schedule }: { ok: boolean; schedule: string }) {
-  return (
-    <View
-      sx={{
-        borderWidth: 1,
-        borderColor: ok ? "#d1fae5" : C.border,
-        bg: ok ? "#ecfdf5" : "#fff",
-        borderRadius: 16,
-        px: 14,
-        py: 14,
+        borderTopLeftRadius: 14,
+        borderBottomLeftRadius: 14,
+        borderWidth: 2,
+        borderColor: C.border,
+        backgroundColor: C.field,
         flexDirection: "row",
-        alignItems: "center",
-        mb: 22,
+        gap: 8,
       }}
     >
-      <CheckCircle2 color={ok ? C.good : C.sub} size={22} />
-      <View sx={{ ml: 12, flex: 1 }}>
-        <Text sx={{ color: C.text, fontWeight: "900" }}>
-          {ok ? "Everything looks ready" : "Double-check your details"}
-        </Text>
-        <Text sx={{ color: C.sub, mt: 4 }}>
-          Preferred schedule: {schedule || "—"}
-        </Text>
-      </View>
-      <ChevronRight color={C.sub} size={18} />
+      {/* simple PH flag dot */}
+      <View
+        style={{
+          width: 16,
+          height: 10,
+          backgroundColor: "#3f7de0",
+          borderRadius: 2,
+          borderWidth: 1,
+          borderColor: "#2d5fb3",
+        }}
+      />
+      <Text style={{ color: C.text, fontWeight: "900" }}>+63</Text>
     </View>
-  );
-}
+    <TextInput
+      value={value}
+      onChangeText={onChangeText}
+      keyboardType="number-pad"
+      placeholder="9XXXXXXXXX"
+      placeholderTextColor={C.placeholder}
+      style={{
+        flex: 1,
+        backgroundColor: C.field,
+        borderWidth: 2,
+        borderColor: C.border,
+        borderLeftWidth: 0,
+        borderTopRightRadius: 14,
+        borderBottomRightRadius: 14,
+        paddingHorizontal: 14,
+        fontSize: 15,
+        color: C.text,
+      }}
+    />
+  </View>
+);
 
-/* ---------- Helpers ---------- */
-function fullName(first?: string, last?: string) {
-  const f = first?.trim() || "";
-  const l = last?.trim() || "";
-  return [f, l].filter(Boolean).join(" ");
-}
-function isoDate(iso?: string | null) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-function isoTime(iso?: string | null) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  let h = d.getHours();
-  const m = String(d.getMinutes()).padStart(2, "0");
-  const am = h < 12 ? "AM" : "PM";
-  h = h % 12 || 12;
-  return `${h}:${m} ${am}`;
-}
-function formatSchedule(dateISO?: string | null, timeISO?: string | null) {
-  if (!dateISO && !timeISO) return "—";
-  const d = dateISO ? isoDate(dateISO) : "";
-  const t = timeISO ? isoTime(timeISO) : "";
-  return `${d}${d && t ? " • " : ""}${t}`;
-}
-function money(s?: string | null) {
-  if (!s) return "";
-  const n = Number(s);
-  if (Number.isNaN(n)) return s || "";
-  return n.toLocaleString("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-}
-function yn(v?: boolean | null) {
-  if (v === true) return "Yes";
-  if (v === false) return "No";
-  return "—";
-}
-function serviceLine(type?: string | null, task?: string | null) {
-  if (!type && !task) return "—";
-  return [type, task].filter(Boolean).join(" — ");
-}
-
-/** readiness check to drive the ReadyCard */
-function isReady(p1?: Step1 | null, p2?: Step2 | null, p3?: Step3 | null) {
-  if (!p1 || !p2 || !p3) return false;
-  const s1Ok =
-    !!p1.first?.trim() &&
-    !!p1.last?.trim() &&
-    !!p1.phone?.trim() &&
-    !!p1.email?.trim() &&
-    !!p1.brgy &&
-    !!p1.street?.trim() &&
-    !!p1.addr?.trim();
-
-  const s2Ok =
-    !!p2.serviceType &&
-    !!p2.serviceTask &&
-    !!p2.date &&
-    !!p2.time &&
-    !!p2.desc?.trim();
-
-  const s3Ok =
-    (p3.rateType === "hour" && !!p3.hourFrom && !!p3.hourTo) ||
-    (p3.rateType === "job" && !!p3.jobFixed);
-
-  return s1Ok && s2Ok && s3Ok;
-}
+const SearchIcon = () => (
+  // tiny inline search glyph (keeps deps consistent even if lucide isn't imported here)
+  <View
+    style={{
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: C.placeholder,
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <View
+      style={{
+        width: 6,
+        height: 2,
+        backgroundColor: C.placeholder,
+        borderRadius: 1,
+        transform: [{ rotate: "45deg" }, { translateX: 5 }, { translateY: 3 }],
+      }}
+    />
+  </View>
+);

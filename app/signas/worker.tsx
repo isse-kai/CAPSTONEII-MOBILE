@@ -1,226 +1,341 @@
 // app/signup/signup.tsx
-import { Image, Pressable, ScrollView, Text, TextInput, View } from 'dripsy'
-import { useFonts } from 'expo-font'
-import { useRouter } from 'expo-router'
-import { useEffect, useRef, useState } from 'react'
-import { Alert, Animated, KeyboardAvoidingView, Platform, SafeAreaView, StatusBar } from 'react-native'
+import { Image, Pressable, Text, TextInput, View } from "dripsy";
+import { useFonts } from "expo-font";
+import { useRouter } from "expo-router";
+import {
+  ArrowLeft,
+  Check,
+  Eye,
+  EyeOff,
+  Globe,
+  Info,
+  Lock,
+  LogIn,
+  Mail,
+  User,
+} from "lucide-react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+} from "react-native";
+
+/* ---------- Theme ---------- */
+const C = {
+  bg: "#f7f9fc",
+  card: "#ffffff",
+  text: "#0f172a",
+  sub: "#64748b",
+  blue: "#1e86ff",
+  blueDark: "#0c62c9",
+  border: "#e6eef7",
+  field: "#f8fafc",
+  placeholder: "#9aa4b2",
+  ok: "#16a34a",
+  warn: "#f59e0b",
+  bad: "#ef4444",
+};
+const PAD = 22;
+const GAP = 16;
+const MIN_PW = 12;
 
 export default function SignUp() {
-  const router = useRouter()
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPw, setShowPw] = useState(false)
-  const [showPw2, setShowPw2] = useState(false)
+  const router = useRouter();
 
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(50)).current
+  // form
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [agree, setAgree] = useState(false);
+
+  // ui
+  const [showPw, setShowPw] = useState(false);
+  const [showPw2, setShowPw2] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // anim
+  const fade = useRef(new Animated.Value(0)).current;
+  const slide = useRef(new Animated.Value(22)).current;
 
   const [fontsLoaded] = useFonts({
-    'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
-    'Poppins-Medium': require('../../assets/fonts/Poppins/Poppins-Medium.ttf'),
-    'Poppins-SemiBold': require('../../assets/fonts/Poppins/Poppins-SemiBold.ttf'),
-    'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
-    'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
-  })
+    "Poppins-Regular": require("../../assets/fonts/Poppins/Poppins-Regular.ttf"),
+    "Poppins-Medium": require("../../assets/fonts/Poppins/Poppins-Medium.ttf"),
+    "Poppins-SemiBold": require("../../assets/fonts/Poppins/Poppins-SemiBold.ttf"),
+    "Poppins-Bold": require("../../assets/fonts/Poppins/Poppins-Bold.ttf"),
+    "Poppins-ExtraBold": require("../../assets/fonts/Poppins/Poppins-ExtraBold.ttf"),
+  });
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 800, useNativeDriver: true })
-    ]).start()
-  }, [fadeAnim, slideAnim])
+      Animated.timing(fade, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(slide, { toValue: 0, duration: 500, useNativeDriver: true }),
+    ]).start();
+  }, [fade, slide]);
 
-  const goLogin = () => router.replace('/signup/signup')
-  const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
-  const pwOk = (p: string) => p.length >= 6
+  /* ---------- Validation ---------- */
+  const emailOk = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
 
-  const isFormValid =
-    fullName.trim().length > 1 &&
-    emailOk(email) &&
-    pwOk(password) &&
-    password === confirmPassword
+  const pwScore = useMemo(() => {
+    let s = 0;
+    if (pw.length >= MIN_PW) s += 1;
+    if (/[A-Z]/.test(pw)) s += 1;
+    if (/[0-9]/.test(pw)) s += 1;
+    if (/[^A-Za-z0-9]/.test(pw)) s += 1;
+    return s; // 0–4
+  }, [pw]);
 
-  const handleSignUp = () => {
-    if (!isFormValid) {
-      Alert.alert('Check your details', 'Please fill up all fields correctly.')
-      return
-    }
-    setIsLoading(true)
+  const pwHint = useMemo(() => {
+    if (!pw) return { label: "Password", color: C.sub };
+    if (pwScore <= 1) return { label: "Weak", color: C.bad };
+    if (pwScore === 2) return { label: "Okay", color: C.warn };
+    return { label: "Strong", color: C.ok };
+  }, [pwScore, pw]);
+
+  const pwMatch = useMemo(() => pw.length >= MIN_PW && pw === pw2, [pw, pw2]);
+
+  const canSubmit = useMemo(
+    () => fullName.trim() && emailOk && pwMatch && agree,
+    [fullName, emailOk, pwMatch, agree]
+  );
+
+  const submit = async () => {
+    if (!canSubmit || loading) return;
+    setLoading(true);
+    // TODO: Integrate with your API
     setTimeout(() => {
-      setIsLoading(false)
-      Alert.alert('Success', `Account created for ${fullName}`)
-      router.replace('/login/login')
-    }, 1100)
-  }
+      setLoading(false);
+      router.replace("/login/login");
+    }, 900);
+  };
 
-  if (!fontsLoaded) return null
+  if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View sx={{ position: 'absolute', left: 16, top: Platform.OS === 'ios' ? 8 : 8, zIndex: 20 }}>
-          <Pressable
-            onPress={goLogin}
-            accessibilityRole="button"
-            accessibilityLabel="Go to login"
-            sx={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' }}
-            style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-          >
-            <Text sx={{ fontSize: 18, color: '#001a33' }}>←</Text>
-          </Pressable>
-        </View>
-
-        <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}>
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1 }}
+            contentContainerStyle={{ paddingBottom: 28 }}
             keyboardShouldPersistTaps="handled"
-            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
             showsVerticalScrollIndicator={false}
           >
-            <View sx={{ flex: 1, px: 'lg', mx: 'md', minHeight: '100%' }}>
-              <View sx={{ alignItems: 'center', pt: 'xl', pb: 'sm' }}>
-                <Image source={require('../../assets/jdklogo.png')} style={{ width: 85, height: 85 }} resizeMode="contain" />
+            {/* Header */}
+            <View sx={{ px: PAD, pt: 12, pb: 8, alignItems: "center", position: "relative" }}>
+              <Pressable
+                onPress={() => router.back()}
+                sx={{
+                  position: "absolute",
+                  left: PAD,
+                  top: 12,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ArrowLeft color={C.text} size={26} />
+              </Pressable>
+
+              <Image
+                source={require("../../assets/jdklogo.png")}
+                sx={{ width: 82, height: 82 }}
+                resizeMode="contain"
+              />
+            </View>
+
+            {/* Title */}
+            <View sx={{ alignItems: "center", mb: 10, px: PAD }}>
+              <Text
+                sx={{
+                  color: C.text,
+                  fontFamily: "Poppins-ExtraBold",
+                  fontSize: 26,
+                  textAlign: "center",
+                }}
+              >
+                Create your <Text sx={{ color: C.blue }}>Worker</Text> account
+              </Text>
+              <Text sx={{ color: C.sub, mt: 6, textAlign: "center" }}>
+                Sign up to start getting home-service jobs
+              </Text>
+            </View>
+
+            {/* Card */}
+            <View
+              sx={{
+                mx: PAD,
+                bg: C.card,
+                borderWidth: 1,
+                borderColor: C.border,
+                borderRadius: 22,
+                px: PAD,
+                py: 20,
+                shadowColor: "#000",
+                shadowOpacity: Platform.OS === "android" ? 0 : 0.05,
+                shadowRadius: 14,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 1,
+              }}
+            >
+              {/* Google */}
+              <Pressable
+                onPress={() => {}}
+                sx={{
+                  height: 52,
+                  borderWidth: 1.8,
+                  borderColor: C.blue,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  columnGap: 10,
+                }}
+              >
+                <Globe color={C.blue} size={18} />
+                <Text sx={{ color: C.text, fontFamily: "Poppins-SemiBold" }}>
+                  Continue with Google
+                </Text>
+              </Pressable>
+
+              {/* or divider */}
+              <View sx={{ flexDirection: "row", alignItems: "center", my: 18 }}>
+                <View sx={{ flex: 1, height: 1, bg: C.border }} />
+                <Text sx={{ color: C.sub, mx: 12 }}>or</Text>
+                <View sx={{ flex: 1, height: 1, bg: C.border }} />
               </View>
 
-              <View sx={{ alignItems: 'center', mb: 'lg' }}>
-                <Text sx={{ fontSize: 24, fontFamily: 'Poppins-ExtraBold', color: '#001a33', mb: 'xs', textAlign: 'center' }}>
-                  Create your account
-                </Text>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4e6075', textAlign: 'center', lineHeight: 20 }}>
-                  Sign up to start using JDK HOMECARE
+              {/* --- VERTICAL FORM --- */}
+              {/* Full Name */}
+              <Field label="Full Name" icon={<User color={C.sub} size={16} />}>
+                <Input
+                  value={fullName}
+                  onChangeText={setFullName}
+                  placeholder="Your full name"
+                />
+              </Field>
+
+              {/* Email */}
+              <Field label="Email Address" icon={<Mail color={C.sub} size={16} />}>
+                <Input
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Email address"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  rightStatus={email ? (emailOk ? "ok" : "bad") : "none"}
+                />
+              </Field>
+
+              {/* Password */}
+              <Field
+                label={
+                  <Text>
+                    Password <Text sx={{ color: C.sub }}>(12+)</Text>
+                  </Text>
+                }
+                icon={<Lock color={C.sub} size={16} />}
+              >
+                <Input
+                  value={pw}
+                  onChangeText={setPw}
+                  placeholder="Create a password"
+                  secureTextEntry={!showPw}
+                  rightAdornment={
+                    <Pressable onPress={() => setShowPw((s) => !s)} hitSlop={10}>
+                      {showPw ? <EyeOff color={C.sub} size={18} /> : <Eye color={C.sub} size={18} />}
+                    </Pressable>
+                  }
+                />
+                {!!pw && (
+                  <Text sx={{ mt: 8, color: pwHint.color, fontSize: 12 }}>
+                    {pwHint.label} • Use letters, numbers & symbols
+                  </Text>
+                )}
+              </Field>
+
+              {/* Confirm Password */}
+              <Field label="Confirm Password" icon={<Lock color={C.sub} size={16} />}>
+                <Input
+                  value={pw2}
+                  onChangeText={setPw2}
+                  placeholder="Re-enter your password"
+                  secureTextEntry={!showPw2}
+                  rightStatus={pw2 ? (pwMatch ? "ok" : "bad") : "none"}
+                  rightAdornment={
+                    <Pressable onPress={() => setShowPw2((s) => !s)} hitSlop={10}>
+                      {showPw2 ? <EyeOff color={C.sub} size={18} /> : <Eye color={C.sub} size={18} />}
+                    </Pressable>
+                  }
+                />
+              </Field>
+
+              {/* Note */}
+              <View sx={{ flexDirection: "row", alignItems: "center", mt: 16 }}>
+                <Info color={C.sub} size={16} />
+                <Text sx={{ color: C.sub, ml: 8, fontSize: 12 }}>
+                  You can update your details later in Settings.
                 </Text>
               </View>
 
-              <View sx={{ borderRadius: 14, p: 'lg', mb: 'lg' }}>
-                <View sx={{ mb: 'md' }}>
-                  <Text sx={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: '#001a33', mb: 'xs' }}>Full Name</Text>
-                  <TextInput
-                    placeholder="Enter your full name"
-                    value={fullName}
-                    onChangeText={setFullName}
-                    style={inputStyle(fullName)}
-                    placeholderTextColor="#9aa4b2"
-                    autoComplete="name"
-                    blurOnSubmit={false}
-                    returnKeyType="next"
-                  />
-                </View>
-
-                <View sx={{ mb: 'md' }}>
-                  <Text sx={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: '#001a33', mb: 'xs' }}>Email Address</Text>
-                  <TextInput
-                    placeholder="your@email.com"
-                    value={email}
-                    onChangeText={setEmail}
-                    style={inputStyle(email, emailOk(email))}
-                    placeholderTextColor="#9aa4b2"
-                    autoComplete="email"
-                    keyboardType="email-address"
-                    blurOnSubmit={false}
-                    returnKeyType="next"
-                  />
-                  {!!email && !emailOk(email) && (
-                    <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Regular', color: '#dc3545', mt: 'xs' }}>
-                      Please enter a valid email.
-                    </Text>
-                  )}
-                </View>
-
-                <View sx={{ mb: 'md' }}>
-                  <Text sx={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: '#001a33', mb: 'xs' }}>Password</Text>
-                  <View sx={{ position: 'relative' }}>
-                    <TextInput
-                      placeholder="Create a password (min 6 chars)"
-                      value={password}
-                      onChangeText={setPassword}
-                      secureTextEntry={!showPw}
-                      style={inputStyle(password, pwOk(password))}
-                      placeholderTextColor="#9aa4b2"
-                      autoComplete="password-new"
-                      blurOnSubmit={false}
-                      returnKeyType="next"
-                    />
-                    <Pressable onPress={() => setShowPw(s => !s)} sx={{ position: 'absolute', right: 12, top: 10, padding: 6, borderRadius: 8 }}>
-                      <Text sx={{ color: '#0685f4', fontSize: 12 }}>{showPw ? 'Hide' : 'Show'}</Text>
-                    </Pressable>
-                  </View>
-                  {!!password && !pwOk(password) && (
-                    <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Regular', color: '#dc3545', mt: 'xs' }}>
-                      Use at least 6 characters.
-                    </Text>
-                  )}
-                </View>
-
-                <View sx={{ mb: 'lg' }}>
-                  <Text sx={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: '#001a33', mb: 'xs' }}>Confirm Password</Text>
-                  <View sx={{ position: 'relative' }}>
-                    <TextInput
-                      placeholder="Confirm your password"
-                      value={confirmPassword}
-                      onChangeText={setConfirmPassword}
-                      secureTextEntry={!showPw2}
-                      style={inputStyle(confirmPassword, confirmPassword.length > 0 && confirmPassword === password)}
-                      placeholderTextColor="#9aa4b2"
-                      autoComplete="password-new"
-                      blurOnSubmit={false}
-                      returnKeyType="done"
-                    />
-                    <Pressable onPress={() => setShowPw2(s => !s)} sx={{ position: 'absolute', right: 12, top: 10, padding: 6, borderRadius: 8 }}>
-                      <Text sx={{ color: '#0685f4', fontSize: 12 }}>{showPw2 ? 'Hide' : 'Show'}</Text>
-                    </Pressable>
-                  </View>
-                  {!!confirmPassword && (
-                    <Text
-                      sx={{
-                        fontSize: 12,
-                        fontFamily: 'Poppins-Regular',
-                        color: confirmPassword === password ? '#28a745' : '#dc3545',
-                        mt: 'xs'
-                      }}
-                    >
-                      {confirmPassword === password ? '✓ Passwords match' : '✗ Passwords do not match'}
-                    </Text>
-                  )}
-                </View>
-
-                <Pressable
-                  onPress={handleSignUp}
-                  disabled={!isFormValid || isLoading}
+              {/* Agree */}
+              <Pressable
+                onPress={() => setAgree((v) => !v)}
+                sx={{ flexDirection: "row", alignItems: "center", mt: 18 }}
+              >
+                <View
                   sx={{
-                    height: 54,
-                    backgroundColor: !isFormValid ? '#e4e7ec' : isLoading ? '#9aa4b2' : '#0685f4',
-                    borderRadius: 12,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mb: 'md'
+                    width: 24,
+                    height: 24,
+                    borderRadius: 8,
+                    borderWidth: 1.5,
+                    borderColor: C.border,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bg: agree ? C.blue : "#fff",
                   }}
-                  style={({ pressed }) => [{ opacity: pressed && isFormValid && !isLoading ? 0.9 : 1, transform: [{ scale: pressed && isFormValid && !isLoading ? 0.98 : 1 }] }]}
                 >
-                  <Text sx={{ fontSize: 15, fontFamily: 'Poppins-SemiBold', color: !isFormValid ? '#9aa4b2' : '#ffffff' }}>
-                    {isLoading ? 'Creating Account...' : 'Create Account'}
-                  </Text>
-                </Pressable>
-
-                <View sx={{ alignItems: 'center' }}>
-                  <Text sx={{ fontSize: 13, color: '#4e6075', fontFamily: 'Poppins-Regular', mb: 'xs' }}>
-                    Already have an account?
-                  </Text>
-                  <Pressable onPress={goLogin} style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
-                    <Text sx={{ fontSize: 15, color: '#0685f4', fontFamily: 'Poppins-SemiBold' }}>
-                      Sign In
-                    </Text>
-                  </Pressable>
+                  {agree ? <Check color="#fff" size={14} /> : null}
                 </View>
-              </View>
 
-              <View sx={{ pb: 'lg', alignItems: 'center' }}>
-                <Text sx={{ fontSize: 12, color: '#9aa4b2', textAlign: 'center', lineHeight: 18, fontFamily: 'Poppins-Regular' }}>
-                  By creating an account, you agree to our{'\n'}
-                  <Text sx={{ color: '#0685f4' }}>Terms of Service</Text> and <Text sx={{ color: '#0685f4' }}>Privacy Policy</Text>
+                <Text sx={{ color: C.text, ml: 12, flex: 1 }}>
+                  I agree to JDK HOMECARE’s <Text sx={{ color: C.blue }}>Terms of Service</Text> and{" "}
+                  <Text sx={{ color: C.blue }}>Privacy Policy</Text>.
+                </Text>
+              </Pressable>
+
+              {/* Submit */}
+              <Pressable
+                onPress={submit}
+                disabled={!canSubmit || loading}
+                sx={{
+                  height: 54,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mt: 18,
+                  bg: !canSubmit ? "#cfd8e3" : loading ? C.blueDark : C.blue,
+                }}
+                style={({ pressed }) => [{ opacity: pressed && canSubmit && !loading ? 0.92 : 1 }]}
+              >
+                <Text sx={{ color: "#fff", fontFamily: "Poppins-Bold", fontSize: 15 }}>
+                  Create worker account
+                </Text>
+              </Pressable>
+
+              {/* Login link */}
+              <View sx={{ alignItems: "center", mt: 12 }}>
+                <Text sx={{ color: C.sub }}>
+                  Already have an account?{" "}
+                  <Text onPress={() => router.replace("/login/login")} sx={{ color: C.blue }}>
+                    <LogIn color={C.blue} size={14} /> Log In
+                  </Text>
                 </Text>
               </View>
             </View>
@@ -228,17 +343,89 @@ export default function SignUp() {
         </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  )
+  );
 }
 
-const inputStyle = (value: string, ok?: boolean) => ({
-  height: 46,
-  paddingHorizontal: 15,
-  borderRadius: 12,
-  backgroundColor: 'transparent',
-  fontSize: 14,
-  borderWidth: 2,
-  borderColor: value ? (ok === undefined ? '#0685f4' : ok ? '#28a745' : '#dc3545') : '#e4e7ec',
-  color: '#001a33',
-  fontFamily: 'Poppins-Regular',
-} as const)
+/* ---------- UI bits ---------- */
+function Field({
+  label,
+  children,
+  icon,
+}: {
+  label: string | React.ReactNode;
+  children: React.ReactNode;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <View sx={{ width: "100%", marginBottom: GAP }}>
+      <View sx={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+        {icon ? <View sx={{ width: 18, mr: 8 }}>{icon}</View> : null}
+        {typeof label === "string" ? (
+          <Text sx={{ color: C.text, fontFamily: "Poppins-SemiBold" }}>{label}</Text>
+        ) : (
+          label
+        )}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+const Input = ({
+  rightStatus = "none",
+  rightAdornment,
+  ...props
+}: any & { rightStatus?: "ok" | "bad" | "none"; rightAdornment?: React.ReactNode }) => (
+  <View
+    sx={{
+      position: "relative",
+      height: 52,
+      bg: C.field,
+      borderWidth: 2,
+      borderColor: C.border,
+      borderRadius: 16,
+      justifyContent: "center",
+      px: 16,
+    }}
+  >
+    <TextInput
+      {...props}
+      style={{
+        color: C.text,
+        fontSize: 16,
+        padding: 0,
+        paddingRight: 34, // room for icon(s)
+      }}
+      placeholderTextColor={C.placeholder}
+    />
+    {/* right adornment (e.g., eye toggle) */}
+    {rightAdornment ? (
+      <View
+        style={{
+          position: "absolute",
+          right: 36,
+          top: 0,
+          bottom: 0,
+          justifyContent: "center",
+        }}
+      >
+        {rightAdornment}
+      </View>
+    ) : null}
+    {/* validation status */}
+    {rightStatus !== "none" ? (
+      <View
+        style={{
+          position: "absolute",
+          right: 10,
+          top: 0,
+          bottom: 0,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {rightStatus === "ok" ? <Check color={C.ok} size={18} /> : <Info color={C.bad} size={18} />}
+      </View>
+    ) : null}
+  </View>
+);

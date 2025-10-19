@@ -1,171 +1,474 @@
 // app/signas/client.tsx
-import { Image, Pressable, ScrollView, Text, TextInput, View } from 'dripsy'
-import { useFonts } from 'expo-font'
-import { useRouter } from 'expo-router'
-import { useEffect, useRef, useState } from 'react'
-import { Alert, Animated, KeyboardAvoidingView, Platform, SafeAreaView, StatusBar } from 'react-native'
+import { Image, Pressable, Text, TextInput, View } from "dripsy";
+import { useFonts } from "expo-font";
+import { useRouter } from "expo-router";
+import {
+  ArrowLeft,
+  Check,
+  ChevronDown,
+  Globe,
+  Info,
+  Lock,
+  LogIn,
+  Mail,
+  User,
+  UserRound,
+} from "lucide-react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Animated,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  TouchableOpacity,
+} from "react-native";
+
+/* ---------- Theme ---------- */
+const C = {
+  bg: "#f7f9fc",
+  card: "#ffffff",
+  text: "#0f172a",
+  sub: "#64748b",
+  blue: "#1e86ff",
+  blueDark: "#0c62c9",
+  border: "#e6eef7",
+  field: "#f8fafc",
+  placeholder: "#9aa4b2",
+  ok: "#16a34a",
+  warn: "#f59e0b",
+  bad: "#ef4444",
+  chip: "#eef6ff",
+};
+const PAD = 22;
+const GAP = 16;
+const MIN_PW = 12;
 
 export default function ClientSignUp() {
-  const router = useRouter()
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
 
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(50)).current
+  // form
+  const [first, setFirst] = useState("");
+  const [last, setLast] = useState("");
+  const [sex, setSex] = useState<string | null>(null);
+  const [sexOpen, setSexOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [agree, setAgree] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // anim
+  const fade = useRef(new Animated.Value(0)).current;
+  const slide = useRef(new Animated.Value(22)).current;
 
   const [fontsLoaded] = useFonts({
-    'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
-    'Poppins-Medium': require('../../assets/fonts/Poppins/Poppins-Medium.ttf'),
-    'Poppins-SemiBold': require('../../assets/fonts/Poppins/Poppins-SemiBold.ttf'),
-    'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
-    'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
-  })
+    "Poppins-Regular": require("../../assets/fonts/Poppins/Poppins-Regular.ttf"),
+    "Poppins-Medium": require("../../assets/fonts/Poppins/Poppins-Medium.ttf"),
+    "Poppins-SemiBold": require("../../assets/fonts/Poppins/Poppins-SemiBold.ttf"),
+    "Poppins-Bold": require("../../assets/fonts/Poppins/Poppins-Bold.ttf"),
+    "Poppins-ExtraBold": require("../../assets/fonts/Poppins/Poppins-ExtraBold.ttf"),
+  });
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 800, useNativeDriver: true })
-    ]).start()
-  }, [fadeAnim, slideAnim])
+      Animated.timing(fade, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(slide, { toValue: 0, duration: 500, useNativeDriver: true }),
+    ]).start();
+  }, [fade, slide]);
 
-  const handleSignUp = async () => {
-    if (!fullName || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields')
-      return
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match')
-      return
-    }
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters')
-      return
-    }
-    setIsLoading(true)
+  /* ---------- Validation ---------- */
+  const emailOk = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
+
+  const pwScore = useMemo(() => {
+    let s = 0;
+    if (pw.length >= MIN_PW) s += 1;
+    if (/[A-Z]/.test(pw)) s += 1;
+    if (/[0-9]/.test(pw)) s += 1;
+    if (/[^A-Za-z0-9]/.test(pw)) s += 1;
+    return s; // 0–4
+  }, [pw]);
+
+  const pwHint = useMemo(() => {
+    if (!pw) return { label: "Password", color: C.sub };
+    if (pwScore <= 1) return { label: "Weak", color: C.bad };
+    if (pwScore === 2) return { label: "Okay", color: C.warn };
+    return { label: "Strong", color: C.ok };
+  }, [pwScore, pw]);
+
+  const pwMatch = useMemo(() => pw.length >= MIN_PW && pw === pw2, [pw, pw2]);
+
+  const canSubmit = useMemo(
+    () => first.trim() && last.trim() && !!sex && emailOk && pwMatch && agree,
+    [first, last, sex, emailOk, pwMatch, agree]
+  );
+
+  const submit = async () => {
+    if (!canSubmit || loading) return;
+    setLoading(true);
     setTimeout(() => {
-      setIsLoading(false)
-      Alert.alert('Success', `Client account created for ${fullName}`)
-      router.push('/')
-    }, 2000)
-  }
+      setLoading(false);
+      router.replace("/login/login");
+    }, 900);
+  };
 
-  const handleSignIn = () => router.push('/login/login')
-  if (!fontsLoaded) return null
-
-  const isFormValid = fullName && email && password && confirmPassword && password === confirmPassword
+  if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-            <View sx={{ flex: 1, px: 'lg', mx: 'md', minHeight: '100%' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}>
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 28 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Header */}
+            <View sx={{ px: PAD, pt: 12, pb: 8, alignItems: "center", position: "relative" }}>
+              <Pressable
+                onPress={() => router.back()}
+                sx={{
+                  position: "absolute",
+                  left: PAD,
+                  top: 12,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ArrowLeft color={C.text} size={26} />
+              </Pressable>
 
-              {/* Header */}
-              <View sx={{ alignItems: 'center', pt: 'md', pb: 'sm', position: 'relative' }}>
-                <View sx={{ position: 'absolute', left: 0, top: 18, zIndex: 1 }}>
-                  <Pressable
-                    onPress={() => router.back()}
-                    sx={{ width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' }}
-                    style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-                  >
-                    <Text sx={{ fontSize: 17, color: '#001a33' }}>←</Text>
-                  </Pressable>
-                </View>
-                <Image source={require('../../assets/jdklogo.png')} style={{ width: 75, height: 75, marginTop: 12 }} resizeMode="contain" />
+              <Image
+                source={require("../../assets/jdklogo.png")}
+                sx={{ width: 82, height: 82 }}
+                resizeMode="contain"
+              />
+            </View>
+
+            {/* Title */}
+            <View sx={{ alignItems: "center", mb: 10, px: PAD }}>
+              <Text
+                sx={{
+                  color: C.text,
+                  fontFamily: "Poppins-ExtraBold",
+                  fontSize: 26,
+                  textAlign: "center",
+                }}
+              >
+                Sign up to be a <Text sx={{ color: C.blue }}>Client</Text>
+              </Text>
+            </View>
+
+            {/* Card */}
+            <View
+              sx={{
+                mx: PAD,
+                bg: C.card,
+                borderWidth: 1,
+                borderColor: C.border,
+                borderRadius: 22,
+                px: PAD,
+                py: 20,
+                shadowColor: "#000",
+                shadowOpacity: Platform.OS === "android" ? 0 : 0.05,
+                shadowRadius: 14,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 1,
+              }}
+            >
+              {/* Google */}
+              <Pressable
+                onPress={() => {}}
+                sx={{
+                  height: 52,
+                  borderWidth: 1.8,
+                  borderColor: C.blue,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  columnGap: 10,
+                }}
+              >
+                <Globe color={C.blue} size={18} />
+                <Text sx={{ color: C.text, fontFamily: "Poppins-SemiBold" }}>Continue with Google</Text>
+              </Pressable>
+
+              {/* or divider */}
+              <View sx={{ flexDirection: "row", alignItems: "center", my: 18 }}>
+                <View sx={{ flex: 1, height: 1, bg: C.border }} />
+                <Text sx={{ color: C.sub, mx: 12 }}>or</Text>
+                <View sx={{ flex: 1, height: 1, bg: C.border }} />
               </View>
 
-              {/* Title Section */}
-              <View sx={{ alignItems: 'center', mb: 'lg' }}>
-                <View sx={{ width: 45, height: 45, borderRadius: 22, backgroundColor: '#0685f4', alignItems: 'center', justifyContent: 'center', mb: 'sm' }}>
-                  <Text sx={{ fontSize: 22, color: '#ffffff' }}>🏠</Text>
-                </View>
-                <Text sx={{ fontSize: 22, fontFamily: 'Poppins-ExtraBold', color: '#001a33', mb: 'xs', textAlign: 'center' }}>Join as Client</Text>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4e6075', textAlign: 'center', lineHeight: 20 }}>
-                  Create your account and start booking home services
+              {/* --- VERTICAL FORM --- */}
+              {/* First Name */}
+              <Field label="First Name" icon={<User color={C.sub} size={16} />}>
+                <Input value={first} onChangeText={setFirst} placeholder="First name" />
+              </Field>
+
+              {/* Last Name */}
+              <Field label="Last Name" icon={<User color={C.sub} size={16} />}>
+                <Input value={last} onChangeText={setLast} placeholder="Last name" />
+              </Field>
+
+              {/* Sex */}
+              <Field label="Sex" icon={<UserRound color={C.sub} size={16} />}>
+                <Pressable onPress={() => setSexOpen(true)} sx={selectBtn}>
+                  <Text sx={{ color: sex ? C.text : C.placeholder }}>{sex || "Select sex"}</Text>
+                  <ChevronDown color={C.sub} size={18} />
+                </Pressable>
+              </Field>
+
+              {/* Email */}
+              <Field label="Email Address" icon={<Mail color={C.sub} size={16} />}>
+                <Input
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Email address"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  rightStatus={email ? (emailOk ? "ok" : "bad") : "none"}
+                />
+              </Field>
+
+              {/* Password */}
+              <Field
+                label={
+                  <Text>
+                    Password <Text sx={{ color: C.sub }}>(12+)</Text>
+                  </Text>
+                }
+                icon={<Lock color={C.sub} size={16} />}
+              >
+                <Input value={pw} onChangeText={setPw} placeholder="Password" secureTextEntry />
+                {!!pw && (
+                  <Text sx={{ mt: 8, color: pwHint.color, fontSize: 12 }}>
+                    {pwHint.label} • Use letters, numbers & symbols
+                  </Text>
+                )}
+              </Field>
+
+              {/* Confirm Password */}
+              <Field label="Confirm Password" icon={<Lock color={C.sub} size={16} />}>
+                <Input
+                  value={pw2}
+                  onChangeText={setPw2}
+                  placeholder="Confirm"
+                  secureTextEntry
+                  rightStatus={pw2 ? (pwMatch ? "ok" : "bad") : "none"}
+                />
+              </Field>
+
+              {/* Note */}
+              <View sx={{ flexDirection: "row", alignItems: "center", mt: 16 }}>
+                <Info color={C.sub} size={16} />
+                <Text sx={{ color: C.sub, ml: 8, fontSize: 12 }}>
+                  You can edit your details anytime in Settings.
                 </Text>
               </View>
 
-              {/* Form Card */}
-              <View sx={{ borderRadius: 14, p: 'lg', mb: 'lg' }}>
-                {['Full Name', 'Email Address', 'Password', 'Confirm Password'].map((label, i) => {
-                  let value, setter, placeholder, secure = false, keyboardType = 'default', autoComplete = 'off'
-                  switch(label) {
-                    case 'Full Name': value=fullName; setter=setFullName; placeholder='Enter your full name'; autoComplete='name'; break;
-                    case 'Email Address': value=email; setter=setEmail; placeholder='your@email.com'; keyboardType='email-address'; autoComplete='email'; break;
-                    case 'Password': value=password; setter=setPassword; placeholder='Create a password'; secure=true; autoComplete='password-new'; break;
-                    case 'Confirm Password': value=confirmPassword; setter=setConfirmPassword; placeholder='Confirm your password'; secure=true; autoComplete='password-new'; break;
-                  }
-                  return (
-                    <View key={i} sx={{ mb: i === 3 ? 'md' : 'md' }}>
-                      <Text sx={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: '#001a33', mb: 'xs' }}>{label}</Text>
-                      <TextInput
-                        placeholder={placeholder}
-                        value={value}
-                        onChangeText={setter}
-                        secureTextEntry={secure}
-                        style={{
-                          height: 46,
-                          paddingHorizontal: 15,
-                          borderRadius: 12,
-                          backgroundColor: 'transparent',
-                          fontSize: 14,
-                          borderWidth: 2,
-                          borderColor: i === 3
-                            ? confirmPassword && password === confirmPassword ? '#28a745'
-                              : confirmPassword && password !== confirmPassword ? '#dc3545'
-                              : '#e4e7ec'
-                            : value ? '#0685f4' : '#e4e7ec',
-                          color: '#001a33',
-                          fontFamily: 'Poppins-Regular'
-                        }}
-                        placeholderTextColor="#9aa4b2"
-                      />
-                      {i === 3 && confirmPassword && (
-                        <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Regular', color: password === confirmPassword ? '#28a745' : '#dc3545', mt: 'xs' }}>
-                          {password === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
-                        </Text>
-                      )}
-                    </View>
-                  )
-                })}
-
-                {/* Sign Up Button */}
-                <Pressable
-                  onPress={handleSignUp}
-                  disabled={!isFormValid || isLoading}
-                  sx={{ height: 54, backgroundColor: !isFormValid ? '#e4e7ec' : (isLoading ? '#9aa4b2' : '#0685f4'), borderRadius: 12, alignItems: 'center', justifyContent: 'center', mb: 'md' }}
-                  style={({ pressed }) => [{ opacity: pressed && isFormValid && !isLoading ? 0.9 : 1, transform: [{ scale: pressed && isFormValid && !isLoading ? 0.98 : 1 }] }]}
+              {/* Agree */}
+              <Pressable
+                onPress={() => setAgree((v) => !v)}
+                sx={{ flexDirection: "row", alignItems: "center", mt: 18 }}
+              >
+                <View
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 8,
+                    borderWidth: 1.5,
+                    borderColor: C.border,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bg: agree ? C.blue : "#fff",
+                  }}
                 >
-                  <Text sx={{ fontSize: 15, fontFamily: 'Poppins-SemiBold', color: !isFormValid ? '#9aa4b2' : '#ffffff' }}>
-                    {isLoading ? 'Creating Account...' : 'Create Client Account'}
-                  </Text>
-                </Pressable>
-
-                {/* Sign In Link */}
-                <View sx={{ alignItems: 'center' }}>
-                  <Text sx={{ fontSize: 13, color: '#4e6075', fontFamily: 'Poppins-Regular', mb: 'xs' }}>Already have an account?</Text>
-                  <Pressable onPress={handleSignIn} style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
-                    <Text sx={{ fontSize: 15, color: '#0685f4', fontFamily: 'Poppins-SemiBold' }}>Sign In</Text>
-                  </Pressable>
+                  {agree ? <Check color="#fff" size={14} /> : null}
                 </View>
-              </View>
 
-              {/* Footer */}
-              <View sx={{ pb: 'lg', alignItems: 'center' }}>
-                <Text sx={{ fontSize: 12, color: '#9aa4b2', textAlign: 'center', lineHeight: 18, fontFamily: 'Poppins-Regular' }}>
-                  By creating an account, you agree to our{'\n'}
-                  <Text sx={{ color: '#0685f4' }}>Terms of Service</Text> and <Text sx={{ color: '#0685f4' }}>Privacy Policy</Text>
+                <Text sx={{ color: C.text, ml: 12, flex: 1 }}>
+                  I agree to JDK HOMECARE’s <Text sx={{ color: C.blue }}>Terms of Service</Text> and{" "}
+                  <Text sx={{ color: C.blue }}>Privacy Policy</Text>.
+                </Text>
+              </Pressable>
+
+              {/* Submit */}
+              <Pressable
+                onPress={submit}
+                disabled={!canSubmit || loading}
+                sx={{
+                  height: 54,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mt: 18,
+                  bg: !canSubmit ? "#cfd8e3" : loading ? C.blueDark : C.blue,
+                }}
+                style={({ pressed }) => [{ opacity: pressed && canSubmit && !loading ? 0.92 : 1 }]}
+              >
+                <Text sx={{ color: "#fff", fontFamily: "Poppins-Bold", fontSize: 15 }}>
+                  Create my account
+                </Text>
+              </Pressable>
+
+              {/* Login link */}
+              <View sx={{ alignItems: "center", mt: 12 }}>
+                <Text sx={{ color: C.sub }}>
+                  Already have an account?{" "}
+                  <Text onPress={() => router.replace("/login/login")} sx={{ color: C.blue }}>
+                    <LogIn color={C.blue} size={14} /> Log In
+                  </Text>
                 </Text>
               </View>
             </View>
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
+
+      {/* Sex modal */}
+      <Modal visible={sexOpen} transparent animationType="fade" onRequestClose={() => setSexOpen(false)}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.35)",
+            justifyContent: "flex-end",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderTopLeftRadius: 22,
+              borderTopRightRadius: 22,
+              paddingBottom: 10,
+            }}
+          >
+            <View
+              style={{
+                paddingHorizontal: PAD,
+                paddingVertical: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: C.border,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text style={{ fontWeight: "900", fontSize: 18, color: C.text }}>Select sex</Text>
+              <TouchableOpacity onPress={() => setSexOpen(false)} style={{ padding: 6 }}>
+                <Text style={{ color: C.blue, fontWeight: "800" }}>Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            {["Male", "Female", "Prefer not to say"].map((opt) => (
+              <TouchableOpacity
+                key={opt}
+                onPress={() => {
+                  setSex(opt);
+                  setSexOpen(false);
+                }}
+                style={{
+                  paddingHorizontal: PAD,
+                  paddingVertical: 16,
+                  borderBottomWidth: 1,
+                  borderBottomColor: C.border,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <UserRound color={C.sub} size={18} />
+                <Text style={{ color: C.text, marginLeft: 12 }}>{opt}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
-  )
+  );
 }
+
+/* ---------- UI bits ---------- */
+function Field({
+  label,
+  children,
+  icon,
+}: {
+  label: string | React.ReactNode;
+  children: React.ReactNode;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <View sx={{ width: "100%", marginBottom: GAP }}>
+      <View sx={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+        {icon ? <View sx={{ width: 18, mr: 8 }}>{icon}</View> : null}
+        {typeof label === "string" ? (
+          <Text sx={{ color: C.text, fontFamily: "Poppins-SemiBold" }}>{label}</Text>
+        ) : (
+          label
+        )}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+const Input = ({
+  rightStatus = "none",
+  ...props
+}: any & { rightStatus?: "ok" | "bad" | "none" }) => (
+  <View
+    sx={{
+      position: "relative",
+      height: 52,
+      bg: C.field,
+      borderWidth: 2,
+      borderColor: C.border,
+      borderRadius: 16,
+      justifyContent: "center",
+      px: 16,
+    }}
+  >
+    <TextInput
+      {...props}
+      style={{
+        color: C.text,
+        fontSize: 16,
+        padding: 0,
+      }}
+      placeholderTextColor={C.placeholder}
+    />
+    {rightStatus !== "none" ? (
+      <View
+        style={{
+          position: "absolute",
+          right: 12,
+          top: 0,
+          bottom: 0,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {rightStatus === "ok" ? <Check color={C.ok} size={18} /> : <Info color={C.bad} size={18} />}
+      </View>
+    ) : null}
+  </View>
+);
+
+const selectBtn = {
+  height: 52,
+  bg: C.field,
+  borderWidth: 2,
+  borderColor: C.border,
+  borderRadius: 16,
+  px: 16,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+} as const;

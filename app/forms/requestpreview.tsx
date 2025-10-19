@@ -50,9 +50,9 @@ const MERGED_KEY = "request_full";
 const CONFIRM_ROUTE = "/home/home" as Href;
 
 // Edit shortcuts
-const EDIT_STEP1 = "/request" as Href;
+const EDIT_STEP1 = "/forms/request" as Href;
 const EDIT_STEP2 = "/forms/request2" as Href;
-const EDIT_STEP3 = "/request/rate" as Href;
+const EDIT_STEP3 = "/forms/request3" as Href;
 
 /* ---------- Types ---------- */
 type Step1 = {

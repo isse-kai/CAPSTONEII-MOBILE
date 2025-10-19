@@ -1,273 +1,322 @@
-import { Image, Pressable, Text, TextInput, View } from 'dripsy'
-import { useFonts } from 'expo-font'
-import { useRouter } from 'expo-router'
-import { useEffect, useRef, useState } from 'react'
-import { Animated, KeyboardAvoidingView, Platform, SafeAreaView, StatusBar } from 'react-native'
+// app/login/login.tsx
+import { Image, Pressable, Text, TextInput, View } from "dripsy";
+import { useFonts } from "expo-font";
+import { useRouter } from "expo-router";
+import { Globe, Lock, LogIn, Mail } from "lucide-react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Animated,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StatusBar,
+} from "react-native";
+
+/* ---------- Theme ---------- */
+const C = {
+  bg: "#ffffff",
+  card: "#ffffff",
+  text: "#0f172a",
+  sub: "#64748b",
+  blue: "#1e86ff",
+  border: "#e6eef7",
+  field: "#f8fafc",
+  placeholder: "#9aa4b2",
+};
+const PAD = 18;
+const GAP = 12;
+const { width } = Dimensions.get("window");
 
 export default function ClientLogin() {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const router = useRouter();
 
-  // Animation ref
-  const fadeAnim = useRef(new Animated.Value(0)).current
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
 
-  // Load Poppins fonts
+  // Anim
+  const fade = useRef(new Animated.Value(0)).current;
+
+  // Fonts
   const [fontsLoaded] = useFonts({
-    'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
-    'Poppins-Medium': require('../../assets/fonts/Poppins/Poppins-Medium.ttf'),
-    'Poppins-SemiBold': require('../../assets/fonts/Poppins/Poppins-SemiBold.ttf'),
-    'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
-    'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
-  })
+    "Poppins-Regular": require("../../assets/fonts/Poppins/Poppins-Regular.ttf"),
+    "Poppins-Medium": require("../../assets/fonts/Poppins/Poppins-Medium.ttf"),
+    "Poppins-SemiBold": require("../../assets/fonts/Poppins/Poppins-SemiBold.ttf"),
+    "Poppins-Bold": require("../../assets/fonts/Poppins/Poppins-Bold.ttf"),
+    "Poppins-ExtraBold": require("../../assets/fonts/Poppins/Poppins-ExtraBold.ttf"),
+  });
 
   useEffect(() => {
-    if (fontsLoaded) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }).start()
-    }
-  }, [fadeAnim, fontsLoaded])
+    Animated.timing(fade, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+  }, [fade]);
 
-  const handleLogin = () => {
-    if (!email?.trim() || !password?.trim()) return
-    router.push('/_sitemap')
-  }
+  /* ---------- Validation ---------- */
+  const emailOk = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
+  const canLogin = useMemo(() => emailOk && pw.trim().length > 0, [emailOk, pw]);
 
-  if (!fontsLoaded) {
-    return null
-  }
+  const onLogin = () => {
+    if (!canLogin) return;
+    // TODO: wire up to your auth
+    router.replace("/_sitemap");
+  };
+
+  const onGoogle = () => {
+    // TODO: hook Google auth
+  };
+
+  if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
       >
-        <Animated.View
-          style={{
-            flex: 1,
-            opacity: fadeAnim,
+        {/* Top-centered logo (thin + roomy) */}
+        <View
+          sx={{
+            position: "absolute",
+            top:
+              Platform.select({
+                ios: 8,
+                android: (StatusBar.currentHeight ?? 0) + 8,
+                default: 8,
+              }) ?? 8,
+            left: 0,
+            right: 0,
+            alignItems: "center",
+            zIndex: 10,
           }}
+          pointerEvents="none"
         >
-          {/* Header */}
-          <View sx={{
-            alignItems: 'center',
-            px: 'lg',
-            pt: 'xl',
-            pb: 'lg',
-          }}>
-            {/* Logo */}
-            <View sx={{
-              alignItems: 'center',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 8,
-              elevation: 5,
-            }}>
-              <Image
-                source={require('../../assets/jdklogo.png')}
-                style={{
-                  width: 80,
-                  height: 80,
-                }}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
+          <Image
+            source={require("../../assets/jdklogo.png")}
+            sx={{ width: Math.min(width * 0.55, 230), height: 60 }}
+            resizeMode="contain"
+          />
+        </View>
 
-          {/* Content */}
-          <View sx={{
-            flex: 1,
-            justifyContent: 'center',
-            px: 'xxl',
-            mx: 'lg',
-          }}>
-            {/* Title */}
-            <View sx={{ mb: 'xl', alignItems: 'center' }}>
-              <Text sx={{
-                fontSize: 28,
-                fontFamily: 'Poppins-Bold',
-                color: '#001a33',
-                mb: 'xs',
-                textAlign: 'center',
-              }}>
-                Login Now
-              </Text>
-              
-              <Text sx={{
-                fontSize: 16,
-                fontFamily: 'Poppins-Regular',
-                color: '#4e6075',
-                textAlign: 'center',
-                mb: 'sm',
-              }}>
-                Welcome to JDK HOMECARE
-              </Text>
-
-              <View sx={{
-                width: 30,
-                height: 3,
-                backgroundColor: '#0685f4',
-                borderRadius: 2,
-              }} />
-            </View>
-
-            {/* Form */}
-            <View sx={{ mb: 'xl' }}>
-              {/* Email */}
-              <View sx={{ mb: 'lg' }}>
-                <Text sx={{
-                  fontSize: 14,
-                  fontFamily: 'Poppins-Medium',
-                  color: '#001a33',
-                  mb: 'sm',
-                }}>
-                  Email
+        <Animated.View style={{ flex: 1, opacity: fade }}>
+          {/* Centered content */}
+          <View
+            sx={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              px: PAD,
+              pb: 24,
+              pt: 96, // space so content doesn't collide with the floating logo
+            }}
+          >
+            {/* Card */}
+            <View
+              sx={{
+                width: "100%",
+                maxWidth: 560,
+                bg: C.card,
+                borderWidth: 1, // thin stroke
+                borderColor: C.border,
+                borderRadius: 18,
+                px: PAD,
+                py: 20,
+                shadowColor: "#000",
+                shadowOpacity: Platform.OS === "android" ? 0 : 0.05,
+                shadowRadius: 14,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 1,
+              }}
+            >
+              {/* Title */}
+              <View sx={{ alignItems: "center", mb: 14 }}>
+                <Text
+                  sx={{
+                    color: C.text,
+                    fontFamily: "Poppins-ExtraBold",
+                    fontSize: 24,
+                    textAlign: "center",
+                  }}
+                >
+                  Welcome back
                 </Text>
-                <TextInput
-                  placeholder="your@email.com"
+                <Text
+                  sx={{
+                    color: C.sub,
+                    fontFamily: "Poppins-Regular",
+                    fontSize: 14,
+                    textAlign: "center",
+                    mt: 4,
+                  }}
+                >
+                  Sign in to JDK HOMECARE
+                </Text>
+              </View>
+
+              {/* Google */}
+              <Pressable
+                onPress={onGoogle}
+                sx={{
+                  height: 48,
+                  borderWidth: 1, // thinner
+                  borderColor: C.blue,
+                  borderRadius: 14,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  columnGap: 10,
+                  mb: 14,
+                  bg: "#fff",
+                }}
+              >
+                <Globe color={C.blue} size={18} />
+                <Text sx={{ color: C.text, fontFamily: "Poppins-SemiBold" }}>
+                  Continue with Google
+                </Text>
+              </Pressable>
+
+              {/* or divider */}
+              <View sx={{ flexDirection: "row", alignItems: "center", my: 12 }}>
+                <View sx={{ flex: 1, height: 1, bg: C.border }} />
+                <Text sx={{ color: C.sub, mx: 10 }}>or</Text>
+                <View sx={{ flex: 1, height: 1, bg: C.border }} />
+              </View>
+
+              {/* Email */}
+              <Field label="Email" icon={<Mail color={C.sub} size={16} />}>
+                <Input
                   value={email}
                   onChangeText={setEmail}
-                  keyboardType="email-address"
+                  placeholder="you@email.com"
                   autoCapitalize="none"
-                  autoComplete="email"
-                  style={{
-                    height: 50,
-                    paddingHorizontal: 16,
-                    borderRadius: 10,
-                    backgroundColor: '#f8f9fa',
-                    fontSize: 16,
-                    borderWidth: 1,
-                    borderColor: email ? '#0685f4' : 'transparent',
-                    color: '#001a33',
-                    fontFamily: 'Poppins-Regular',
-                  }}
-                  placeholderTextColor="#9aa4b2"
+                  keyboardType="email-address"
+                  rightStatus={email ? (emailOk ? "ok" : "bad") : "none"}
                 />
-              </View>
+              </Field>
 
               {/* Password */}
-              <View sx={{ mb: 'lg' }}>
-                <Text sx={{
-                  fontSize: 14,
-                  fontFamily: 'Poppins-Medium',
-                  color: '#001a33',
-                  mb: 'sm',
-                }}>
-                  Password
-                </Text>
-                <TextInput
-                  placeholder="Enter your password"
-                  value={password}
-                  onChangeText={setPassword}
+              <Field label="Password" icon={<Lock color={C.sub} size={16} />}>
+                <Input
+                  value={pw}
+                  onChangeText={setPw}
+                  placeholder="Your password"
                   secureTextEntry
-                  autoComplete="password"
-                  style={{
-                    height: 50,
-                    paddingHorizontal: 16,
-                    borderRadius: 10,
-                    backgroundColor: '#f8f9fa',
-                    fontSize: 16,
-                    borderWidth: 1,
-                    borderColor: password ? '#0685f4' : 'transparent',
-                    color: '#001a33',
-                    fontFamily: 'Poppins-Regular',
-                  }}
-                  placeholderTextColor="#9aa4b2"
                 />
-              </View>
+              </Field>
 
-              {/* Login Button */}
+              {/* Login */}
               <Pressable
-                onPress={handleLogin}
-                disabled={!email?.trim() || !password?.trim()}
+                onPress={onLogin}
+                disabled={!canLogin}
                 sx={{
                   height: 50,
-                  backgroundColor: (!email?.trim() || !password?.trim()) ? '#e4e7ec' : '#0685f4',
-                  borderRadius: 10,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 'lg',
+                  borderRadius: 14,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mt: 14,
+                  bg: !canLogin ? "#cfd8e3" : C.blue,
                 }}
                 style={({ pressed }) => [
-                  {
-                    opacity: pressed && email && password ? 0.9 : 1,
-                    transform: [{ scale: pressed && email && password ? 0.98 : 1 }],
-                  }
+                  { opacity: pressed && canLogin ? 0.92 : 1 },
                 ]}
               >
-                <Text sx={{
-                  fontSize: 16,
-                  fontFamily: 'Poppins-SemiBold',
-                  color: (!email?.trim() || !password?.trim()) ? '#9aa4b2' : '#ffffff',
-                }}>
-                  Login
-                </Text>
-              </Pressable>
-            </View>
-
-            {/* Support + Sign In Links */}
-            <View sx={{
-              alignItems: 'center',
-              py: 'lg',
-            }}>
-              <Text sx={{
-                fontSize: 14,
-                color: '#4e6075',
-                fontFamily: 'Poppins-Regular',
-                mb: 'sm',
-              }}>
-                Need help?
-              </Text>
-              
-              {/* Contact Support */}
-              <Pressable
-                onPress={() => console.log('Contact support')}
-                sx={{
-                  paddingVertical: 'sm',
-                  paddingHorizontal: 'md',
-                }}
-                style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-              >
-                <Text sx={{
-                  fontSize: 14,
-                  color: '#0685f4',
-                  fontFamily: 'Poppins-SemiBold',
-                  textAlign: 'center',
-                }}>
-                  Contact Support
+                <Text
+                  sx={{
+                    color: "#fff",
+                    fontFamily: "Poppins-Bold",
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  <LogIn color="#fff" size={16} /> Login
                 </Text>
               </Pressable>
 
-              {/* Sign In Button */}
-              <Pressable
-                onPress={() => router.push('/signup/signup')} // adjust the route here
-                sx={{
-                  paddingVertical: 'sm',
-                  paddingHorizontal: 'md',
-                  mt: 'md',
-                }}
-                style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-              >
-                <Text sx={{
-                  fontSize: 14,
-                  color: '#0685f4',
-                  fontFamily: 'Poppins-SemiBold',
-                  textAlign: 'center',
-                }}>
-                  Sign In
+              {/* Footer links */}
+              <View sx={{ alignItems: "center", mt: 12 }}>
+                <Text sx={{ color: C.sub }}>
+                  Don’t have an account?{" "}
+                  <Text
+                    onPress={() => router.push("/signup/signup")}
+                    sx={{ color: C.blue, fontFamily: "Poppins-SemiBold" }}
+                  >
+                    Create one
+                  </Text>
                 </Text>
-              </Pressable>
+              </View>
             </View>
           </View>
         </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  )
+  );
 }
+
+/* ---------- UI bits ---------- */
+function Field({
+  label,
+  children,
+  icon,
+}: {
+  label: string;
+  children: React.ReactNode;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <View sx={{ mb: GAP }}>
+      <View sx={{ flexDirection: "row", alignItems: "center", mb: 6 }}>
+        {icon ? <View sx={{ width: 18, mr: 8 }}>{icon}</View> : null}
+        <Text sx={{ color: C.text, fontFamily: "Poppins-SemiBold" }}>{label}</Text>
+      </View>
+      {children}
+    </View>
+  );
+}
+
+const Input = ({
+  rightStatus = "none",
+  ...props
+}: any & { rightStatus?: "ok" | "bad" | "none" }) => (
+  <View
+    sx={{
+      position: "relative",
+      height: 48,
+      bg: C.field,
+      borderWidth: 1, // thinner stroke
+      borderColor: C.border,
+      borderRadius: 14,
+      justifyContent: "center",
+      px: 14,
+    }}
+  >
+    <TextInput
+      {...props}
+      style={{
+        color: C.text,
+        fontSize: 15,
+        padding: 0,
+      }}
+      placeholderTextColor={C.placeholder}
+    />
+    {/* Right status dot */}
+    {rightStatus !== "none" ? (
+      <View
+        style={{
+          position: "absolute",
+          right: 10,
+          top: 0,
+          bottom: 0,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: rightStatus === "ok" ? "#16a34a" : "#ef4444",
+          }}
+        />
+      </View>
+    ) : null}
+  </View>
+);

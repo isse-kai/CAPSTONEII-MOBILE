@@ -25,7 +25,7 @@ const ROUTES = {
   search: "/search" as Href,
   notifications: "/notification/Notification" as Href,
   profile: "/profile/Profile" as Href,
-  request: "/forms/request" as Href,
+  request: "/forms/request" as Href, // ← target route
   messages: "/chat/Messaging" as Href,
 };
 
@@ -52,11 +52,9 @@ export default function ClientWelcome() {
             justifyContent: "space-between",
           }}
         >
-          {/* Left: Hamburger (bigger touch target) */}
+          {/* Left: Hamburger */}
           <Pressable
-            onPress={() => {
-              /* open drawer */
-            }}
+            onPress={() => {}}
             hitSlop={12}
             style={{
               width: 52,
@@ -71,7 +69,7 @@ export default function ClientWelcome() {
             <Menu color={C.text} size={30} strokeWidth={2.6} />
           </Pressable>
 
-          {/* Right: 3 big icons (Search • Bell • Profile) */}
+          {/* Right: Search • Bell • Profile */}
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Pressable
               onPress={() => router.push(ROUTES.search)}
@@ -164,8 +162,9 @@ export default function ClientWelcome() {
           We’ll make sure the right expert is on the way.
         </Text>
 
+        {/* Direct navigation to /forms/request */}
         <Pressable
-          onPress={() => router.push(ROUTES.request)}
+          onPress={() => router.push("/forms/request" as Href)}
           style={({ pressed }) => ({
             backgroundColor: pressed ? C.blueDark : C.blue,
             paddingVertical: 16,
@@ -193,7 +192,7 @@ export default function ClientWelcome() {
         </Pressable>
       </View>
 
-      {/* FLOATING MESSAGE BUTTON (bigger) */}
+      {/* FLOATING MESSAGE BUTTON */}
       <View pointerEvents="box-none" style={{ position: "absolute", right: 0, bottom: 0, left: 0 }}>
         <Pressable
           accessibilityRole="button"
