@@ -1,5 +1,6 @@
 // app/forms/request.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Image, Pressable, ScrollView, Text, TextInput, View, type SxProp } from "dripsy";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter, type Href } from "expo-router";
 import {
@@ -9,46 +10,38 @@ import {
   Image as ImageIcon,
   Mail,
   MapPin,
-  Phone as PhoneIcon,
-  User
+  User,
+  X,
 } from "lucide-react-native";
-import { useEffect, useMemo, useState } from "react";
-import {
-  Dimensions,
-  FlatList,
-  Image,
-  Modal,
-  Platform,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Dimensions, Modal, Platform, SafeAreaView } from "react-native";
 
 /* ---------- Theme / Layout ---------- */
 const { width } = Dimensions.get("window");
+const LOGO = require("../../assets/jdklogo.png");
+
 const C = {
   bg: "#f7f9fc",
-  card: "#ffffff",
   text: "#0f172a",
   sub: "#64748b",
   blue: "#1e86ff",
   blueDark: "#0c62c9",
   border: "#e6eef7",
-  field: "#f8fafc",
+  fieldBg: "#ffffff",
   placeholder: "#93a3b5",
-  chip: "#eef6ff",
+  card: "#ffffff",
+  track: "#e9f0fb",
+  chip: "#eaf4ff",
 };
-const PAD = 18;
-const GAP = 14;
+
+const PAD = 20;
+const GAP = 16;
+const BTN_PY = 16;
 
 /* ---------- Storage / Routes ---------- */
-const STORAGE_KEY = "client_request_step1";
+const STORAGE_KEY = "request_step1";
 const NEXT_ROUTE = "/forms/request2" as Href;
-const BACK_ROUTE = "/home/index" as Href; // adjust if your client's home is different
+const BACK_ROUTE = "/home/home" as Href;
 
 /* ---------- Data ---------- */
 const BARANGAYS: string[] = [
@@ -62,11 +55,14 @@ const BARANGAYS: string[] = [
   "Mansilingan","Montevista","Pahanocoy","Punta Taytay","Singcang-Airport","Sum-ag","Taculing","Tangub","Villamonte","Vista Alegre",
 ];
 
-/* ---------- Screen ---------- */
+/* ====================================================== */
+
+type Nullable<T> = T | null;
+
 export default function ClientRequest1() {
   const router = useRouter();
 
-  // Form state
+  // form state
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
   const [phone, setPhone] = useState(""); // 10 digits after +63
@@ -74,30 +70,32 @@ export default function ClientRequest1() {
   const [brgy, setBrgy] = useState<string>(BARANGAYS[0]);
   const [street, setStreet] = useState("");
   const [moreAddr, setMoreAddr] = useState(""); // Additional Address (Required)
-  const [photo, setPhoto] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<Nullable<string>>(null);
 
-  // Barangay selector
+  // barangay modal
   const [brgyOpen, setBrgyOpen] = useState(false);
   const [brgyQuery, setBrgyQuery] = useState("");
 
-  // Hydrate
+  // hydrate
   useEffect(() => {
     (async () => {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const v = JSON.parse(raw);
-      setFirst(v.first ?? "");
-      setLast(v.last ?? "");
-      setPhone(v.phone ?? "");
-      setEmail(v.email ?? "");
-      setBrgy(v.brgy ?? BARANGAYS[0]);
-      setStreet(v.street ?? "");
-      setMoreAddr(v.moreAddr ?? "");
-      setPhoto(v.photo ?? null);
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const v = JSON.parse(raw);
+        setFirst(v.first ?? "");
+        setLast(v.last ?? "");
+        setPhone(v.phone ?? "");
+        setEmail(v.email ?? "");
+        setBrgy(v.brgy ?? BARANGAYS[0]);
+        setStreet(v.street ?? "");
+        setMoreAddr(v.moreAddr ?? "");
+        setPhoto(v.photo ?? null);
+      } catch {}
     })();
   }, []);
 
-  // Autosave
+  // autosave draft (debounced)
   useEffect(() => {
     const id = setTimeout(() => {
       AsyncStorage.setItem(
@@ -108,23 +106,26 @@ export default function ClientRequest1() {
     return () => clearTimeout(id);
   }, [first, last, phone, email, brgy, street, moreAddr, photo]);
 
-  // Derived
+  // derived
   const emailOk = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
   const phoneOk = useMemo(() => phone.trim().length === 10, [phone]); // after +63
   const brgyOk = useMemo(() => brgy !== BARANGAYS[0], [brgy]);
-  const canNext = useMemo(() => {
-    return (
-      first.trim() &&
-      last.trim() &&
-      emailOk &&
-      phoneOk &&
-      brgyOk &&
-      street.trim() &&
-      moreAddr.trim()
-    );
-  }, [first, last, emailOk, phoneOk, brgyOk, street, moreAddr]);
 
-  // Actions
+  const canNext = useMemo(
+    () =>
+      Boolean(
+        first.trim() &&
+          last.trim() &&
+          emailOk &&
+          phoneOk &&
+          brgyOk &&
+          street.trim() &&
+          moreAddr.trim()
+      ),
+    [first, last, emailOk, phoneOk, brgyOk, street, moreAddr]
+  );
+
+  // actions
   const choosePhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") return;
@@ -134,7 +135,7 @@ export default function ClientRequest1() {
       aspect: [1, 1],
       quality: 0.9,
     });
-    if (!res.canceled) setPhoto(res.assets[0].uri);
+    if (!res.canceled) setPhoto(res.assets[0]?.uri ?? null);
   };
 
   const onNext = async () => {
@@ -150,489 +151,521 @@ export default function ClientRequest1() {
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
       {/* Header */}
       <View
-        style={{
-          paddingHorizontal: PAD,
-          paddingTop: 8,
-          paddingBottom: 12,
+        sx={{
+          px: PAD,
+          pt: 12,
+          pb: 16,
           borderBottomWidth: 1,
           borderBottomColor: C.border,
-          backgroundColor: "#fff",
+          position: "relative",
+          bg: "#fff",
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Pressable
-            onPress={() => router.push(BACK_ROUTE)}
-            style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
-          >
-            <ArrowLeft color={C.text} size={26} />
-          </Pressable>
+        <View
+          sx={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 10,
+            alignItems: "center",
+          }}
+          pointerEvents="none"
+        >
+          <Image
+            source={LOGO}
+            sx={{ width: Math.min(width * 0.7, 300), height: 56 }}
+            resizeMode="contain"
+          />
+        </View>
+        <Pressable
+          onPress={() => router.push(BACK_ROUTE)}
+          sx={{ width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
+        >
+          <ArrowLeft color={C.text} size={28} strokeWidth={2.4} />
+        </Pressable>
+      </View>
 
-          {/* Step indicator right side */}
-          <View style={{ alignItems: "flex-end", flex: 1 }}>
-            <Text style={{ color: C.sub, marginBottom: 6, textAlign: "right" }}>Step 1 of 4</Text>
+      {/* Step status */}
+      <View sx={{ px: PAD, pt: 16, pb: 14, bg: "#fff" }}>
+        <View sx={{ flexDirection: "row", alignItems: "center", mb: 14 }}>
+          <Text sx={{ color: C.text, fontWeight: "900", fontSize: 18 }}>Step 1 of 4</Text>
+          <Text sx={{ color: C.sub, ml: 12, fontSize: 14 }}>Client Information</Text>
+        </View>
+
+        <View sx={{ flexDirection: "row", columnGap: 12 }}>
+          {[1, 2, 3, 4].map((i) => (
             <View
-              style={{
-                width: 140,
-                height: 6,
-                backgroundColor: "#e8eef7",
+              key={i}
+              sx={{
+                flex: 1,
+                height: 10,
                 borderRadius: 999,
-                overflow: "hidden",
-                alignSelf: "flex-end",
+                bg: i <= 1 ? C.blue : C.track,
               }}
-            >
-              <View style={{ width: "25%", height: "100%", backgroundColor: C.blue }} />
-            </View>
-          </View>
+            />
+          ))}
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
-        <View style={{ paddingHorizontal: PAD, paddingTop: 14 }}>
-          {/* Card */}
-          <View
-            style={{
-              backgroundColor: C.card,
-              borderWidth: 1,
-              borderColor: C.border,
-              borderRadius: 20,
-              paddingHorizontal: PAD,
-              paddingVertical: 16,
-              shadowColor: "#000",
-              shadowOpacity: Platform.OS === "android" ? 0 : 0.06,
-              shadowRadius: 12,
-              shadowOffset: { width: 0, height: 6 },
-              elevation: 1,
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-              <Text style={{ color: C.text, fontWeight: "900", fontSize: 18, flex: 1 }}>
-                Personal Information
-              </Text>
-              <View
-                style={{
-                  paddingVertical: 4,
-                  paddingHorizontal: 10,
-                  backgroundColor: C.chip,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: C.border,
-                }}
-              >
-                <Text style={{ color: C.sub, fontWeight: "700" }}>Client</Text>
-              </View>
-            </View>
-
-            <Text style={{ color: C.sub, marginBottom: 14 }}>
-              Please fill in your personal details to proceed.
-            </Text>
-
-            {/* Two column on wide phones, stacked on small */}
-            <View style={{ flexDirection: "row", gap: GAP }}>
-              <View style={{ flex: 1 }}>
-                <Label icon={<User color={C.sub} size={16} />}>First Name</Label>
-                <Input
+      {/* Body */}
+      <ScrollView contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+        <View sx={{ px: PAD, pt: 18 }}>
+          {/* Personal Info */}
+          <Card title="Personal Information" subtitle="Please fill in your personal details to proceed.">
+            <Row>
+              <Col>
+                <Label>First Name</Label>
+                <Field
                   value={first}
                   onChangeText={setFirst}
                   placeholder="First name"
+                  icon={<User color={C.sub} size={16} />}
                 />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Label icon={<User color={C.sub} size={16} />}>Last Name</Label>
-                <Input
+              </Col>
+              <Col>
+                <Label>Last Name</Label>
+                <Field
                   value={last}
                   onChangeText={setLast}
                   placeholder="Last name"
+                  icon={<User color={C.sub} size={16} />}
                 />
-              </View>
-            </View>
+              </Col>
+            </Row>
 
-            <View style={{ height: 10 }} />
-
-            <View style={{ flexDirection: "row", gap: GAP }}>
-              <View style={{ flex: 1 }}>
-                <Label icon={<PhoneIcon color={C.sub} size={16} />}>Contact Number</Label>
+            <Row>
+              <Col>
+                <Label>Contact Number</Label>
                 <PhoneGroup
                   value={phone}
-                  onChangeText={(t: string) => setPhone(t.replace(/[^0-9]/g, "").slice(0, 10))}
+                  onChangeText={(t: string) =>
+                    setPhone(t.replace(/[^0-9]/g, "").slice(0, 10))
+                  }
                 />
-                <Text style={{ color: C.sub, fontSize: 12, marginTop: 6 }}>
-                  Format: +63 <Text style={{ fontWeight: "700" }}>9XXXXXXXXX</Text>
+                <Text sx={{ color: C.sub, fontSize: 12, mt: 6 }}>
+                  Format: +63 <Text sx={{ fontWeight: "900" }}>9XXXXXXXXX</Text>
                 </Text>
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <Label icon={<Mail color={C.sub} size={16} />}>Email Address</Label>
-                <Input
+              </Col>
+              <Col>
+                <Label>Email Address</Label>
+                <Field
                   value={email}
                   onChangeText={setEmail}
                   placeholder="Email address"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  borderTint={email ? (emailOk ? "ok" : "bad") : "none"}
+                  icon={<Mail color={C.sub} size={16} />}
+                  danger={!!email && !emailOk}
+                  ok={!!email && emailOk}
                 />
-              </View>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col>
+                <Label>Barangay</Label>
+                <SelectBox
+                  value={brgy || "Select Barangay"}
+                  onPress={() => setBrgyOpen(true)}
+                  danger={brgy === BARANGAYS[0]}
+                />
+              </Col>
+              <Col>
+                <Label>Street</Label>
+                <Field
+                  value={street}
+                  onChangeText={setStreet}
+                  placeholder="House No. and Street"
+                  icon={<MapPin color={C.sub} size={16} />}
+                />
+              </Col>
+            </Row>
+
+            <View sx={{ mt: 4 }}>
+              <Label>Additional Address (Landmark etc.)</Label>
+              <TextInput
+                value={moreAddr}
+                onChangeText={setMoreAddr}
+                placeholder="Additional Address (Required)"
+                placeholderTextColor={C.placeholder}
+                multiline
+                textAlignVertical="top"
+                sx={{
+                  bg: C.fieldBg,
+                  borderWidth: 1,
+                  borderColor: C.border,
+                  borderRadius: 20,
+                  px: 16,
+                  py: 16,
+                  minHeight: 100,
+                  color: C.text,
+                  fontSize: 16,
+                }}
+              />
             </View>
+          </Card>
 
-            <View style={{ height: 10 }} />
+          {/* Profile Photo */}
+          <Card title="Profile Picture" subtitle="Upload your profile picture.">
+            <Pressable
+              onPress={choosePhoto}
+              sx={{
+                borderWidth: 1,
+                borderColor: C.border,
+                borderRadius: 20,
+                bg: "#fff",
+                px: 16,
+                py: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mb: GAP,
+              }}
+            >
+              <Text sx={{ color: C.text, fontWeight: "900", fontSize: 16 }}>Choose Photo</Text>
+              <Camera color={C.sub} size={20} />
+            </Pressable>
 
-            <View style={{ flexDirection: "row", gap: GAP }}>
-              <View style={{ flex: 1 }}>
-                <Label icon={<MapPin color={C.sub} size={16} />}>Barangay</Label>
-                <Pressable onPress={() => setBrgyOpen(true)} style={selectBtn}>
-                  <Text style={{ color: brgy === BARANGAYS[0] ? C.placeholder : C.text }}>
-                    {brgy}
-                  </Text>
-                  <ChevronDown color={C.sub} size={18} />
-                </Pressable>
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <Label icon={<MapPin color={C.sub} size={16} />}>Street</Label>
-                <Input value={street} onChangeText={setStreet} placeholder="House No. and Street" />
-              </View>
-            </View>
-
-            <View style={{ height: 10 }} />
-
-            <Label>Additional Address (Landmark etc.)</Label>
-            <Multiline
-              value={moreAddr}
-              onChangeText={setMoreAddr}
-              placeholder="Additional Address (Required)"
-            />
-
-            {/* Profile Picture (right column in web -> here stacked) */}
-            <View style={{ marginTop: 18, alignItems: "center" }}>
-              <Text style={{ color: C.text, fontWeight: "900", marginBottom: 6 }}>Profile Picture</Text>
-              <Text style={{ color: C.sub, marginBottom: 12 }}>Upload your profile picture.</Text>
-
-              <Pressable onPress={choosePhoto} style={{ alignItems: "center" }}>
-                <View
-                  style={{
-                    width: 124,
-                    height: 124,
-                    borderRadius: 62,
-                    borderWidth: 1,
-                    borderColor: C.border,
-                    backgroundColor: "#f1f5f9",
-                    overflow: "hidden",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {photo ? (
-                    <Image source={{ uri: photo }} style={{ width: "100%", height: "100%" }} />
-                  ) : (
-                    <>
-                      <ImageIcon color="#c2cfdf" size={28} />
-                      <Text style={{ color: C.sub, marginTop: 6 }}>+</Text>
-                    </>
-                  )}
+            <View
+              sx={{
+                alignSelf: "center",
+                width: 140,
+                height: 140,
+                borderRadius: 70,
+                borderWidth: 1,
+                borderColor: C.border,
+                bg: "#eef3f9",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+              }}
+            >
+              {photo ? (
+                <Image
+                  source={{ uri: photo }}
+                  sx={{ width: "100%", height: "100%" }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View sx={{ alignItems: "center" }}>
+                  <ImageIcon color="#9aa9bc" size={30} />
+                  <Text sx={{ color: "#9aa9bc", mt: 8, fontSize: 14 }}>No Image Selected</Text>
                 </View>
-
-                <View
-                  style={{
-                    marginTop: 12,
-                    paddingVertical: 12,
-                    paddingHorizontal: 18,
-                    borderRadius: 12,
-                    backgroundColor: C.blue,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <Camera color="#fff" size={18} />
-                  <Text style={{ color: "#fff", fontWeight: "800" }}>Choose Photo</Text>
-                </View>
-              </Pressable>
+              )}
             </View>
-          </View>
+          </Card>
         </View>
       </ScrollView>
 
-      {/* Sticky Bottom Bar */}
+      {/* Sticky bottom actions */}
       <View
-        style={{
+        sx={{
           position: "absolute",
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "#fff",
+          bg: "#fff",
           borderTopWidth: 1,
           borderTopColor: C.border,
-          padding: 14,
+          p: 14,
           flexDirection: "row",
           columnGap: 12,
         }}
       >
         <Pressable
           onPress={() => router.push(BACK_ROUTE)}
-          style={{
+          sx={{
             flex: 1,
             borderWidth: 1,
             borderColor: C.border,
-            borderRadius: 14,
+            borderRadius: 18,
             alignItems: "center",
             justifyContent: "center",
-            paddingVertical: 14,
-            backgroundColor: "#fff",
+            py: BTN_PY,
+            bg: "#fff",
           }}
         >
-          <Text style={{ color: C.text, fontWeight: "800" }}>Back</Text>
+          <Text sx={{ color: C.text, fontWeight: "900", fontSize: 16 }}>Back</Text>
         </Pressable>
 
         <Pressable
           onPress={onNext}
           disabled={!canNext}
-          style={{
+          sx={{
             flex: 1.25,
-            borderRadius: 14,
+            borderRadius: 18,
             alignItems: "center",
             justifyContent: "center",
-            paddingVertical: 14,
-            backgroundColor: canNext ? C.blue : "#a7c8ff",
+            py: BTN_PY,
+            bg: canNext ? C.blue : "#a7c8ff",
+            opacity: canNext ? 1 : 0.9,
           }}
         >
-          <Text style={{ color: "#fff", fontWeight: "800" }}>Next : Service Request Details</Text>
+          <Text sx={{ color: "#fff", fontWeight: "900", fontSize: 16 }}>
+            Next : Service Request Details
+          </Text>
         </Pressable>
       </View>
 
-      {/* Barangay Modal */}
+      {/* Barangay Picker Modal */}
       <Modal
         visible={brgyOpen}
+        animationType="slide"
         transparent
-        animationType="fade"
         onRequestClose={() => setBrgyOpen(false)}
       >
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" }}>
+        <Pressable onPress={() => setBrgyOpen(false)} sx={{ flex: 1, bg: "rgba(0,0,0,0.25)" }}>
           <View
-            style={{
-              backgroundColor: "#fff",
-              borderTopLeftRadius: 22,
-              borderTopRightRadius: 22,
-              maxHeight: "75%",
+            sx={{
+              mt: "auto",
+              bg: "#fff",
+              borderTopLeftRadius: 26,
+              borderTopRightRadius: 26,
+              maxHeight: "74%",
+              p: 18,
             }}
           >
-            {/* header */}
-            <View
-              style={{
-                paddingHorizontal: PAD,
-                paddingVertical: 14,
-                borderBottomWidth: 1,
-                borderBottomColor: C.border,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Text style={{ fontWeight: "900", fontSize: 18, color: C.text }}>Select Barangay</Text>
-              <TouchableOpacity onPress={() => setBrgyOpen(false)} style={{ padding: 8 }}>
-                <Text style={{ color: C.blue, fontWeight: "800" }}>Close</Text>
-              </TouchableOpacity>
+            <View sx={{ flexDirection: "row", alignItems: "center", mb: 14 }}>
+              <Text sx={{ color: C.text, fontWeight: "900", fontSize: 18, flex: 1 }}>
+                Select Barangay
+              </Text>
+              <Pressable onPress={() => setBrgyOpen(false)}>
+                <X color={C.sub} size={22} />
+              </Pressable>
             </View>
 
             {/* search */}
-            <View style={{ paddingHorizontal: PAD, paddingVertical: 12 }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: C.field,
-                  borderWidth: 1,
-                  borderColor: C.border,
-                  borderRadius: 14,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  columnGap: 8,
-                }}
-              >
-                <SearchIcon />
-                <TextInput
-                  value={brgyQuery}
-                  onChangeText={setBrgyQuery}
-                  placeholder="Search barangay…"
-                  placeholderTextColor={C.placeholder}
-                  style={{ color: C.text, flex: 1 }}
-                />
-              </View>
+            <View
+              sx={{
+                borderWidth: 1,
+                borderColor: C.border,
+                borderRadius: 999,
+                px: 16,
+                height: 44,
+                mb: 14,
+                bg: "#fff",
+                justifyContent: "center",
+              }}
+            >
+              <TextInput
+                value={brgyQuery}
+                onChangeText={setBrgyQuery}
+                placeholder="Search barangay…"
+                placeholderTextColor={C.placeholder}
+                sx={{ color: C.text, fontSize: 16 }}
+              />
             </View>
 
-            {/* list */}
-            <FlatList
-              keyboardShouldPersistTaps="handled"
-              data={BARANGAYS.filter((b) =>
-                b.toLowerCase().includes((brgyQuery || "").toLowerCase())
-              ).filter((b) => b !== "Select Barangay")}
-              keyExtractor={(item) => item}
-              ItemSeparatorComponent={() => (
-                <View style={{ height: 1, backgroundColor: C.border }} />
-              )}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => {
-                    setBrgy(item);
-                    setBrgyOpen(false);
-                  }}
-                  style={{ paddingHorizontal: PAD, paddingVertical: 14 }}
-                >
-                  <Text style={{ color: C.text }}>{item}</Text>
-                </TouchableOpacity>
-              )}
-              style={{ maxHeight: "100%" }}
-            />
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {BARANGAYS.filter((b) => b !== "Select Barangay")
+                .filter((b) =>
+                  b.toLowerCase().includes((brgyQuery || "").toLowerCase())
+                )
+                .map((item) => (
+                  <Pressable
+                    key={item}
+                    onPress={() => {
+                      setBrgy(item);
+                      setBrgyOpen(false);
+                    }}
+                    sx={{ py: 14, borderBottomWidth: 1, borderBottomColor: C.border }}
+                  >
+                    <Text sx={{ color: C.text, fontSize: 16 }}>{item}</Text>
+                  </Pressable>
+                ))}
+            </ScrollView>
           </View>
-        </View>
+        </Pressable>
       </Modal>
     </SafeAreaView>
   );
 }
 
-/* ---------- UI bits ---------- */
-const Label = ({ children, icon }: any) => (
-  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-    {icon ? <View style={{ width: 18, marginRight: 8 }}>{icon}</View> : null}
-    <Text style={{ color: C.text, fontWeight: "800" }}>{children}</Text>
+/* =============== Reusable Components =============== */
+
+function Card({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <View
+      sx={{
+        bg: C.card,
+        borderWidth: 1,
+        borderColor: C.border,
+        borderRadius: 24,
+        px: PAD,
+        py: 18,
+        mb: 22,
+        shadowColor: "#000",
+        shadowOpacity: Platform.OS === "android" ? 0 : 0.06,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 1,
+      }}
+    >
+      <Text sx={{ color: C.text, fontWeight: "900", fontSize: 20 }}>{title}</Text>
+      {subtitle ? (
+        <Text sx={{ color: C.sub, mt: 6, mb: 14, lineHeight: 20 }}>{subtitle}</Text>
+      ) : null}
+      {children}
+    </View>
+  );
+}
+
+const Row = ({ children }: { children: React.ReactNode }) => (
+  <View sx={{ flexDirection: "row", flexWrap: "wrap", columnGap: GAP, rowGap: GAP, mb: GAP }}>
+    {children}
   </View>
 );
 
-const Input = ({
-  borderTint = "none",
-  style,
-  ...props
-}: any & { borderTint?: "ok" | "bad" | "none" }) => (
-  <TextInput
-    {...props}
-    placeholderTextColor={C.placeholder}
-    style={[
-      {
-        height: 48,
-        paddingHorizontal: 14,
-        borderRadius: 14,
-        backgroundColor: C.field,
-        fontSize: 15,
-        borderWidth: 2,
-        borderColor:
-          borderTint === "none" ? C.border : borderTint === "ok" ? "#16a34a" : "#ef4444",
-        color: C.text,
-      },
-      style,
-    ]}
-  />
+const Col = ({ children }: { children: React.ReactNode }) => (
+  <View sx={{ flex: 1, minWidth: "48%" }}>{children}</View>
 );
 
-const Multiline = (props: any) => (
-  <TextInput
-    {...props}
-    multiline
-    textAlignVertical="top"
-    placeholderTextColor={C.placeholder}
-    style={{
-      minHeight: 84,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      borderRadius: 14,
-      backgroundColor: C.field,
-      fontSize: 15,
-      borderWidth: 2,
-      borderColor: C.border,
-      color: C.text,
-    }}
-  />
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <Text sx={{ color: C.text, fontWeight: "800", mb: 10, fontSize: 14 }}>{children}</Text>
 );
 
-const selectBtn = {
-  height: 48,
-  backgroundColor: C.field,
-  borderWidth: 2,
+const fieldBox = {
+  bg: C.fieldBg,
+  borderWidth: 1,
   borderColor: C.border,
-  borderRadius: 14,
-  paddingHorizontal: 14,
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
+  borderRadius: 20,
+  px: 16,
+  height: 52,
+  flexDirection: "row" as const,
+  alignItems: "center" as const,
 } as const;
 
-/** phone with +63 prefix + flag */
-const PhoneGroup = ({
+type FieldProps = Omit<React.ComponentProps<typeof TextInput>, "style"> & {
+  icon?: React.ReactNode;
+  ok?: boolean;
+  danger?: boolean;
+  /** optional extra styles for the outer container */
+  containerSx?: SxProp;
+  /** optional extra styles for the TextInput */
+  inputSx?: SxProp;
+};
+
+function Field({ icon, ok, danger, containerSx, inputSx, ...props }: FieldProps) {
+  return (
+    <View
+      sx={{
+        ...fieldBox,
+        justifyContent: "flex-start",
+        columnGap: 10,
+        borderColor: danger ? "#ef4444" : ok ? "#16a34a" : C.border,
+        ...(containerSx as object),
+      }}
+    >
+      {icon ? <View sx={{ width: 18 }}>{icon}</View> : null}
+      <TextInput
+        {...props}
+        placeholderTextColor={C.placeholder}
+        sx={{ color: C.text, fontSize: 16, flex: 1, ...(inputSx as object) }}
+      />
+    </View>
+  );
+}
+
+function SelectBox({
+  value,
+  onPress,
+  danger,
+}: {
+  value: string;
+  onPress: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      sx={{
+        ...fieldBox,
+        justifyContent: "space-between",
+        borderColor: danger ? "#ef4444" : C.border,
+      }}
+    >
+      <Text
+        sx={{
+          color: value === "Select Barangay" ? C.placeholder : C.text,
+          fontWeight: "700",
+          fontSize: 16,
+        }}
+      >
+        {value}
+      </Text>
+      <ChevronDown color={danger ? "#ef4444" : C.sub} size={20} />
+    </Pressable>
+  );
+}
+
+/** +63 phone prefix group with same radius/height as Field */
+function PhoneGroup({
   value,
   onChangeText,
 }: {
   value: string;
   onChangeText: (t: string) => void;
-}) => (
-  <View style={{ flexDirection: "row" }}>
-    <View
-      style={{
-        paddingHorizontal: 12,
-        minWidth: 84,
-        alignItems: "center",
-        justifyContent: "center",
-        borderTopLeftRadius: 14,
-        borderBottomLeftRadius: 14,
-        borderWidth: 2,
-        borderColor: C.border,
-        backgroundColor: C.field,
-        flexDirection: "row",
-        gap: 8,
-      }}
-    >
-      {/* simple PH flag dot */}
+}) {
+  return (
+    <View sx={{ flexDirection: "row" }}>
       <View
-        style={{
-          width: 16,
-          height: 10,
-          backgroundColor: "#3f7de0",
-          borderRadius: 2,
+        sx={{
+          pl: 14,
+          pr: 12,
+          minWidth: 90,
+          alignItems: "center",
+          justifyContent: "center",
+          borderTopLeftRadius: 20,
+          borderBottomLeftRadius: 20,
           borderWidth: 1,
-          borderColor: "#2d5fb3",
+          borderColor: C.border,
+          bg: C.fieldBg,
+          flexDirection: "row",
+          columnGap: 8,
+          height: 52,
+        }}
+      >
+        {/* simple PH flag block */}
+        <View
+          sx={{
+            width: 16,
+            height: 10,
+            bg: "#3f7de0",
+            borderRadius: 2,
+            borderWidth: 1,
+            borderColor: "#2d5fb3",
+          }}
+        />
+        <Text sx={{ color: C.text, fontWeight: "900" }}>+63</Text>
+      </View>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType="number-pad"
+        placeholder="9XXXXXXXXX"
+        placeholderTextColor={C.placeholder}
+        sx={{
+          flex: 1,
+          bg: C.fieldBg,
+          borderWidth: 1,
+          borderColor: C.border,
+          borderLeftWidth: 0,
+          borderTopRightRadius: 20,
+          borderBottomRightRadius: 20,
+          px: 16,
+          height: 52,
+          color: C.text,
+          fontSize: 16,
         }}
       />
-      <Text style={{ color: C.text, fontWeight: "900" }}>+63</Text>
     </View>
-    <TextInput
-      value={value}
-      onChangeText={onChangeText}
-      keyboardType="number-pad"
-      placeholder="9XXXXXXXXX"
-      placeholderTextColor={C.placeholder}
-      style={{
-        flex: 1,
-        backgroundColor: C.field,
-        borderWidth: 2,
-        borderColor: C.border,
-        borderLeftWidth: 0,
-        borderTopRightRadius: 14,
-        borderBottomRightRadius: 14,
-        paddingHorizontal: 14,
-        fontSize: 15,
-        color: C.text,
-      }}
-    />
-  </View>
-);
-
-const SearchIcon = () => (
-  // tiny inline search glyph (keeps deps consistent even if lucide isn't imported here)
-  <View
-    style={{
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-      borderWidth: 2,
-      borderColor: C.placeholder,
-      justifyContent: "center",
-      alignItems: "center",
-    }}
-  >
-    <View
-      style={{
-        width: 6,
-        height: 2,
-        backgroundColor: C.placeholder,
-        borderRadius: 1,
-        transform: [{ rotate: "45deg" }, { translateX: 5 }, { translateY: 3 }],
-      }}
-    />
-  </View>
-);
+  );
+}
