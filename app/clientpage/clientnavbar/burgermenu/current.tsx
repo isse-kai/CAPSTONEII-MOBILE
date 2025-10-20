@@ -2,8 +2,6 @@ import { Text, View } from 'dripsy'
 import { ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Header from '../header'
-import ClientNavbar from '../navbar'
-
 
 const CurrentRequests = () => {
   return (
@@ -23,7 +21,6 @@ const CurrentRequests = () => {
           </View>
         </View>
       </ScrollView>
-      <ClientNavbar />
     </SafeAreaView>
   )
 }

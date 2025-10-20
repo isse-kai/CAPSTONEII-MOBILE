@@ -43,8 +43,8 @@ export default function Roles() {
       <SafeAreaView
         style={{
           flex: 1,
-          paddingTop: insets.top + 8,
-          paddingBottom: insets.bottom + 8,
+          paddingTop: insets.top - 20,
+          paddingBottom: insets.bottom - 40,
         }}
       >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>

@@ -99,8 +99,8 @@ export default function ClientSignup() {
         <SafeAreaView
           style={{
             flex: 1,
-            paddingTop: insets.top + 2,
-            paddingBottom: insets.bottom + 2,
+            paddingTop: insets.top - 20,
+            paddingBottom: insets.bottom - 40,
           }}
         >
           <ScrollView
@@ -128,7 +128,7 @@ export default function ClientSignup() {
                 </Text>
               </View>
 
-              {/* First + Last Name Row */}
+              {/* First + Last Name */}
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 1 }}>
                   <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>First Name</Text>
@@ -165,7 +165,7 @@ export default function ClientSignup() {
                 </View>
               </View>
 
-              {/* Sex Dropdown (Animated Overlay) */}
+              {/* Sex Dropdown */}
               <View style={{ position: 'relative' }}>
                 <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Sex</Text>
                 <TouchableOpacity
@@ -320,7 +320,7 @@ export default function ClientSignup() {
 
               <Text
                 sx={{
-                  fontSize: 14,
+                  fontSize: 12,
                   fontFamily: 'Poppins-Regular',
                   color: '#000',
                 }}
@@ -360,6 +360,7 @@ export default function ClientSignup() {
                 justifyContent: 'center',
                 alignItems: 'center',
                 mt: 8,
+                mb: 30,
               }}
             >
               <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>

@@ -12,22 +12,17 @@ export default function ClientNavbar() {
   const navItems = [
     {
       label: 'Home',
-      route: './home',
+      route: '/clientpage/home',
       icon: require('../../../assets/home-icon.png'),
     },
     {
       label: 'Messages',
-      route: '/clientnavbar/chat',
+      route: '/clientpage/clientnavbar/chat',
       icon: require('../../../assets/chat-icon.png'),
-    },
-     {
-      label: 'Services',
-      route: './clientnavbar/services',
-      icon: require('../../../assets/add-icon.png'),
     },
     {
       label: 'Profile',
-      route: './clientnavbar/profile',
+      route: '/clientpage/clientnavbar/profile',
       icon: require('../../../assets/profile-icon.png'),
     },
   ]
@@ -55,7 +50,7 @@ export default function ClientNavbar() {
         return (
           <Pressable
             key={item.route}
-            onPress={() => router.push(item.route as any)}
+            onPress={() => router.replace(item.route as any)}
             sx={{ alignItems: 'center', flex: 1 }}
           >
             <Image

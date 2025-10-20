@@ -111,12 +111,12 @@ const Header = () => {
 
           {submenuOpen && (
             <View sx={{ pl: 12, gap: 8 }}>
-              <Pressable onPress={() => router.push('./burgermenu/current')}>
+              <Pressable onPress={() => router.replace('/clientpage/clientnavbar/burgermenu/current')}>
                 <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563' }}>
                   Current Service Requests
                 </Text>
               </Pressable>
-              <Pressable onPress={() => router.push('./burgermenu/completed')}>
+              <Pressable onPress={() => router.replace('/clientpage/clientnavbar/burgermenu/completed')}>
                 <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563' }}>
                   Completed Requests
                 </Text>
@@ -125,7 +125,7 @@ const Header = () => {
           )}
 
           {/* Hire a Worker */}
-          <Pressable onPress={() => router.push('./burgermenu/hire')}>
+          <Pressable onPress={() => router.replace('/clientpage/clientnavbar/burgermenu/hire')}>
             <Text sx={{ fontSize: 16, fontFamily: 'Poppins-Bold', color: '#001a33' }}>
               Hire a Worker
             </Text>

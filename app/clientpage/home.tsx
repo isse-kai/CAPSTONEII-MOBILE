@@ -74,8 +74,8 @@ export default function ClientHome() {
       <SafeAreaView
         style={{
           flex: 1,
-          paddingTop: insets.top + 4,
-          paddingBottom: insets.bottom + 4,
+          paddingTop: insets.top - 20,
+          paddingBottom: insets.bottom + 2,
           backgroundColor: 'rgba(249, 250, 251, 0.9)',
         }}
       >
@@ -187,7 +187,6 @@ export default function ClientHome() {
 
             {/* Worker Carousel */}
             <View sx={{ mt: 24 }}>
-              {/* Header with title + browse + arrows */}
               <View sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mb: 8 }}>
                 <View sx={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <Text
