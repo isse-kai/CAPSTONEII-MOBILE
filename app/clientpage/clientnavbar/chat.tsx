@@ -1,13 +1,15 @@
+import { Ionicons } from '@expo/vector-icons'
 import { Text, View } from 'dripsy'
 import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import { useState } from 'react'
 import {
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  TextInput
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Header from './header'
@@ -15,6 +17,8 @@ import Header from './header'
 export default function ChatList() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isFocused, setIsFocused] = useState(false)
 
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('../../../assets/fonts/Poppins/Poppins-Regular.ttf'),
@@ -69,23 +73,35 @@ export default function ChatList() {
               sx={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                bg: '#f3f4f6',
                 borderRadius: 12,
+                borderWidth: 1,
+                borderColor: isFocused ? '#008CFC' : '#d1d5db', // gray-300 default
                 px: 14,
-                py: 10,
+                py: 2,
                 mb: 16,
+                bg: 'transparent',
               }}
             >
-              <Text
-                sx={{
+              <Ionicons name="search" size={24} color="#001a33" />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder="Search"
+                placeholderTextColor="#6b7280"
+                style={{
+                  flex: 1,
+                  marginLeft: 10,
                   fontSize: 16,
                   fontFamily: 'Poppins-Regular',
-                  color: '#6b7280',
+                  color: '#001a33',
+                  lineHeight: 22
                 }}
-              >
-                🔍 Search people...
-              </Text>
+              />
             </View>
+
+
 
             {/* People List */}
             <FlatList

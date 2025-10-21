@@ -132,7 +132,7 @@ export default function Login() {
                 />
               </View>
 
-              {/* Password with icon */}
+              {/* Password */}
               <View>
                 <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Password</Text>
                 <RNView
@@ -192,7 +192,7 @@ export default function Login() {
                 </Text>
               </Pressable>
 
-              {/* Sign Up Prompt */}
+              {/* Sign Up */}
               <View
                 sx={{
                   flexDirection: 'row',
