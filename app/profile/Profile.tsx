@@ -15,6 +15,7 @@ import {
   Mail,
   Phone,
   User,
+  X,
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -28,9 +29,10 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 
-/* ---------- Spacious minimalist theme ---------- */
+/* ---------- Spacious minimalist theme (tweaked) ---------- */
 const C = {
   bg: "#f6f8fb",
   card: "#ffffff",
@@ -43,11 +45,12 @@ const C = {
   blueDark: "#0c62c9",
   green: "#16a34a",
   red: "#ef4444",
+  chipBg: "#eaf4ff",
 };
-const RADIUS = 16;
-const PAD = 24;         // page/card padding
-const GAP = 18;         // space between fields/sections
-const INPUT_H = 56;     // comfy input height
+const RADIUS = 18;
+const PAD = 28;         // page/card padding (more space)
+const GAP = 20;         // vertical rhythm
+const INPUT_H = 58;     // comfy input height
 const BTN_H = 56;
 
 /* ---------- Storage keys ---------- */
@@ -83,6 +86,8 @@ type Profile = {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTwoCol = width >= 420;
 
   const [tab, setTab] = useState<"profile" | "password">("profile");
 
@@ -217,12 +222,11 @@ export default function ProfileScreen() {
     if (!result.canceled) setPhotoUri(result.assets[0].uri);
   };
 
-  /* ---------- Render ---------- */
   const createdAtText = createdAt ? new Date(createdAt).toLocaleString() : "";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
-      {/* TOP HEADER (spacious) */}
+      {/* TOP HEADER */}
       <TopHeader
         title="Personal Information"
         subtitle="This is a client account"
@@ -230,51 +234,76 @@ export default function ProfileScreen() {
         onBack={() => router.back()}
       />
 
-      {/* TABS (larger touch targets) */}
+      {/* TABS with icons */}
       <Tabs active={tab} onChange={(v) => setTab(v)} />
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ScrollView contentContainerStyle={{ padding: PAD, paddingBottom: 200 }}>
+        <ScrollView contentContainerStyle={{ padding: PAD, paddingBottom: 220 }}>
           {tab === "profile" ? (
             <>
               {/* Avatar */}
               <Card title="Profile Picture" subtitle="A clear face photo helps us recognize you.">
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <View style={{
-                    width: 120, height: 120, borderRadius: 60,
-                    backgroundColor: C.fieldBg, borderWidth: 1, borderColor: C.border,
-                    alignItems: "center", justifyContent: "center", overflow: "hidden", marginRight: 18
-                  }}>
-                    {photoUri ? <Image source={{ uri: photoUri }} style={{ width: "100%", height: "100%" }} /> : <User color={C.placeholder} size={58} />}
+                  <View
+                    style={[
+                      {
+                        width: 120, height: 120, borderRadius: 60,
+                        backgroundColor: C.fieldBg, borderWidth: 1, borderColor: C.border,
+                        alignItems: "center", justifyContent: "center", overflow: "hidden", marginRight: 18,
+                      },
+                      shadowMd,
+                    ]}
+                  >
+                    {photoUri ? (
+                      <Image source={{ uri: photoUri }} style={{ width: "100%", height: "100%" }} />
+                    ) : (
+                      <User color={C.placeholder} size={58} />
+                    )}
                   </View>
-                  <PrimaryBtn
-                    label="Choose Photo"
-                    icon={<ImageIcon color="#fff" size={20} />}
-                    onPress={pickImage}
-                  />
+                  <View style={{ gap: 10 }}>
+                    <PrimaryBtn
+                      label="Choose Photo"
+                      icon={<ImageIcon color="#fff" size={20} />}
+                      onPress={pickImage}
+                    />
+                    {!!photoUri && (
+                      <SecondaryBtn
+                        label="Remove Photo"
+                        icon={<X size={18} color={C.text} />}
+                        onPress={() => setPhotoUri(null)}
+                      />
+                    )}
+                  </View>
                 </View>
               </Card>
 
               {/* Personal Info */}
-              <Card title="Personal Information" subtitle="Keep your details up to date so we can reach you easily.">
-                <Field
-                  label="First Name"
-                  value={first}
-                  onChangeText={setFirst}
-                  icon={<User color={C.sub} size={20} />}
-                  placeholder="First name"
-                  autoComplete="name-given"
-                  returnKeyType="next"
-                />
-                <Field
-                  label="Last Name"
-                  value={last}
-                  onChangeText={setLast}
-                  icon={<User color={C.sub} size={20} />}
-                  placeholder="Last name"
-                  autoComplete="name-family"
-                  returnKeyType="next"
-                />
+              <Card
+                title="Personal Information"
+                subtitle="Keep your details up to date so we can reach you easily."
+              >
+                {/* Two-column on wide screens */}
+                <FormRow twoCol={isTwoCol}>
+                  <Field
+                    label="First Name"
+                    value={first}
+                    onChangeText={setFirst}
+                    icon={<User color={C.sub} size={20} />}
+                    placeholder="First name"
+                    autoComplete="name-given"
+                    returnKeyType="next"
+                  />
+                  <Field
+                    label="Last Name"
+                    value={last}
+                    onChangeText={setLast}
+                    icon={<User color={C.sub} size={20} />}
+                    placeholder="Last name"
+                    autoComplete="name-family"
+                    returnKeyType="next"
+                  />
+                </FormRow>
+
                 <Field
                   label="Email"
                   value={email}
@@ -288,32 +317,45 @@ export default function ProfileScreen() {
                   returnKeyType="next"
                 />
 
-                {/* DOB & Age (stacked for clarity) */}
+                {/* DOB */}
                 <View style={{ marginBottom: GAP }}>
                   <Label>Date of Birth</Label>
                   <Pressable
                     onPress={() => setShowDobPicker(true)}
-                    style={{
-                      backgroundColor: C.fieldBg,
-                      borderWidth: 1,
-                      borderColor: C.border,
-                      borderRadius: 14,
-                      paddingHorizontal: 14,
-                      height: INPUT_H,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
+                    style={[
+                      {
+                        backgroundColor: C.fieldBg,
+                        borderWidth: 1,
+                        borderColor: C.border,
+                        borderRadius: 14,
+                        paddingHorizontal: 14,
+                        height: INPUT_H,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      },
+                    ]}
                     hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Select date of birth"
                   >
                     <Text style={{ color: dob ? C.text : C.placeholder, fontSize: 16 }}>
                       {dob ? formatDate(dob) : "+ Add date of birth"}
                     </Text>
                     <ChevronDown color={C.sub} size={20} />
                   </Pressable>
-                  <Text style={{ color: C.sub, fontSize: 12, marginTop: 8 }}>
-                    We use your date of birth only to show your age.
-                  </Text>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
+                    <Text style={{ color: C.sub, fontSize: 12 }}>
+                      We use your date of birth only to show your age.
+                    </Text>
+                    {dob && (
+                      <Pressable hitSlop={8} onPress={() => setDob(null)}>
+                        <Text style={{ color: C.sub, fontSize: 12, textDecorationLine: "underline" }}>
+                          Clear DOB
+                        </Text>
+                      </Pressable>
+                    )}
+                  </View>
                 </View>
 
                 <PhoneField
@@ -324,6 +366,8 @@ export default function ProfileScreen() {
                 />
 
                 <ReadOnlyField label="Age" value={dob ? ageFrom(dob) : "—"} />
+
+                <Divider />
 
                 <SectionAction>
                   <PrimaryBtn
@@ -336,7 +380,12 @@ export default function ProfileScreen() {
               </Card>
 
               {/* Socials */}
-              <Card title="Social Media" subtitle="Optional links to help us reach you faster.">
+              <Card
+                title="Social Media"
+                subtitle="Optional links to help us reach you faster."
+              >
+                <OptionalChip />
+
                 <Field
                   label="Facebook"
                   value={facebook}
@@ -407,15 +456,20 @@ export default function ProfileScreen() {
           )}
         </ScrollView>
 
-        {/* Sticky bottom confirm for whole profile (extra affordance) */}
+        {/* Sticky bottom confirm */}
         {tab === "profile" && (
-          <View style={{
-            position: "absolute",
-            left: 0, right: 0, bottom: 0,
-            backgroundColor: C.card,
-            borderTopWidth: 1, borderTopColor: C.border,
-            padding: PAD
-          }}>
+          <View
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: C.card,
+              borderTopWidth: 1,
+              borderTopColor: C.border,
+              padding: PAD,
+            }}
+          >
             <PrimaryBtn
               onPress={saveProfile}
               label="Confirm Changes"
@@ -467,7 +521,6 @@ function TopHeader({
         paddingBottom: 22,
       }}
     >
-      {/* Back + title/subtitle stacked for readability */}
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 18 }}>
         <Pressable
           onPress={onBack}
@@ -479,7 +532,7 @@ function TopHeader({
           <ArrowLeft color={C.text} size={28} strokeWidth={2.4} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: C.text, fontSize: 24, fontWeight: "900", letterSpacing: 0.2 }}>
+          <Text style={{ color: C.text, fontSize: 26, fontWeight: "900", letterSpacing: 0.2 }}>
             {title}
           </Text>
           {!!subtitle && (
@@ -490,14 +543,29 @@ function TopHeader({
         </View>
       </View>
 
-      {/* Account meta row */}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
         <View>
           <Text style={{ color: C.sub, fontSize: 12, marginBottom: 2 }}>Account Created</Text>
           <Text style={{ color: C.text, fontSize: 14 }}>{createdAtText || "—"}</Text>
         </View>
 
-        <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "#eaf4ff", borderRadius: 999 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            backgroundColor: C.chipBg,
+            borderRadius: 999,
+          }}
+        >
           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.green, marginRight: 8 }} />
           <Text style={{ color: C.blue, fontWeight: "800", fontSize: 13 }}>Active</Text>
         </View>
@@ -513,7 +581,15 @@ function Tabs({
   active: "profile" | "password";
   onChange: (v: "profile" | "password") => void;
 }) {
-  const TabBtn = ({ label, value }: { label: string; value: "profile" | "password" }) => {
+  const TabBtn = ({
+    label,
+    value,
+    icon,
+  }: {
+    label: string;
+    value: "profile" | "password";
+    icon: React.ReactNode;
+  }) => {
     const isActive = active === value;
     return (
       <Pressable
@@ -525,10 +601,14 @@ function Tabs({
           alignItems: "center",
           borderWidth: 1.5,
           borderColor: isActive ? C.blue : C.border,
-          backgroundColor: isActive ? "#eaf4ff" : C.card,
+          backgroundColor: isActive ? C.chipBg : C.card,
           borderRadius: 12,
+          flexDirection: "row",
+          justifyContent: "center",
+          gap: 8,
         }}
       >
+        {icon}
         <Text style={{ color: isActive ? C.blue : C.text, fontWeight: "800", fontSize: 15, letterSpacing: 0.2 }}>
           {label}
         </Text>
@@ -537,10 +617,27 @@ function Tabs({
   };
 
   return (
-    <View style={{ backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.border, paddingHorizontal: PAD, paddingTop: 12, paddingBottom: 14 }}>
+    <View
+      style={{
+        backgroundColor: C.card,
+        borderBottomWidth: 1,
+        borderBottomColor: C.border,
+        paddingHorizontal: PAD,
+        paddingTop: 12,
+        paddingBottom: 14,
+      }}
+    >
       <View style={{ flexDirection: "row", gap: 12 }}>
-        <TabBtn label="My Information" value="profile" />
-        <TabBtn label="Password" value="password" />
+        <TabBtn
+          label="My Information"
+          value="profile"
+          icon={<User size={18} color={active === "profile" ? C.blue : C.sub} />}
+        />
+        <TabBtn
+          label="Password"
+          value="password"
+          icon={<KeyRound size={18} color={active === "password" ? C.blue : C.sub} />}
+        />
       </View>
     </View>
   );
@@ -549,37 +646,75 @@ function Tabs({
 /* ======================= Components ======================= */
 
 function Card({
-  title, subtitle, children,
+  title,
+  subtitle,
+  children,
 }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
 }) {
   return (
-    <View style={{
-      backgroundColor: C.card,
-      borderRadius: RADIUS,
-      padding: PAD,
-      marginBottom: GAP + 6,
-      borderWidth: 1, borderColor: C.border,
-    }}>
+    <View
+      style={[
+        {
+          backgroundColor: C.card,
+          borderRadius: RADIUS,
+          padding: PAD,
+          marginBottom: GAP + 6,
+          borderWidth: 1,
+          borderColor: C.border,
+        },
+        shadowMd,
+      ]}
+    >
       <Text style={{ color: C.text, fontWeight: "900", fontSize: 20 }}>{title}</Text>
       {subtitle ? (
-        <Text style={{ color: C.sub, marginTop: 6, marginBottom: 16, lineHeight: 20 }}>
-          {subtitle}
-        </Text>
-      ) : <View style={{ height: 12 }} />}
+        <Text style={{ color: C.sub, marginTop: 6, marginBottom: 16, lineHeight: 20 }}>{subtitle}</Text>
+      ) : (
+        <View style={{ height: 12 }} />
+      )}
       {children}
     </View>
   );
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <Text style={{ color: C.sub, fontWeight: "700", marginBottom: 8, fontSize: 15 }}>{children}</Text>;
+  return (
+    <Text style={{ color: C.sub, fontWeight: "700", marginBottom: 8, fontSize: 15 }}>
+      {children}
+    </Text>
+  );
+}
+
+function OptionalChip() {
+  return (
+    <View style={{ alignSelf: "flex-start", backgroundColor: "#f8fafc", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 12, borderWidth: 1, borderColor: C.border }}>
+      <Text style={{ fontSize: 12, color: C.sub }}>Optional</Text>
+    </View>
+  );
+}
+
+function Divider() {
+  return <View style={{ height: 1, backgroundColor: C.border, marginTop: 6, marginBottom: 6 }} />;
+}
+
+function FormRow({ children, twoCol }: { children: React.ReactNode; twoCol: boolean }) {
+  const content = React.Children.toArray(children);
+  if (!twoCol) return <View style={{ gap: GAP }}>{children}</View>;
+  return (
+    <View style={{ flexDirection: "row", gap: 12 }}>
+      <View style={{ flex: 1 }}>{content[0] ?? null}</View>
+      <View style={{ flex: 1 }}>{content[1] ?? null}</View>
+    </View>
+  );
 }
 
 function Field({
-  label, icon, error, ...props
+  label,
+  icon,
+  error,
+  ...props
 }: {
   label: string;
   icon?: React.ReactNode;
@@ -596,17 +731,19 @@ function Field({
   return (
     <View style={{ marginBottom: GAP }}>
       <Label>{label}</Label>
-      <View style={{
-        backgroundColor: C.fieldBg,
-        borderWidth: 1,
-        borderColor: hasError ? C.red : C.border,
-        borderRadius: 14,
-        paddingHorizontal: 14,
-        height: INPUT_H,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-      }}>
+      <View
+        style={{
+          backgroundColor: C.fieldBg,
+          borderWidth: 1,
+          borderColor: hasError ? C.red : C.border,
+          borderRadius: 14,
+          paddingHorizontal: 14,
+          height: INPUT_H,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
         {icon}
         <TextInput
           {...props}
@@ -620,7 +757,10 @@ function Field({
 }
 
 function PhoneField({
-  label, value, onChangeText, error,
+  label,
+  value,
+  onChangeText,
+  error,
 }: {
   label: string;
   value: string;
@@ -632,24 +772,29 @@ function PhoneField({
   return (
     <View style={{ marginBottom: GAP }}>
       <Label>{label}</Label>
-      <View style={{
-        flexDirection: "row",
-        borderWidth: 1,
-        borderColor: hasError ? C.red : C.border,
-        borderRadius: 14,
-        overflow: "hidden",
-        backgroundColor: C.fieldBg,
-        alignItems: "center",
-        height: INPUT_H,
-      }}>
-        <View style={{
-          paddingHorizontal: 14,
-          height: "100%",
+      <View
+        style={{
+          flexDirection: "row",
+          borderWidth: 1,
+          borderColor: hasError ? C.red : C.border,
+          borderRadius: 14,
+          overflow: "hidden",
+          backgroundColor: C.fieldBg,
           alignItems: "center",
-          justifyContent: "center",
-          borderRightWidth: 1, borderRightColor: C.border,
-          backgroundColor: "#fff"
-        }}>
+          height: INPUT_H,
+        }}
+      >
+        <View
+          style={{
+            paddingHorizontal: 14,
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRightWidth: 1,
+            borderRightColor: C.border,
+            backgroundColor: "#fff",
+          }}
+        >
           <Text style={{ color: C.text, fontWeight: "700" }}>+63</Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingRight: 12 }}>
@@ -658,7 +803,7 @@ function PhoneField({
             keyboardType="phone-pad"
             value={value}
             onChangeText={onChangeText}
-            placeholder={empty ? "+ Add contact number" : "9XXXXXXXXX"}
+            placeholder={empty ? "+ Add contact number" : "9123456789"}
             placeholderTextColor={C.placeholder}
             style={{ flex: 1, paddingHorizontal: 10, color: C.text, fontSize: 16 }}
           />
@@ -673,15 +818,17 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <View style={{ marginBottom: GAP }}>
       <Label>{label}</Label>
-      <View style={{
-        backgroundColor: C.fieldBg,
-        borderWidth: 1,
-        borderColor: C.border,
-        borderRadius: 14,
-        paddingHorizontal: 14,
-        height: INPUT_H,
-        justifyContent: "center",
-      }}>
+      <View
+        style={{
+          backgroundColor: C.fieldBg,
+          borderWidth: 1,
+          borderColor: C.border,
+          borderRadius: 14,
+          paddingHorizontal: 14,
+          height: INPUT_H,
+          justifyContent: "center",
+        }}
+      >
         <Text style={{ color: value === "—" ? C.placeholder : C.text, fontSize: 16 }}>{value}</Text>
       </View>
     </View>
@@ -689,7 +836,11 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
 }
 
 function PasswordField({
-  label, value, onChangeText, visible, setVisible,
+  label,
+  value,
+  onChangeText,
+  visible,
+  setVisible,
 }: {
   label: string;
   value: string;
@@ -700,16 +851,18 @@ function PasswordField({
   return (
     <View style={{ marginBottom: GAP }}>
       <Label>{label}</Label>
-      <View style={{
-        backgroundColor: C.fieldBg,
-        borderWidth: 1,
-        borderColor: C.border,
-        borderRadius: 14,
-        paddingHorizontal: 14,
-        height: INPUT_H,
-        flexDirection: "row",
-        alignItems: "center",
-      }}>
+      <View
+        style={{
+          backgroundColor: C.fieldBg,
+          borderWidth: 1,
+          borderColor: C.border,
+          borderRadius: 14,
+          paddingHorizontal: 14,
+          height: INPUT_H,
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
         <KeyRound color={C.sub} size={20} />
         <TextInput
           value={value}
@@ -733,26 +886,85 @@ function SectionAction({ children }: { children: React.ReactNode }) {
 }
 
 function PrimaryBtn({
-  onPress, label, icon, disabled,
-}: { onPress: () => void; label: string; icon?: React.ReactNode; disabled?: boolean }) {
+  onPress,
+  label,
+  icon,
+  disabled,
+}: {
+  onPress: () => void;
+  label: string;
+  icon?: React.ReactNode;
+  disabled?: boolean;
+}) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      style={({ pressed }) => ({
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        backgroundColor: disabled ? "#b9d5ff" : pressed ? C.blueDark : C.blue,
-        height: BTN_H,
-        borderRadius: 14,
-        paddingHorizontal: 16,
-      })}
+      style={({ pressed }) => [
+        {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          backgroundColor: disabled ? "#b9d5ff" : pressed ? C.blueDark : C.blue,
+          height: BTN_H,
+          borderRadius: 14,
+          paddingHorizontal: 16,
+        },
+      ]}
     >
       {icon}
       <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}>{label}</Text>
     </Pressable>
   );
 }
+
+function SecondaryBtn({
+  onPress,
+  label,
+  icon,
+}: {
+  onPress: () => void;
+  label: string;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          backgroundColor: "#fff",
+          height: BTN_H - 10,
+          borderRadius: 12,
+          paddingHorizontal: 14,
+          borderWidth: 1,
+          borderColor: C.border,
+          opacity: pressed ? 0.8 : 1,
+        },
+      ]}
+    >
+      {icon}
+      <Text style={{ color: C.text, fontWeight: "700", fontSize: 14 }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/* ---------- Shadows (platform-appropriate) ---------- */
+const shadowMd = Platform.select({
+  ios: {
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  android: {
+    elevation: 3,
+  },
+  default: {},
+});

@@ -1,5 +1,19 @@
+// app/home/homeworker.tsx
 import { useRouter, type Href } from "expo-router";
-import { Briefcase, FileText, Menu, Pencil, Search, Star, X } from "lucide-react-native";
+import {
+  Briefcase,
+  Compass,
+  FileText,
+  Home as HomeIcon,
+  Menu,
+  MessageCircle,
+  Pencil,
+  Plus,
+  Search,
+  Star,
+  User as UserIcon,
+  X,
+} from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
@@ -38,7 +52,16 @@ const C = {
 };
 
 const SEARCH_TOP_OFFSET =
-  (Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0) + 24; // push the search sheet below top
+  (Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0) + 24;
+
+// Nav routes (edit paths if needed)
+const ROUTES = {
+  home: "/home/homeworker" as Href,
+  browse: "/browse/browse" as Href,         // label "Browse" but still routes to your search screen
+  chat: "/chat/Chat" as Href,
+  profile: "/profile/Profile" as Href,
+  post: "/WokerForms/WorkerForms1" as Href, // center +
+};
 
 const CARDS = [
   { title: "Welcome to JD HOMECARE", subtitle: "Find nearby jobs and start earning", bg: "#eaf3ff" },
@@ -104,7 +127,7 @@ export default function WorkerHome() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
-      {/* HEADER (compact, search icon only) */}
+      {/* HEADER */}
       <View
         style={{
           paddingHorizontal: 12,
@@ -138,7 +161,6 @@ export default function WorkerHome() {
         </View>
 
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          {/* Left: menu */}
           <Pressable
             onPress={() => {}}
             hitSlop={8}
@@ -147,7 +169,6 @@ export default function WorkerHome() {
             <Menu color={C.text} size={24} strokeWidth={2.5} />
           </Pressable>
 
-          {/* Right: search icon (opens sheet) */}
           <Pressable
             onPress={() => setShowSearch(true)}
             hitSlop={8}
@@ -159,7 +180,10 @@ export default function WorkerHome() {
       </View>
 
       {/* BODY */}
-      <ScrollView contentContainerStyle={{ paddingBottom: 28 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 130 /* keep clear of nav */ }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Carousel (auto) */}
         <View style={{ marginTop: 12 }}>
           <ScrollView
@@ -246,7 +270,7 @@ export default function WorkerHome() {
             </Text>
 
             <Pressable
-              onPress={() => router.push({ pathname: "/WokerForms/WorkerForms1" } as Href)}
+              onPress={() => router.push(ROUTES.post)}
               style={({ pressed }) => ({
                 borderWidth: 1.5,
                 borderColor: C.blue,
@@ -261,7 +285,7 @@ export default function WorkerHome() {
           </View>
         </View>
 
-        {/* Posted Workers (slider with 6 placeholders, auto) */}
+        {/* Posted Workers slider */}
         <View style={{ marginTop: 18 }}>
           <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
             <Text style={{ color: C.text, fontWeight: "900", fontSize: 18 }}>Posted Workers</Text>
@@ -294,7 +318,6 @@ export default function WorkerHome() {
                   shadowOffset: { width: 0, height: 6 },
                 }}
               >
-                {/* avatar placeholder */}
                 <View
                   style={{
                     width: 56,
@@ -337,11 +360,9 @@ export default function WorkerHome() {
         </View>
       </ScrollView>
 
-      {/* SEARCH SHEET (pop-out, lowered from top) */}
+      {/* SEARCH SHEET */}
       <Modal visible={showSearch} transparent animationType="fade" onRequestClose={() => setShowSearch(false)}>
-        {/* dim background */}
         <Pressable onPress={() => setShowSearch(false)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)" }}>
-          {/* floating search card */}
           <Pressable
             onPress={() => {}}
             style={{
@@ -388,7 +409,6 @@ export default function WorkerHome() {
               </Pressable>
             </View>
 
-            {/* Quick filters (optional) */}
             <View style={{ flexDirection: "row", marginTop: 10, columnGap: 8 }}>
               {["Near me", "Highest rated", "Newest"].map((t) => (
                 <Pressable
@@ -413,6 +433,113 @@ export default function WorkerHome() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* ======== FLOATING NAVBAR (center + fixed) ======== */}
+      <View
+        pointerEvents="box-none"
+        style={{ position: "absolute", left: 0, right: 0, bottom: 0, zIndex: 5 }}
+      >
+        {/* Center + button (raised & on top) */}
+        <Pressable
+          onPress={() => router.push(ROUTES.post)}
+          style={({ pressed }) => ({
+            position: "absolute",
+            alignSelf: "center",
+            bottom: 38,
+            width: 68,
+            height: 68,
+            borderRadius: 34,
+            backgroundColor: pressed ? C.blueDark : C.blue,
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: C.blue,
+            shadowOpacity: Platform.OS === "android" ? 0.3 : 0.35,
+            shadowRadius: 14,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 10,
+            zIndex: 30,
+            borderWidth: 4,
+            borderColor: "#fff", // white ring so it stands out above the pill
+          })}
+          accessibilityRole="button"
+          accessibilityLabel="Create / Post"
+        >
+          <Plus color="#fff" size={30} />
+        </Pressable>
+
+        {/* Bottom pill nav (under the +) */}
+        <View
+          style={{
+            marginHorizontal: 16,
+            marginBottom: 14,
+            backgroundColor: "#fff",
+            borderRadius: 999,
+            borderWidth: 1,
+            borderColor: C.border,
+            height: 64,
+            paddingHorizontal: 22,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            shadowColor: "#000",
+            shadowOpacity: Platform.OS === "android" ? 0.12 : 0.18,
+            shadowRadius: 14,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 6,
+            zIndex: 10,
+          }}
+        >
+          {/* Left two */}
+          <Pressable
+            onPress={() => router.push(ROUTES.home)}
+            style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Home"
+          >
+            <HomeIcon color={C.text} size={24} />
+            <Text style={{ fontSize: 10, color: C.sub, marginTop: 4 }}>Home</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push(ROUTES.browse)}
+            style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Browse"
+          >
+            <Compass color={C.text} size={22} />
+            <Text style={{ fontSize: 10, color: C.sub, marginTop: 4 }}>Browse</Text>
+          </Pressable>
+
+          {/* spacer under the + button */}
+          <View style={{ width: 84 }} />
+
+          {/* Right two */}
+          <Pressable
+            onPress={() => router.push(ROUTES.chat)}
+            style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Messages"
+          >
+            <MessageCircle color={C.text} size={22} />
+            <Text style={{ fontSize: 10, color: C.sub, marginTop: 4 }}>Chat</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push(ROUTES.profile)}
+            style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Profile"
+          >
+            <UserIcon color={C.text} size={22} />
+            <Text style={{ fontSize: 10, color: C.sub, marginTop: 4 }}>Profile</Text>
+          </Pressable>
+        </View>
+      </View>
+      {/* ======== /FLOATING NAVBAR ======== */}
     </SafeAreaView>
   );
 }
