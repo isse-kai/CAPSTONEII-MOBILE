@@ -3,7 +3,7 @@ import { Text, View } from 'dripsy'
 import { useRouter } from 'expo-router'
 import { AnimatePresence, MotiView } from 'moti'
 import { useEffect, useState } from 'react'
-import { Image, Pressable } from 'react-native'
+import { Image, Pressable, TextInput } from 'react-native'
 import { getNotificationsForCurrentUser } from '../../../supabase/auth'
 
 type Notification = {
@@ -18,6 +18,8 @@ const Header = () => {
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [submenuOpen, setSubmenuOpen] = useState(false)
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
 
@@ -55,7 +57,7 @@ const Header = () => {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          mb: 20,
+          mb: 24,
         }}
       >
         {/* Logo */}
@@ -69,7 +71,7 @@ const Header = () => {
         />
 
         <View sx={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <Pressable onPress={() => router.push('/search')}>
+          <Pressable onPress={() => setShowSearch((prev) => !prev)}>
             <Ionicons name="search" size={24} color="#001a33" />
           </Pressable>
 
@@ -82,6 +84,58 @@ const Header = () => {
           </Pressable>
         </View>
       </View>
+
+      {/* === SEARCH BAR (slides in) === */}
+      <AnimatePresence>
+        {showSearch && (
+          <MotiView
+            from={{ opacity: 0, translateY: -10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            exit={{ opacity: 0, translateY: -10 }}
+            transition={{ type: "timing", duration: 300 }}
+            style={{
+              marginBottom: 16,
+              width: "100%",
+              top: -14
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "#fff",
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderWidth: 1,
+                borderColor: "#e5e7eb",
+                shadowColor: "#000",
+                shadowOpacity: 0.05,
+                shadowRadius: 3,
+                elevation: 2,
+              }}
+            >
+              <Ionicons name="search-outline" size={20} color="#4b5563" />
+              <TextInput
+                placeholder="Search..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                style={{
+                  flex: 1,
+                  marginLeft: 10,
+                  fontSize: 15,
+                  color: "#001a33",
+                  fontFamily: "Poppins-Regular",
+                }}
+                placeholderTextColor="#9ca3af"
+              />
+              <Pressable onPress={() => setShowSearch(false)}>
+                <Ionicons name="close" size={20} color="#6b7280" />
+              </Pressable>
+            </View>
+          </MotiView>
+        )}
+      </AnimatePresence>
 
       {/* Notifications Dropdown */}
       <AnimatePresence>

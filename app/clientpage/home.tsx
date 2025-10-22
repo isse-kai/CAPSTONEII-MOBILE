@@ -3,7 +3,7 @@ import { Pressable, Text, View } from 'dripsy'
 import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
 import { AnimatePresence, MotiImage, MotiView } from 'moti'
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Dimensions,
   Image,
@@ -16,7 +16,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Header from './clientnavbar/header'
 import ClientNavbar from './clientnavbar/navbar'
 
-const { width } = Dimensions.get('window')
+const { width, height } = Dimensions.get('window')
 
 const banners = [
   { id: 1, image: require('../../assets/banner.png') },
@@ -51,17 +51,12 @@ export default function ClientHome() {
     return () => clearInterval(timer)
   }, [])
 
-  const scrollBy = (offset: number) => {
-    const newX = scrollX + offset
-    setScrollX(newX)
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({ x: newX, animated: true })
-    }
-  }
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) =>
+    setScrollX(event.nativeEvent.contentOffset.x);
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    setScrollX(event.nativeEvent.contentOffset.x)
-  }
+  const scrollBy = (offset: number) => {
+    scrollRef.current?.scrollTo({ x: scrollX + offset, animated: true });
+  };
 
   if (!fontsLoaded) return null
 
@@ -69,24 +64,25 @@ export default function ClientHome() {
     <ImageBackground
       source={require('../../assets/welcome.jpg')}
       resizeMode="cover"
-      style={{ flex: 1 }}
+      style={{ 
+        flex: 1,
+        height: height,
+      }}
     >
       <SafeAreaView
         style={{
           flex: 1,
-          paddingTop: insets.top - 20,
-          paddingBottom: insets.bottom + 2,
+          paddingBottom: insets.bottom,
           backgroundColor: 'rgba(249, 250, 251, 0.9)',
         }}
       >
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            paddingHorizontal: 16,
-            paddingVertical: 12,
+            paddingHorizontal: 18,
             paddingBottom: 100,
           }}
-          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <MotiView
             from={{ opacity: 0, translateY: 20 }}
@@ -99,16 +95,11 @@ export default function ClientHome() {
             {/* Banner Slideshow */}
             <View
               sx={{
-                width: width - 32,
-                height: 110,
-                borderRadius: 12,
+                width: '100%',
+                height: height * 0.18,
+                borderRadius: 14,
                 overflow: 'hidden',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.1,
-                shadowRadius: 2,
-                elevation: 2,
-                mb: 16,
+                mb: 18,
               }}
             >
               <AnimatePresence>
@@ -129,34 +120,35 @@ export default function ClientHome() {
               </AnimatePresence>
             </View>
 
-            {/* Service Request Section */}
+            {/* Service Request */}
             <View sx={{ gap: 16 }}>
               <Text
                 sx={{
                   fontSize: 18,
                   fontFamily: 'Poppins-Bold',
                   color: '#001a33',
+                  mb: 10
                 }}
               >
                 Service Request Post
               </Text>
 
               <Pressable
-                onPress={() => router.push('./postrequest')}
+                onPress={() => router.push('/_sitemap')}
                 sx={{
                   borderWidth: 2,
                   borderColor: '#008CFC',
-                  borderRadius: 12,
+                  borderRadius: 14,
                   p: 16,
-                  bg: 'transparent',
+                  bg: 'white',
                 }}
               >
                 <View sx={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <Image
                     source={require('../../assets/add-icon.png')}
                     style={{
-                      width: 40,
-                      height: 40,
+                      width: 42,
+                      height: 42,
                       resizeMode: 'contain',
                     }}
                   />
@@ -186,31 +178,25 @@ export default function ClientHome() {
             </View>
 
             {/* Worker Carousel */}
-            <View sx={{ mt: 24 }}>
-              <View sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mb: 8 }}>
-                <View sx={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <Text
-                    sx={{
-                      fontSize: 18,
-                      fontFamily: 'Poppins-Bold',
-                      color: '#001a33',
-                    }}
-                  >
-                    Available Workers
-                  </Text>
-                  <Pressable onPress={() => router.push('/workers')}>
-                    <Text
-                      sx={{
-                        fontSize: 14,
-                        fontFamily: 'Poppins-Regular',
-                        color: '#008CFC',
-                      }}
-                    >
-                      Browse
-                    </Text>
-                  </Pressable>
-                </View>
-
+             <View sx={{ mt: 24 }}>
+              <View
+                sx={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 10,
+                }}
+              >
+                <Text
+                  sx={{
+                    fontSize: 18,
+                    fontFamily: "Poppins-Bold",
+                    color: "#001a33",
+                  }}
+                >
+                  Available Workers
+                </Text>
+                
                 <View sx={{ flexDirection: 'row', gap: 12 }}>
                   <Pressable onPress={() => scrollBy(-160)}>
                     <Ionicons name="chevron-back" size={24} color="#001a33" />
@@ -221,29 +207,22 @@ export default function ClientHome() {
                 </View>
               </View>
 
-              {/* Scrollable worker cards */}
               <ScrollView
                 ref={scrollRef}
                 horizontal
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 12 }}
+                contentContainerStyle={{ gap: 14 }}
               >
                 {workers.map(worker => (
                   <View
                     key={worker.id}
                     sx={{
-                      width: 160,
+                      width: width * 0.38,
                       bg: '#fff',
-                      borderRadius: 12,
-                      p: 12,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 2,
-                      elevation: 2,
-                      justifyContent: 'center',
+                      borderRadius: 14,
+                      p: 14,
                       alignItems: 'center',
                     }}
                   >
@@ -258,24 +237,24 @@ export default function ClientHome() {
                         alignItems: 'center',
                       }}
                     >
-                      <Text sx={{ fontSize: 24, color: '#6b7280' }}>👤</Text>
+                      <Text sx={{ fontSize: 28 }}>👤</Text>
                     </View>
                     <Text
                       sx={{
-                        fontSize: 16,
-                        fontFamily: 'Poppins-Bold',
-                        color: '#001a33',
-                        textAlign: 'center',
+                        fontSize: 15,
+                        fontFamily: "Poppins-Bold",
+                        color: "#001a33",
+                        textAlign: "center",
                       }}
                     >
                       {worker.name}
                     </Text>
                     <Text
                       sx={{
-                        fontSize: 14,
-                        fontFamily: 'Poppins-Regular',
-                        color: '#4b5563',
-                        textAlign: 'center',
+                        fontSize: 13,
+                        fontFamily: "Poppins-Regular",
+                        color: "#4b5563",
+                        textAlign: "center",
                       }}
                     >
                       {worker.role}
@@ -303,14 +282,11 @@ export default function ClientHome() {
                 })}
               </View>
             </View>
-
-
-
           </MotiView>
         </ScrollView>
 
-        {/* Sticky Bottom Navbar */}
         <ClientNavbar />
+        
       </SafeAreaView>
     </ImageBackground>
   )

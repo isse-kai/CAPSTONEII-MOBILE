@@ -38,8 +38,7 @@ export default function ChatList() {
     <SafeAreaView
       style={{
         flex: 1,
-        paddingTop: insets.top - 20,
-        paddingBottom: insets.bottom + 2,
+        paddingBottom: insets.bottom,
         backgroundColor: 'rgba(249, 250, 251, 0.9)',
       }}
     >
