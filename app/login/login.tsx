@@ -72,8 +72,7 @@ export default function Login() {
         <SafeAreaView
           style={{
             flex: 1,
-            paddingTop: insets.top - 20,
-            paddingBottom: insets.bottom - 40,
+            paddingBottom: insets.bottom,
           }}
         >
           <ScrollView

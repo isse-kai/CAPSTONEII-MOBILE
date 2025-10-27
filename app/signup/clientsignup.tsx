@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import React, { useState } from 'react'
 import {
-  Alert,
   Image,
   ImageBackground,
   KeyboardAvoidingView,
@@ -31,37 +30,49 @@ export default function ClientSignup() {
   const [confirm_password, setConfirmPassword] = useState('')
   const [is_email_opt_in, setIsEmailOptIn] = useState(false)
   const [is_agreed_to_terms, setIsAgreedToTerms] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [error_message, setErrorMessage] = useState('')
 
-  const [showOtpModal, setShowOtpModal] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  const [loading, setLoading] = useState(false)
+  const [info_message, setInfoMessage] = useState('')
+
+  const [otpOpen, setOtpOpen] = useState(false)
   const [otpCode, setOtpCode] = useState('')
+  const [otpInfo, setOtpInfo] = useState('')
+  const [otpError, setOtpError] = useState('')
   const [serverOtp, setServerOtp] = useState('')
+  const [canResendAt, setCanResendAt] = useState(Date.now() + 60000)
+  const canResend = Date.now() >= canResendAt
 
-  const [fontsLoaded] = useFonts({
-    'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
-    'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
-    'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
-  })
+const [fontsLoaded] = useFonts({
+  'Poppins-Regular': require('../../../assets/fonts/Poppins-Regular.ttf'),
+  'Poppins-Bold': require('../../../assets/fonts/Poppins-Bold.ttf'),
+  'Poppins-ExtraBold': require('../../../assets/fonts/Poppins-ExtraBold.ttf'),
+})
 
   if (!fontsLoaded) return null
 
   const handleSignup = async () => {
     if (!first_name || !last_name || !sex || !email_address || !password || !confirm_password) {
-      Alert.alert('Missing Fields', 'Please fill out all required fields.')
+      setErrorMessage('Please fill out all required fields.')
       return
     }
 
     if (password !== confirm_password) {
-      Alert.alert('Password Mismatch', 'Passwords do not match.')
+      setErrorMessage('Passwords do not match.')
       return
     }
 
     if (!is_agreed_to_terms) {
-      Alert.alert('Terms Required', 'You must agree to the terms and conditions.')
+      setErrorMessage('You must agree to the terms and conditions.')
       return
     }
 
-    setIsLoading(true)
+    setLoading(true)
+    setErrorMessage('')
+    setInfoMessage('')
 
     try {
       await signupClient({
@@ -75,14 +86,17 @@ export default function ClientSignup() {
 
       const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString()
       setServerOtp(generatedOtp)
+      setOtpCode('')
+      setOtpInfo(`Enter the 6-digit code sent to ${email_address}`)
+      setOtpError('')
+      setCanResendAt(Date.now() + 60000)
+      setOtpOpen(true)
 
       console.log('OTP sent to email:', generatedOtp)
-
-      setShowOtpModal(true)
     } catch (err: any) {
-      Alert.alert('Signup Failed', err.message)
+      setErrorMessage(err.message)
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
@@ -99,8 +113,7 @@ export default function ClientSignup() {
         <SafeAreaView
           style={{
             flex: 1,
-            paddingTop: insets.top - 20,
-            paddingBottom: insets.bottom - 40,
+            paddingBottom: insets.bottom,
           }}
         >
           <ScrollView
@@ -113,7 +126,6 @@ export default function ClientSignup() {
             showsVerticalScrollIndicator={false}
           >
             <MotiView style={{ gap: 20 }}>
-              {/* Logo */}
               <View sx={{ alignItems: 'center', mt: -50, mb: -70 }}>
                 <Image
                   source={require('../../assets/jdklogo.png')}
@@ -121,10 +133,9 @@ export default function ClientSignup() {
                 />
               </View>
 
-              {/* Title */}
               <View sx={{ alignItems: 'center', mb: 4 }}>
                 <Text sx={{ fontSize: 20, fontFamily: 'Poppins-ExtraBold', color: '#000000' }}>
-                  Sign Up as <Text sx={{ fontSize: 20, fontFamily: 'Poppins-ExtraBold', color: '#008CFC' }}>Client</Text>
+                  Sign Up as <Text sx={{ color: '#008CFC' }}>Client</Text>
                 </Text>
               </View>
 
@@ -137,16 +148,9 @@ export default function ClientSignup() {
                     onChangeText={setFirstName}
                     placeholder="Enter first name"
                     placeholderTextColor="#ccc"
-                    style={{
-                      backgroundColor: '#ffffffcc',
-                      borderRadius: 10,
-                      paddingHorizontal: 16,
-                      paddingVertical: 14,
-                      fontSize: 16,
-                    }}
+                    style={inputStyle}
                   />
                 </View>
-
                 <View style={{ flex: 1 }}>
                   <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Last Name</Text>
                   <TextInput
@@ -154,13 +158,7 @@ export default function ClientSignup() {
                     onChangeText={setLastName}
                     placeholder="Enter last name"
                     placeholderTextColor="#ccc"
-                    style={{
-                      backgroundColor: '#ffffffcc',
-                      borderRadius: 10,
-                      paddingHorizontal: 16,
-                      paddingVertical: 14,
-                      fontSize: 16,
-                    }}
+                    style={inputStyle}
                   />
                 </View>
               </View>
@@ -171,10 +169,7 @@ export default function ClientSignup() {
                 <TouchableOpacity
                   onPress={() => setShowSexDropdown(prev => !prev)}
                   style={{
-                    backgroundColor: '#ffffffcc',
-                    borderRadius: 10,
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
+                    ...inputStyle,
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -187,7 +182,6 @@ export default function ClientSignup() {
                     name={showSexDropdown ? 'chevron-up' : 'chevron-down'}
                     size={20}
                     color="#333"
-                    lineHeight={22}
                   />
                 </TouchableOpacity>
 
@@ -212,28 +206,27 @@ export default function ClientSignup() {
                     }}
                   >
                     {['Clear', 'Male', 'Female'].map(option => (
-                    <TouchableOpacity
-                      key={option}
-                      onPress={() => {
-                        setSex(option === 'Clear' ? '' : option)
-                        setShowSexDropdown(false)
-                      }}
-                      style={{
-                        paddingVertical: 12,
-                        paddingHorizontal: 16,
-                        borderBottomWidth: option === 'Female' ? 0 : 1,
-                        borderColor: '#eee',
-                      }}
-                    >
-                      <Text style={{ fontSize: 16, color: option === 'Clear' ? '#888' : '#000' }}>
-                        {option === 'Clear' ? 'Select Sex' : option}
-                      </Text>
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        key={option}
+                        onPress={() => {
+                          setSex(option === 'Clear' ? '' : option)
+                          setShowSexDropdown(false)
+                        }}
+                        style={{
+                          paddingVertical: 12,
+                          paddingHorizontal: 16,
+                          borderBottomWidth: option === 'Female' ? 0 : 1,
+                          borderColor: '#eee',
+                        }}
+                      >
+                        <Text style={{ fontSize: 16, color: option === 'Clear' ? '#888' : '#000' }}>
+                          {option === 'Clear' ? 'Select Sex' : option}
+                        </Text>
+                      </TouchableOpacity>
                     ))}
                   </MotiView>
                 )}
               </View>
-
 
               {/* Email */}
               <View>
@@ -243,18 +236,12 @@ export default function ClientSignup() {
                   onChangeText={setEmail}
                   placeholder="Enter email"
                   placeholderTextColor="#ccc"
-                  style={{
-                    backgroundColor: '#ffffffcc',
-                    borderRadius: 10,
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    fontSize: 16,
-                  }}
+                  style={inputStyle}
                 />
               </View>
 
               {/* Password */}
-              <View>
+              <View style={{ position: 'relative' }}>
                 <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Password</Text>
                 <TextInput
                   value={password}
@@ -262,33 +249,33 @@ export default function ClientSignup() {
                   placeholder="Enter password"
                   placeholderTextColor="#ccc"
                   secureTextEntry
-                  style={{
-                    backgroundColor: '#ffffffcc',
-                    borderRadius: 10,
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    fontSize: 16,
-                  }}
-                />
-              </View>
-
-              {/* Confirm Password */}
-              <View>
-                <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Confirm Password</Text>
-                <TextInput
-                  value={confirm_password}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Confirm password"
-                  placeholderTextColor="#ccc"
-                  secureTextEntry
-                  style={{
-                    backgroundColor: '#ffffffcc',
-                    borderRadius: 10,
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    fontSize: 16,
-                }}
+                  style={inputStyle}
               />
+              <Pressable
+                onPress={() => setShowPassword(prev => !prev)}
+                style={{ position: 'absolute', right: 16, top: 42 }}
+              >
+                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#333" />
+              </Pressable>
+            </View>
+
+            {/* Confirm Password */}
+            <View style={{ position: 'relative' }}>
+              <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Confirm Password</Text>
+              <TextInput
+                value={confirm_password}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirm password"
+                placeholderTextColor="#ccc"
+                secureTextEntry={!showConfirm}
+                style={inputStyle}
+              />
+              <Pressable
+                onPress={() => setShowConfirm(prev => !prev)}
+                style={{ position: 'absolute', right: 16, top: 42 }}
+              >
+                <Ionicons name={showConfirm ? 'eye-off' : 'eye'} size={20} color="#333" />
+              </Pressable>
             </View>
 
             {/* Terms and Email Opt-In */}
@@ -317,7 +304,6 @@ export default function ClientSignup() {
                   <Text sx={{ color: '#fff', fontSize: 12 }}>✓</Text>
                 )}
               </View>
-
               <Text
                 sx={{
                   fontSize: 12,
@@ -329,16 +315,26 @@ export default function ClientSignup() {
               </Text>
             </Pressable>
 
+            {/* Error Message */}
+            {error_message ? (
+              <Text sx={{ fontSize: 14, color: '#ef4444', mt: 8 }}>{error_message}</Text>
+            ) : null}
+
+            {/* Info Message */}
+            {info_message ? (
+              <Text sx={{ fontSize: 14, color: '#16a34a', mt: 8 }}>{info_message}</Text>
+            ) : null}
 
             {/* Signup Button */}
             <Pressable
               onPress={handleSignup}
-              disabled={isLoading}
+              disabled={loading}
               sx={{
                 bg: '#008CFC',
                 borderRadius: 10,
                 py: 14,
                 alignItems: 'center',
+                mt: 16,
               }}
             >
               <Text
@@ -349,7 +345,7 @@ export default function ClientSignup() {
                   lineHeight: 22,
                 }}
               >
-                {isLoading ? 'Sending verification code…' : 'Sign Up'}
+                {loading ? 'Sending verification code…' : 'Sign Up'}
               </Text>
             </Pressable>
 
@@ -384,18 +380,31 @@ export default function ClientSignup() {
       </SafeAreaView>
     </KeyboardAvoidingView>
 
+    {/* OTP Modal */}
     <VerificationModal
-    showLoading={isLoading}
-    showOtpModal={showOtpModal}
-    otpCode={otpCode}
-    setOtpCode={setOtpCode}
-    serverOtp={serverOtp}
-    onVerified={() => {
-      setShowOtpModal(false)
-      router.push('/clientpage/home')
-    }}
-  />
-
+      showLoading={loading}
+      showOtpModal={otpOpen}
+      otpCode={otpCode}
+      setOtpCode={setOtpCode}
+      serverOtp={serverOtp}
+      otpInfo={otpInfo}
+      otpError={otpError}
+      canResend={canResend}
+      canResendAt={canResendAt}
+      onVerified={() => {
+        setOtpOpen(false)
+        router.push('/clientpage/home')
+      }}
+    />
   </ImageBackground>
 )
+}
+
+const inputStyle = {
+  backgroundColor: '#ffffffcc',
+  borderRadius: 10,
+  paddingHorizontal: 16,
+  paddingVertical: 14,
+  fontSize: 16,
+  color: '#000',
 }

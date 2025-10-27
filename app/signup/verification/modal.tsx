@@ -8,6 +8,10 @@ type Props = {
   otpCode: string
   setOtpCode: (code: string) => void
   serverOtp: string
+  otpInfo?: string
+  otpError?: string
+  canResend?: boolean
+  canResendAt?: number
   onVerified: () => void
 }
 
@@ -17,6 +21,10 @@ export default function VerificationModal({
   otpCode,
   setOtpCode,
   serverOtp,
+  otpInfo,
+  otpError,
+  canResend,
+  canResendAt,
   onVerified,
 }: Props) {
   if (!showLoading && !showOtpModal) return null
@@ -38,9 +46,51 @@ export default function VerificationModal({
             zIndex: 998,
           }}
         >
-          <DripsyText sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#fff' }}>
-            Sending verification code…
+          <DripsyText sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
+            Enter 6-digit verification code
           </DripsyText>
+
+          {/* Dynamic messages */}
+          {otpInfo && (
+            <DripsyText sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563', mb: 8 }}>
+              {otpInfo}
+            </DripsyText>
+          )}
+
+          {otpError && (
+            <DripsyText sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#ef4444', mb: 8 }}>
+              {otpError}
+            </DripsyText>
+          )}
+
+          {canResend === false && canResendAt ? (
+            <DripsyText sx={{ fontSize: 12, fontFamily: 'Poppins-Regular', color: '#9ca3af', mb: 8 }}>
+              You can resend code in {Math.ceil((canResendAt - Date.now()) / 1000)}s
+            </DripsyText>
+          ) : null}
+
+          <TextInput
+            value={otpCode}
+            onChangeText={text => {
+              setOtpCode(text)
+              if (text.length === 6 && text === serverOtp) {
+                onVerified()
+              }
+            }}
+            keyboardType="number-pad"
+            maxLength={6}
+            style={{
+              backgroundColor: '#f3f4f6',
+              borderRadius: 10,
+              paddingHorizontal: 16,
+              paddingVertical: 14,
+              fontSize: 20,
+              letterSpacing: 8,
+              textAlign: 'center',
+              width: '100%',
+            }}
+          />
+
         </View>
       )}
 
