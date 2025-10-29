@@ -18,6 +18,7 @@
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
+    "@supabase/supabase-js": "^2.77.0",
     "dripsy": "^4.3.8",
     "expo": "54.0.19",
     "expo-blur": "~15.0.7",
@@ -52,13 +53,13 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@tailwindcss/postcss": "^4.1.11",
-    "@types/react": "~19.1.10",
+    "@types/react": "^19.2.2",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "metro-react-native-babel-preset": "^0.77.0",
     "postcss": "^8.5.6",
-    "typescript": "~5.9.2"
+    "typescript": "^5.9.3"
   },
   "private": true,
   "description": "This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).",
