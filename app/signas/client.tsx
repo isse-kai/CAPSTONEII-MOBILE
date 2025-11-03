@@ -25,6 +25,7 @@ import {
   StatusBar,
   TouchableOpacity,
 } from "react-native";
+import { signUpClient } from "../../lib/auth";
 
 /* ---------- Theme ---------- */
 const C = {
@@ -59,6 +60,7 @@ export default function ClientSignUp() {
   const [pw2, setPw2] = useState("");
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   // anim
   const fade = useRef(new Animated.Value(0)).current;
@@ -108,10 +110,21 @@ export default function ClientSignUp() {
   const submit = async () => {
     if (!canSubmit || loading) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setErr(null);
+    try {
+      await signUpClient({
+        email,
+        password: pw,
+        first,
+        last,
+        sex: (sex as "Male" | "Female") ?? null,
+      });
       router.replace("/login/login");
-    }, 900);
+    } catch (e: any) {
+      setErr(e?.message ?? "Sign up failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!fontsLoaded) return null;
@@ -197,7 +210,9 @@ export default function ClientSignUp() {
                 }}
               >
                 <Globe color={C.blue} size={18} />
-                <Text sx={{ color: C.text, fontFamily: "Poppins-SemiBold" }}>Continue with Google</Text>
+                <Text sx={{ color: C.text, fontFamily: "Poppins-SemiBold" }}>
+                  Continue with Google
+                </Text>
               </Pressable>
 
               {/* or divider */}
@@ -208,17 +223,14 @@ export default function ClientSignUp() {
               </View>
 
               {/* --- VERTICAL FORM --- */}
-              {/* First Name */}
               <Field label="First Name" icon={<User color={C.sub} size={16} />}>
                 <Input value={first} onChangeText={setFirst} placeholder="First name" />
               </Field>
 
-              {/* Last Name */}
               <Field label="Last Name" icon={<User color={C.sub} size={16} />}>
                 <Input value={last} onChangeText={setLast} placeholder="Last name" />
               </Field>
 
-              {/* Sex */}
               <Field label="Sex" icon={<UserRound color={C.sub} size={16} />}>
                 <Pressable onPress={() => setSexOpen(true)} sx={selectBtn}>
                   <Text sx={{ color: sex ? C.text : C.placeholder }}>{sex || "Select sex"}</Text>
@@ -226,7 +238,6 @@ export default function ClientSignUp() {
                 </Pressable>
               </Field>
 
-              {/* Email */}
               <Field label="Email Address" icon={<Mail color={C.sub} size={16} />}>
                 <Input
                   value={email}
@@ -238,7 +249,6 @@ export default function ClientSignUp() {
                 />
               </Field>
 
-              {/* Password */}
               <Field
                 label={
                   <Text>
@@ -255,7 +265,6 @@ export default function ClientSignUp() {
                 )}
               </Field>
 
-              {/* Confirm Password */}
               <Field label="Confirm Password" icon={<Lock color={C.sub} size={16} />}>
                 <Input
                   value={pw2}
@@ -266,7 +275,6 @@ export default function ClientSignUp() {
                 />
               </Field>
 
-              {/* Note */}
               <View sx={{ flexDirection: "row", alignItems: "center", mt: 16 }}>
                 <Info color={C.sub} size={16} />
                 <Text sx={{ color: C.sub, ml: 8, fontSize: 12 }}>
@@ -274,7 +282,6 @@ export default function ClientSignUp() {
                 </Text>
               </View>
 
-              {/* Agree */}
               <Pressable
                 onPress={() => setAgree((v) => !v)}
                 sx={{ flexDirection: "row", alignItems: "center", mt: 18 }}
@@ -300,7 +307,8 @@ export default function ClientSignUp() {
                 </Text>
               </Pressable>
 
-              {/* Submit */}
+              {err ? <Text sx={{ color: C.bad, mt: 10, fontSize: 12 }}>{err}</Text> : null}
+
               <Pressable
                 onPress={submit}
                 disabled={!canSubmit || loading}
@@ -319,7 +327,6 @@ export default function ClientSignUp() {
                 </Text>
               </Pressable>
 
-              {/* Login link */}
               <View sx={{ alignItems: "center", mt: 12 }}>
                 <Text sx={{ color: C.sub }}>
                   Already have an account?{" "}
@@ -367,7 +374,7 @@ export default function ClientSignUp() {
               </TouchableOpacity>
             </View>
 
-            {["Male", "Female", "Prefer not to say"].map((opt) => (
+            {["Male", "Female"].map((opt) => (
               <TouchableOpacity
                 key={opt}
                 onPress={() => {
@@ -419,10 +426,7 @@ function Field({
   );
 }
 
-const Input = ({
-  rightStatus = "none",
-  ...props
-}: any & { rightStatus?: "ok" | "bad" | "none" }) => (
+const Input = ({ rightStatus = "none", ...props }: any & { rightStatus?: "ok" | "bad" | "none" }) => (
   <View
     sx={{
       position: "relative",
@@ -448,7 +452,7 @@ const Input = ({
       <View
         style={{
           position: "absolute",
-          right: 12,
+          right: 10,
           top: 0,
           bottom: 0,
           justifyContent: "center",

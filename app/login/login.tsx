@@ -12,6 +12,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from "react-native";
+import { signInWithEmail } from "../../lib/auth";
 
 /* ---------- Theme ---------- */
 const C = {
@@ -33,6 +34,8 @@ export default function ClientLogin() {
 
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Anim
   const fade = useRef(new Animated.Value(0)).current;
@@ -54,14 +57,25 @@ export default function ClientLogin() {
   const emailOk = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
   const canLogin = useMemo(() => emailOk && pw.trim().length > 0, [emailOk, pw]);
 
-  const onLogin = () => {
-    if (!canLogin) return;
-    // TODO: wire up to your auth
-    router.replace("/_sitemap");
+  const onLogin = async () => {
+    if (!canLogin || loading) return;
+    setLoading(true);
+    setErr(null);
+    try {
+      const { role } = await signInWithEmail(email, pw);
+      // route by role – adjust to your actual routes
+      if (role === "worker") router.replace("/home/homeworker");
+      else if (role === "client") router.replace("/home/home");
+      else router.replace("/"); // fallback
+    } catch (e: any) {
+      setErr(e?.message ?? "Login failed. Check your credentials.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onGoogle = () => {
-    // TODO: hook Google auth
+    // placeholder; not wired
   };
 
   if (!fontsLoaded) return null;
@@ -73,7 +87,7 @@ export default function ClientLogin() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
       >
-        {/* Top-centered logo (thin + roomy) */}
+        {/* Top-centered logo */}
         <View
           sx={{
             position: "absolute",
@@ -106,7 +120,7 @@ export default function ClientLogin() {
               alignItems: "center",
               px: PAD,
               pb: 24,
-              pt: 96, // space so content doesn't collide with the floating logo
+              pt: 96,
             }}
           >
             {/* Card */}
@@ -115,7 +129,7 @@ export default function ClientLogin() {
                 width: "100%",
                 maxWidth: 560,
                 bg: C.card,
-                borderWidth: 1, // thin stroke
+                borderWidth: 1,
                 borderColor: C.border,
                 borderRadius: 18,
                 px: PAD,
@@ -157,7 +171,7 @@ export default function ClientLogin() {
                 onPress={onGoogle}
                 sx={{
                   height: 48,
-                  borderWidth: 1, // thinner
+                  borderWidth: 1,
                   borderColor: C.blue,
                   borderRadius: 14,
                   alignItems: "center",
@@ -203,10 +217,15 @@ export default function ClientLogin() {
                 />
               </Field>
 
+              {/* Error */}
+              {err ? (
+                <Text sx={{ color: "#ef4444", mt: 6, fontSize: 12 }}>{err}</Text>
+              ) : null}
+
               {/* Login */}
               <Pressable
                 onPress={onLogin}
-                disabled={!canLogin}
+                disabled={!canLogin || loading}
                 sx={{
                   height: 50,
                   borderRadius: 14,
@@ -271,16 +290,13 @@ function Field({
   );
 }
 
-const Input = ({
-  rightStatus = "none",
-  ...props
-}: any & { rightStatus?: "ok" | "bad" | "none" }) => (
+const Input = ({ rightStatus = "none", ...props }: any & { rightStatus?: "ok" | "bad" | "none" }) => (
   <View
     sx={{
       position: "relative",
       height: 48,
       bg: C.field,
-      borderWidth: 1, // thinner stroke
+      borderWidth: 1,
       borderColor: C.border,
       borderRadius: 14,
       justifyContent: "center",
@@ -296,7 +312,6 @@ const Input = ({
       }}
       placeholderTextColor={C.placeholder}
     />
-    {/* Right status dot */}
     {rightStatus !== "none" ? (
       <View
         style={{

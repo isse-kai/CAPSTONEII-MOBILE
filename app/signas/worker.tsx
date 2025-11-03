@@ -1,10 +1,11 @@
-// app/signup/signup.tsx
+// app/signas/worker.tsx
 import { Image, Pressable, Text, TextInput, View } from "dripsy";
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
   Eye,
   EyeOff,
   Globe,
@@ -13,16 +14,20 @@ import {
   LogIn,
   Mail,
   User,
+  UserRound,
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   SafeAreaView,
   ScrollView,
   StatusBar,
+  TouchableOpacity,
 } from "react-native";
+import { signUpWorker } from "../../lib/auth";
 
 /* ---------- Theme ---------- */
 const C = {
@@ -47,7 +52,10 @@ export default function SignUp() {
   const router = useRouter();
 
   // form
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [sex, setSex] = useState<"Male" | "Female" | null>(null);
+  const [sexOpen, setSexOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
@@ -57,6 +65,7 @@ export default function SignUp() {
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   // anim
   const fade = useRef(new Animated.Value(0)).current;
@@ -99,18 +108,28 @@ export default function SignUp() {
   const pwMatch = useMemo(() => pw.length >= MIN_PW && pw === pw2, [pw, pw2]);
 
   const canSubmit = useMemo(
-    () => fullName.trim() && emailOk && pwMatch && agree,
-    [fullName, emailOk, pwMatch, agree]
+    () => firstName.trim() && lastName.trim() && !!sex && emailOk && pwMatch && agree,
+    [firstName, lastName, sex, emailOk, pwMatch, agree]
   );
 
   const submit = async () => {
     if (!canSubmit || loading) return;
     setLoading(true);
-    // TODO: Integrate with your API
-    setTimeout(() => {
-      setLoading(false);
+    setErr(null);
+    try {
+      await signUpWorker({
+        email,
+        password: pw,
+        first: firstName,
+        last: lastName,
+        sex,
+      });
       router.replace("/login/login");
-    }, 900);
+    } catch (e: any) {
+      setErr(e?.message ?? "Sign up failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!fontsLoaded) return null;
@@ -184,7 +203,7 @@ export default function SignUp() {
                 elevation: 1,
               }}
             >
-              {/* Google */}
+              {/* Google (not wired yet) */}
               <Pressable
                 onPress={() => {}}
                 sx={{
@@ -212,16 +231,21 @@ export default function SignUp() {
               </View>
 
               {/* --- VERTICAL FORM --- */}
-              {/* Full Name */}
-              <Field label="Full Name" icon={<User color={C.sub} size={16} />}>
-                <Input
-                  value={fullName}
-                  onChangeText={setFullName}
-                  placeholder="Your full name"
-                />
+              <Field label="First Name" icon={<User color={C.sub} size={16} />}>
+                <Input value={firstName} onChangeText={setFirstName} placeholder="First name" />
               </Field>
 
-              {/* Email */}
+              <Field label="Last Name" icon={<User color={C.sub} size={16} />}>
+                <Input value={lastName} onChangeText={setLastName} placeholder="Last name" />
+              </Field>
+
+              <Field label="Sex" icon={<UserRound color={C.sub} size={16} />}>
+                <Pressable onPress={() => setSexOpen(true)} sx={selectBtn}>
+                  <Text sx={{ color: sex ? C.text : C.placeholder }}>{sex || "Select sex"}</Text>
+                  <ChevronDown color={C.sub} size={18} />
+                </Pressable>
+              </Field>
+
               <Field label="Email Address" icon={<Mail color={C.sub} size={16} />}>
                 <Input
                   value={email}
@@ -233,7 +257,6 @@ export default function SignUp() {
                 />
               </Field>
 
-              {/* Password */}
               <Field
                 label={
                   <Text>
@@ -260,7 +283,6 @@ export default function SignUp() {
                 )}
               </Field>
 
-              {/* Confirm Password */}
               <Field label="Confirm Password" icon={<Lock color={C.sub} size={16} />}>
                 <Input
                   value={pw2}
@@ -276,7 +298,6 @@ export default function SignUp() {
                 />
               </Field>
 
-              {/* Note */}
               <View sx={{ flexDirection: "row", alignItems: "center", mt: 16 }}>
                 <Info color={C.sub} size={16} />
                 <Text sx={{ color: C.sub, ml: 8, fontSize: 12 }}>
@@ -284,7 +305,6 @@ export default function SignUp() {
                 </Text>
               </View>
 
-              {/* Agree */}
               <Pressable
                 onPress={() => setAgree((v) => !v)}
                 sx={{ flexDirection: "row", alignItems: "center", mt: 18 }}
@@ -310,7 +330,8 @@ export default function SignUp() {
                 </Text>
               </Pressable>
 
-              {/* Submit */}
+              {err ? <Text sx={{ color: C.bad, mt: 10, fontSize: 12 }}>{err}</Text> : null}
+
               <Pressable
                 onPress={submit}
                 disabled={!canSubmit || loading}
@@ -329,7 +350,6 @@ export default function SignUp() {
                 </Text>
               </Pressable>
 
-              {/* Login link */}
               <View sx={{ alignItems: "center", mt: 12 }}>
                 <Text sx={{ color: C.sub }}>
                   Already have an account?{" "}
@@ -342,6 +362,64 @@ export default function SignUp() {
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
+
+      {/* Sex modal */}
+      <Modal visible={sexOpen} transparent animationType="fade" onRequestClose={() => setSexOpen(false)}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.35)",
+            justifyContent: "flex-end",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderTopLeftRadius: 22,
+              borderTopRightRadius: 22,
+              paddingBottom: 10,
+            }}
+          >
+            <View
+              style={{
+                paddingHorizontal: PAD,
+                paddingVertical: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: C.border,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text style={{ fontWeight: "900", fontSize: 18, color: C.text }}>Select sex</Text>
+              <TouchableOpacity onPress={() => setSexOpen(false)} style={{ padding: 6 }}>
+                <Text style={{ color: C.blue, fontWeight: "800" }}>Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            {(["Male", "Female"] as const).map((opt) => (
+              <TouchableOpacity
+                key={opt}
+                onPress={() => {
+                  setSex(opt);
+                  setSexOpen(false);
+                }}
+                style={{
+                  paddingHorizontal: PAD,
+                  paddingVertical: 16,
+                  borderBottomWidth: 1,
+                  borderBottomColor: C.border,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <UserRound color={C.sub} size={18} />
+                <Text style={{ color: C.text, marginLeft: 12 }}>{opt}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -394,11 +472,10 @@ const Input = ({
         color: C.text,
         fontSize: 16,
         padding: 0,
-        paddingRight: 34, // room for icon(s)
+        paddingRight: 34,
       }}
       placeholderTextColor={C.placeholder}
     />
-    {/* right adornment (e.g., eye toggle) */}
     {rightAdornment ? (
       <View
         style={{
@@ -412,7 +489,6 @@ const Input = ({
         {rightAdornment}
       </View>
     ) : null}
-    {/* validation status */}
     {rightStatus !== "none" ? (
       <View
         style={{
@@ -429,3 +505,15 @@ const Input = ({
     ) : null}
   </View>
 );
+
+const selectBtn = {
+  height: 52,
+  bg: C.field,
+  borderWidth: 2,
+  borderColor: C.border,
+  borderRadius: 16,
+  px: 16,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+} as const;
