@@ -14,8 +14,8 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { signupClient } from '../../supabase/auth'
-import VerificationModal from './verification/modal'
+import { resendSignupEmail, signupClient } from '../../supabase/auth'
+import VerificationModal from './verification/verificationmodal'
 
 export default function ClientSignup() {
   const router = useRouter()
@@ -30,27 +30,25 @@ export default function ClientSignup() {
   const [confirm_password, setConfirmPassword] = useState('')
   const [is_email_opt_in, setIsEmailOptIn] = useState(false)
   const [is_agreed_to_terms, setIsAgreedToTerms] = useState(false)
+
   const [error_message, setErrorMessage] = useState('')
+  const [info_message, setInfoMessage] = useState('')
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
   const [loading, setLoading] = useState(false)
-  const [info_message, setInfoMessage] = useState('')
 
   const [otpOpen, setOtpOpen] = useState(false)
   const [otpCode, setOtpCode] = useState('')
   const [otpInfo, setOtpInfo] = useState('')
-  const [otpError, setOtpError] = useState('')
-  const [serverOtp, setServerOtp] = useState('')
-  const [canResendAt, setCanResendAt] = useState(Date.now() + 60000)
-  const canResend = Date.now() >= canResendAt
+  const [otpError] = useState('')
 
-const [fontsLoaded] = useFonts({
-  'Poppins-Regular': require('../../../assets/fonts/Poppins-Regular.ttf'),
-  'Poppins-Bold': require('../../../assets/fonts/Poppins-Bold.ttf'),
-  'Poppins-ExtraBold': require('../../../assets/fonts/Poppins-ExtraBold.ttf'),
-})
+  const [fontsLoaded] = useFonts({
+    'Poppins-Regular': require('../../assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('../../assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-ExtraBold': require('../../assets/fonts/Poppins-ExtraBold.ttf'),
+  })
 
   if (!fontsLoaded) return null
 
@@ -62,6 +60,11 @@ const [fontsLoaded] = useFonts({
 
     if (password !== confirm_password) {
       setErrorMessage('Passwords do not match.')
+      return
+    }
+
+    if (password.trim().length < 12) {
+      setErrorMessage('Password must be at least 12 characters long.')
       return
     }
 
@@ -84,19 +87,22 @@ const [fontsLoaded] = useFonts({
         is_email_opt_in,
       })
 
-      const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString()
-      setServerOtp(generatedOtp)
-      setOtpCode('')
-      setOtpInfo(`Enter the 6-digit code sent to ${email_address}`)
-      setOtpError('')
-      setCanResendAt(Date.now() + 60000)
+      setInfoMessage('We sent a verification link to your email. Please confirm to continue.')
+      setOtpInfo('Check your email for the confirmation link.')
       setOtpOpen(true)
-
-      console.log('OTP sent to email:', generatedOtp)
     } catch (err: any) {
       setErrorMessage(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    try {
+      await resendSignupEmail(email_address)
+      setInfoMessage('Verification email resent. Please check your inbox.')
+    } catch (err: any) {
+      setErrorMessage(err.message)
     }
   }
 
@@ -113,7 +119,8 @@ const [fontsLoaded] = useFonts({
         <SafeAreaView
           style={{
             flex: 1,
-            paddingBottom: insets.bottom,
+            paddingTop: insets.top - 20,
+            paddingBottom: insets.bottom - 40,
           }}
         >
           <ScrollView
@@ -126,6 +133,7 @@ const [fontsLoaded] = useFonts({
             showsVerticalScrollIndicator={false}
           >
             <MotiView style={{ gap: 20 }}>
+              {/* Logo */}
               <View sx={{ alignItems: 'center', mt: -50, mb: -70 }}>
                 <Image
                   source={require('../../assets/jdklogo.png')}
@@ -133,9 +141,10 @@ const [fontsLoaded] = useFonts({
                 />
               </View>
 
+              {/* Title */}
               <View sx={{ alignItems: 'center', mb: 4 }}>
                 <Text sx={{ fontSize: 20, fontFamily: 'Poppins-ExtraBold', color: '#000000' }}>
-                  Sign Up as <Text sx={{ color: '#008CFC' }}>Client</Text>
+                  Sign Up as <Text sx={{ fontSize: 20, fontFamily: 'Poppins-ExtraBold', color: '#008CFC' }}>Client</Text>
                 </Text>
               </View>
 
@@ -250,154 +259,154 @@ const [fontsLoaded] = useFonts({
                   placeholderTextColor="#ccc"
                   secureTextEntry
                   style={inputStyle}
-              />
-              <Pressable
-                onPress={() => setShowPassword(prev => !prev)}
-                style={{ position: 'absolute', right: 16, top: 42 }}
-              >
-                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#333" />
-              </Pressable>
-            </View>
-
-            {/* Confirm Password */}
-            <View style={{ position: 'relative' }}>
-              <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Confirm Password</Text>
-              <TextInput
-                value={confirm_password}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirm password"
-                placeholderTextColor="#ccc"
-                secureTextEntry={!showConfirm}
-                style={inputStyle}
-              />
-              <Pressable
-                onPress={() => setShowConfirm(prev => !prev)}
-                style={{ position: 'absolute', right: 16, top: 42 }}
-              >
-                <Ionicons name={showConfirm ? 'eye-off' : 'eye'} size={20} color="#333" />
-              </Pressable>
-            </View>
-
-            {/* Terms and Email Opt-In */}
-            <Pressable
-              onPress={() => {
-                const next = !(is_email_opt_in && is_agreed_to_terms)
-                setIsEmailOptIn(next)
-                setIsAgreedToTerms(next)
-              }}
-              sx={{ flexDirection: 'row', alignItems: 'center', mt: 12 }}
-            >
-              <View
-                sx={{
-                  width: 18,
-                  height: 18,
-                  borderWidth: 1,
-                  borderColor: '#000',
-                  borderRadius: 4,
-                  bg: is_email_opt_in && is_agreed_to_terms ? '#008CFC' : 'transparent',
-                  mr: 10,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {is_email_opt_in && is_agreed_to_terms && (
-                  <Text sx={{ color: '#fff', fontSize: 12 }}>✓</Text>
-                )}
+                />
+                <Pressable
+                  onPress={() => setShowPassword(prev => !prev)}
+                  style={{ position: 'absolute', right: 16, top: 42 }}
+                >
+                  <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#333" />
+                </Pressable>
               </View>
-              <Text
-                sx={{
-                  fontSize: 12,
-                  fontFamily: 'Poppins-Regular',
-                  color: '#000',
+
+              {/* Confirm Password */}
+              <View style={{ position: 'relative' }}>
+                <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Confirm Password</Text>
+                <TextInput
+                  value={confirm_password}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Confirm password"
+                  placeholderTextColor="#ccc"
+                  secureTextEntry={!showConfirm}
+                  style={inputStyle}
+                />
+                <Pressable
+                  onPress={() => setShowConfirm(prev => !prev)}
+                  style={{ position: 'absolute', right: 16, top: 42 }}
+                >
+                  <Ionicons name={showConfirm ? 'eye-off' : 'eye'} size={20} color="#333" />
+                </Pressable>
+              </View>
+
+              {/* Terms and Email Opt-In */}
+              <Pressable
+                onPress={() => {
+                  const next = !(is_email_opt_in && is_agreed_to_terms)
+                  setIsEmailOptIn(next)
+                  setIsAgreedToTerms(next)
                 }}
+                sx={{ flexDirection: 'row', alignItems: 'center', mt: 12 }}
               >
-                I agree to JDK HOMECARE’s Terms of Service and Privacy Policy
-              </Text>
-            </Pressable>
-
-            {/* Error Message */}
-            {error_message ? (
-              <Text sx={{ fontSize: 14, color: '#ef4444', mt: 8 }}>{error_message}</Text>
-            ) : null}
-
-            {/* Info Message */}
-            {info_message ? (
-              <Text sx={{ fontSize: 14, color: '#16a34a', mt: 8 }}>{info_message}</Text>
-            ) : null}
-
-            {/* Signup Button */}
-            <Pressable
-              onPress={handleSignup}
-              disabled={loading}
-              sx={{
-                bg: '#008CFC',
-                borderRadius: 10,
-                py: 14,
-                alignItems: 'center',
-                mt: 16,
-              }}
-            >
-              <Text
-                sx={{
-                  fontSize: 18,
-                  fontFamily: 'Poppins-Bold',
-                  color: '#fff',
-                  lineHeight: 22,
-                }}
-              >
-                {loading ? 'Sending verification code…' : 'Sign Up'}
-              </Text>
-            </Pressable>
-
-            {/* Already have account */}
-            <View
-              sx={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                mt: 8,
-                mb: 30,
-              }}
-            >
-              <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>
-                Already have an account?{' '}
-              </Text>
-              <Pressable onPress={() => router.push('../login/login')}>
-                <Text
+                <View
                   sx={{
-                    fontSize: 14,
-                    fontFamily: 'Poppins-Bold',
-                    color: '#008CFC',
-                    textDecorationLine: 'underline',
+                    width: 18,
+                    height: 18,
+                    borderWidth: 1,
+                    borderColor: '#000',
+                    borderRadius: 4,
+                    bg: is_email_opt_in && is_agreed_to_terms ? '#008CFC' : 'transparent',
+                    mr: 10,
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  Login
+                  {is_email_opt_in && is_agreed_to_terms && (
+                    <Text sx={{ color: '#fff', fontSize: 12 }}>✓</Text>
+                  )}
+                </View>
+                <Text
+                  sx={{
+                    fontSize: 12,
+                    fontFamily: 'Poppins-Regular',
+                    color: '#000',
+                  }}
+                >
+                  I agree to JDK HOMECARE’s Terms of Service and Privacy Policy
                 </Text>
               </Pressable>
-            </View>
-          </MotiView>
-        </ScrollView>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
 
-    {/* OTP Modal */}
-    <VerificationModal
-      showLoading={loading}
-      showOtpModal={otpOpen}
-      otpCode={otpCode}
-      setOtpCode={setOtpCode}
-      serverOtp={serverOtp}
-      otpInfo={otpInfo}
-      otpError={otpError}
-      canResend={canResend}
-      canResendAt={canResendAt}
-      onVerified={() => {
-        setOtpOpen(false)
-        router.push('/clientpage/home')
-      }}
-    />
-  </ImageBackground>
-)
+              {/* Error Message */}
+              {error_message ? (
+                <Text sx={{ fontSize: 14, color: '#ef4444', mt: 8 }}>{error_message}</Text>
+              ) : null}
+
+              {/* Info Message */}
+              {info_message ? (
+                <Text sx={{ fontSize: 14, color: '#16a34a', mt: 8 }}>{info_message}</Text>
+              ) : null}
+
+              {/* Signup Button */}
+              <Pressable
+                onPress={handleSignup}
+                disabled={loading}
+                sx={{
+                  bg: '#008CFC',
+                  borderRadius: 10,
+                  py: 14,
+                  alignItems: 'center',
+                  mt: 16,
+                }}
+              >
+                <Text
+                  sx={{
+                    fontSize: 18,
+                    fontFamily: 'Poppins-Bold',
+                    color: '#fff',
+                    lineHeight: 22,
+                  }}
+                >
+                  {loading ? 'Sending verification email…' : 'Sign Up'}
+                </Text>
+              </Pressable>
+
+              {/* Already have account */}
+              <View
+                sx={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  mt: 8,
+                  mb: 30,
+                }}
+              >
+                <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>
+                  Already have an account?{' '}
+                </Text>
+                <Pressable onPress={() => router.push('../login/login')}>
+                  <Text
+                    sx={{
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Bold',
+                      color: '#008CFC',
+                      textDecorationLine: 'underline',
+                    }}
+                  >
+                    Login
+                  </Text>
+                </Pressable>
+              </View>
+            </MotiView>
+          </ScrollView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
+
+      <VerificationModal
+        showLoading={loading}
+        showOtpModal={otpOpen}
+        otpCode={otpCode}
+        setOtpCode={setOtpCode}
+        serverOtp={''}
+        otpInfo={otpInfo || 'Check your email for the confirmation link.'}
+        otpError={otpError}
+        canResend={true}
+        canResendAt={0}
+        onVerified={() => {
+          setOtpOpen(false)
+          router.push('/clientpage/home')
+        }}
+        onResend={handleResend}
+      />
+    </ImageBackground>
+  )
 }
 
 const inputStyle = {

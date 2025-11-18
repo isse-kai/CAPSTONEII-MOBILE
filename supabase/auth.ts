@@ -68,15 +68,12 @@ export async function signupClient({
         sex,
         is_email_opt_in,
       },
+      emailRedirectTo: 'exp://localhost:19000'
     },
   })
 
   if (error) throw new Error(error.message)
-
-  const otp = Math.floor(100000 + Math.random() * 900000).toString()
-  console.log(`OTP for ${email}: ${otp}`)
-
-  return { data, otp }
+  return data
 }
 
 // Worker Signup
@@ -111,6 +108,16 @@ export async function signupWorker({
 
   if (error) throw new Error(error.message)
   return data
+}
+
+// Verification Email
+export async function resendSignupEmail(email: string) {
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+  })
+  if (error) throw new Error(error.message)
+  return true
 }
 
 // Get current user

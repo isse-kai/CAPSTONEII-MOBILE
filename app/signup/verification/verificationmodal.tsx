@@ -1,6 +1,6 @@
 import { Text as DripsyText } from 'dripsy'
 import React from 'react'
-import { TextInput, View } from 'react-native'
+import { Pressable, TextInput, View } from 'react-native'
 
 type Props = {
   showLoading: boolean
@@ -13,6 +13,7 @@ type Props = {
   canResend?: boolean
   canResendAt?: number
   onVerified: () => void
+  onResend?: () => void
 }
 
 export default function VerificationModal({
@@ -26,6 +27,7 @@ export default function VerificationModal({
   canResend,
   canResendAt,
   onVerified,
+  onResend,
 }: Props) {
   if (!showLoading && !showOtpModal) return null
 
@@ -69,6 +71,21 @@ export default function VerificationModal({
             </DripsyText>
           ) : null}
 
+          {canResend && onResend && (
+            <Pressable
+              onPress={onResend}
+              style={{
+                marginTop: 12,
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                backgroundColor: '#008CFC',
+                borderRadius: 8,
+              }}
+            >
+              <DripsyText sx={{ color: '#fff', fontFamily: 'Poppins-Bold' }}>Resend Email</DripsyText>
+            </Pressable>
+          )}
+
           <TextInput
             value={otpCode}
             onChangeText={text => {
@@ -90,7 +107,6 @@ export default function VerificationModal({
               width: '100%',
             }}
           />
-
         </View>
       )}
 
@@ -121,6 +137,33 @@ export default function VerificationModal({
             <DripsyText sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
               Enter 6-digit verification code
             </DripsyText>
+
+            {otpInfo && (
+              <DripsyText sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563', mb: 8 }}>
+                {otpInfo}
+              </DripsyText>
+            )}
+
+            {otpError && (
+              <DripsyText sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#ef4444', mb: 8 }}>
+                {otpError}
+              </DripsyText>
+            )}
+
+            {canResend && onResend && (
+              <Pressable
+                onPress={onResend}
+                style={{
+                  marginTop: 12,
+                  paddingVertical: 10,
+                  paddingHorizontal: 20,
+                  backgroundColor: '#008CFC',
+                  borderRadius: 8,
+                }}
+              >
+                <DripsyText sx={{ color: '#fff', fontFamily: 'Poppins-Bold' }}>Resend Email</DripsyText>
+              </Pressable>
+            )}
 
             <TextInput
               value={otpCode}
