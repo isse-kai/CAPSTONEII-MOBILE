@@ -42,25 +42,25 @@ export async function loginUser(email: string, password: string) {
 }
 
 // Client Signup
+
 export async function signupClient({
   email,
-  password,
   first_name,
   last_name,
   sex,
   is_email_opt_in,
 }: {
   email: string
-  password: string
   first_name: string
   last_name: string
   sex: string
   is_email_opt_in: boolean
 }) {
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signInWithOtp({
     email,
-    password,
     options: {
+      shouldCreateUser: true,
+      emailRedirectTo: 'app://auth/callback',
       data: {
         role: 'client',
         first_name,
@@ -68,10 +68,29 @@ export async function signupClient({
         sex,
         is_email_opt_in,
       },
-      emailRedirectTo: 'exp://localhost:19000'
     },
   })
+  if (error) throw new Error(error.message)
+  return data
+}
 
+// Verify OTP
+export async function verifyEmailOtp(email: string, otpCode: string) {
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token: otpCode,
+    type: 'email',
+  })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Resend OTP email
+export async function resendSignupOtpEmail(email: string) {
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false },
+  })
   if (error) throw new Error(error.message)
   return data
 }

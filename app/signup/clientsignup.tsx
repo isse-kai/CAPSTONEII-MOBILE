@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { resendSignupEmail, signupClient } from '../../supabase/auth'
+import { resendSignupEmail, signupClient, verifyEmailOtp } from '../../supabase/auth'
 import VerificationModal from './verification/verificationmodal'
 
 export default function ClientSignup() {
@@ -42,60 +42,59 @@ export default function ClientSignup() {
   const [otpOpen, setOtpOpen] = useState(false)
   const [otpCode, setOtpCode] = useState('')
   const [otpInfo, setOtpInfo] = useState('')
-  const [otpError] = useState('')
+  const [otpError, setOtpError] = useState('')
 
   const [fontsLoaded] = useFonts({
-    'Poppins-Regular': require('../../assets/fonts/Poppins-Regular.ttf'),
-    'Poppins-Bold': require('../../assets/fonts/Poppins-Bold.ttf'),
-    'Poppins-ExtraBold': require('../../assets/fonts/Poppins-ExtraBold.ttf'),
+    'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
+    'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
   })
 
   if (!fontsLoaded) return null
 
   const handleSignup = async () => {
-    if (!first_name || !last_name || !sex || !email_address || !password || !confirm_password) {
-      setErrorMessage('Please fill out all required fields.')
-      return
-    }
-
-    if (password !== confirm_password) {
-      setErrorMessage('Passwords do not match.')
-      return
-    }
-
-    if (password.trim().length < 12) {
-      setErrorMessage('Password must be at least 12 characters long.')
-      return
-    }
-
-    if (!is_agreed_to_terms) {
-      setErrorMessage('You must agree to the terms and conditions.')
-      return
-    }
-
-    setLoading(true)
-    setErrorMessage('')
-    setInfoMessage('')
-
-    try {
-      await signupClient({
-        email: email_address,
-        password,
-        first_name,
-        last_name,
-        sex,
-        is_email_opt_in,
-      })
-
-      setInfoMessage('We sent a verification link to your email. Please confirm to continue.')
-      setOtpInfo('Check your email for the confirmation link.')
-      setOtpOpen(true)
-    } catch (err: any) {
-      setErrorMessage(err.message)
-    } finally {
-      setLoading(false)
-    }
+  if (!first_name || !last_name || !sex || !email_address || !password || !confirm_password) {
+    setErrorMessage('Please fill out all required fields.')
+    return
   }
+
+  if (password !== confirm_password) {
+    setErrorMessage('Passwords do not match.')
+    return
+  }
+
+  if (password.trim().length < 12) {
+    setErrorMessage('Password must be at least 12 characters long.')
+    return
+  }
+
+  if (!is_agreed_to_terms) {
+    setErrorMessage('You must agree to the terms and conditions.')
+    return
+  }
+
+  setLoading(true)
+  setErrorMessage('')
+  setInfoMessage('')
+
+  try {
+    await signupClient({
+      email: email_address,
+      first_name,
+      last_name,
+      sex,
+      is_email_opt_in,
+    })
+
+    setInfoMessage('We sent a 6-digit verification code to your email. Enter it below to continue.')
+    setOtpInfo('Check your Gmail inbox for the code.')
+    setOtpOpen(true)
+  } catch (err: any) {
+    setErrorMessage(err.message)
+  } finally {
+    setLoading(false)
+  }
+}
 
   const handleResend = async () => {
     try {
@@ -103,6 +102,16 @@ export default function ClientSignup() {
       setInfoMessage('Verification email resent. Please check your inbox.')
     } catch (err: any) {
       setErrorMessage(err.message)
+    }
+  }
+
+  const handleVerify = async () => {
+    try {
+      await verifyEmailOtp(email_address, otpCode)
+      setOtpOpen(false)
+      router.push('/clientpage/home')
+    } catch (err: any) {
+      setOtpError(err.message)
     }
   }
 
@@ -395,16 +404,14 @@ export default function ClientSignup() {
         otpCode={otpCode}
         setOtpCode={setOtpCode}
         serverOtp={''}
-        otpInfo={otpInfo || 'Check your email for the confirmation link.'}
+        otpInfo={otpInfo || 'Enter the 6-digit code sent to your email.'}
         otpError={otpError}
         canResend={true}
         canResendAt={0}
-        onVerified={() => {
-          setOtpOpen(false)
-          router.push('/clientpage/home')
-        }}
+        onVerified={handleVerify}
         onResend={handleResend}
       />
+
     </ImageBackground>
   )
 }

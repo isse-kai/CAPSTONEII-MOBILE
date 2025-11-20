@@ -1,6 +1,7 @@
 import { Text as DripsyText } from 'dripsy'
+import { MotiView } from 'moti'
 import React from 'react'
-import { Pressable, TextInput, View } from 'react-native'
+import { Modal, Pressable, TextInput, View } from 'react-native'
 
 type Props = {
   showLoading: boolean
@@ -32,60 +33,60 @@ export default function VerificationModal({
   if (!showLoading && !showOtpModal) return null
 
   return (
-    <>
-      {/* Loading Modal */}
-      {showLoading && (
-        <View
+    <Modal visible={showLoading || showOtpModal} transparent animationType="fade">
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <MotiView
+          from={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 250 }}
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: '#00000055',
-            justifyContent: 'center',
+            backgroundColor: '#fff',
+            padding: 24,
+            borderRadius: 16,
+            width: '85%',
             alignItems: 'center',
-            zIndex: 998,
+            shadowColor: '#000',
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            elevation: 6,
           }}
         >
+          {/* Title */}
           <DripsyText sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
             Enter 6-digit verification code
           </DripsyText>
 
-          {/* Dynamic messages */}
+          {/* Info / Error */}
           {otpInfo && (
-            <DripsyText sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563', mb: 8 }}>
+            <DripsyText
+              sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563', mb: 8, textAlign: 'center' }}
+            >
               {otpInfo}
             </DripsyText>
           )}
-
           {otpError && (
-            <DripsyText sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#ef4444', mb: 8 }}>
+            <DripsyText
+              sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#ef4444', mb: 8, textAlign: 'center' }}
+            >
               {otpError}
             </DripsyText>
           )}
-
-          {canResend === false && canResendAt ? (
-            <DripsyText sx={{ fontSize: 12, fontFamily: 'Poppins-Regular', color: '#9ca3af', mb: 8 }}>
+          {canResend === false && canResendAt && (
+            <DripsyText
+              sx={{ fontSize: 12, fontFamily: 'Poppins-Regular', color: '#9ca3af', mb: 8, textAlign: 'center' }}
+            >
               You can resend code in {Math.ceil((canResendAt - Date.now()) / 1000)}s
             </DripsyText>
-          ) : null}
-
-          {canResend && onResend && (
-            <Pressable
-              onPress={onResend}
-              style={{
-                marginTop: 12,
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                backgroundColor: '#008CFC',
-                borderRadius: 8,
-              }}
-            >
-              <DripsyText sx={{ color: '#fff', fontFamily: 'Poppins-Bold' }}>Resend Email</DripsyText>
-            </Pressable>
           )}
 
+          {/* OTP Input */}
           <TextInput
             value={otpCode}
             onChangeText={text => {
@@ -105,90 +106,47 @@ export default function VerificationModal({
               letterSpacing: 8,
               textAlign: 'center',
               width: '100%',
+              marginBottom: 16,
             }}
           />
-        </View>
-      )}
 
-      {/* OTP Modal */}
-      {showOtpModal && (
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: '#000000aa',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 999,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: '#fff',
-              padding: 24,
-              borderRadius: 12,
-              width: '80%',
-              alignItems: 'center',
-            }}
-          >
-            <DripsyText sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
-              Enter 6-digit verification code
-            </DripsyText>
-
-            {otpInfo && (
-              <DripsyText sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563', mb: 8 }}>
-                {otpInfo}
-              </DripsyText>
-            )}
-
-            {otpError && (
-              <DripsyText sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#ef4444', mb: 8 }}>
-                {otpError}
-              </DripsyText>
-            )}
-
+          {/* Actions */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
             {canResend && onResend && (
               <Pressable
                 onPress={onResend}
                 style={{
-                  marginTop: 12,
-                  paddingVertical: 10,
-                  paddingHorizontal: 20,
-                  backgroundColor: '#008CFC',
-                  borderRadius: 8,
+                  flex: 1,
+                  marginRight: 8,
+                  backgroundColor: '#f3f4f6',
+                  borderRadius: 10,
+                  paddingVertical: 12,
+                  alignItems: 'center',
                 }}
               >
-                <DripsyText sx={{ color: '#fff', fontFamily: 'Poppins-Bold' }}>Resend Email</DripsyText>
+                <DripsyText sx={{ color: '#333', fontFamily: 'Poppins-Bold' }}>Resend</DripsyText>
               </Pressable>
             )}
 
-            <TextInput
-              value={otpCode}
-              onChangeText={text => {
-                setOtpCode(text)
-                if (text.length === 6 && text === serverOtp) {
-                  onVerified()
-                }
-              }}
-              keyboardType="number-pad"
-              maxLength={6}
+            <Pressable
+              onPress={onVerified}
+              disabled={showLoading}
               style={{
-                backgroundColor: '#f3f4f6',
+                flex: 1,
+                marginLeft: 8,
+                backgroundColor: '#008CFC',
                 borderRadius: 10,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-                fontSize: 20,
-                letterSpacing: 8,
-                textAlign: 'center',
-                width: '100%',
+                paddingVertical: 12,
+                alignItems: 'center',
               }}
-            />
+            >
+              <DripsyText sx={{ color: '#fff', fontFamily: 'Poppins-Bold' }}>
+                {showLoading ? 'Verifying…' : 'Verify'}
+              </DripsyText>
+            </Pressable>
           </View>
-        </View>
-      )}
-    </>
+        </MotiView>
+      </View>
+    </Modal>
   )
 }
