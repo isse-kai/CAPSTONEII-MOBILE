@@ -2,15 +2,20 @@ import { Ionicons } from '@expo/vector-icons'
 import { Pressable, Text } from 'dripsy'
 import { useFonts } from 'expo-font'
 import { useRouter } from 'expo-router'
+import moment from "moment"
 import { MotiView } from 'moti'
 import React from 'react'
 import { ImageBackground, ScrollView, TextInput, View } from 'react-native'
+import DateTimePickerModal from "react-native-modal-datetime-picker"
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getCurrentUser } from '../../../../supabase/auth'
 import Header from '../../clientnavbar/header'
 import ClientNavbar from '../../clientnavbar/navbar'
 
 export default function AccountSettings() {
+  const [user, setUser] = React.useState<any>(null)
+  const [facebook, setFacebook] = React.useState("")
+  const [instagram, setInstagram] = React.useState("")
   const router = useRouter()
   const insets = useSafeAreaInsets()
 
@@ -20,13 +25,19 @@ export default function AccountSettings() {
     'Poppins-ExtraBold': require('../../../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
   })
 
-  const [user, setUser] = React.useState<any>(null)
+  const [dob, setDob] = React.useState<string>('')
+  const [showPicker, setShowPicker] = React.useState(false)
 
   React.useEffect(() => {
     const fetchUser = async () => {
       try {
         const u = await getCurrentUser()
         setUser(u)
+        setFacebook(u?.user_metadata?.facebook || "")
+        setInstagram(u?.user_metadata?.instagram || "")
+        if (u?.user_metadata?.dob) {
+          setDob(u.user_metadata.dob)
+        }
       } catch (err) {
         console.error(err)
       }
@@ -34,6 +45,13 @@ export default function AccountSettings() {
     fetchUser()
   }, [])
 
+const handleConfirmDob = (selectedDate: Date) => {
+  setShowPicker(false)
+  if (selectedDate) {
+    const formatted = moment(selectedDate).format("YYYY-MM-DD")
+    setDob(formatted)
+  }
+}
   if (!fontsLoaded) return null
 
   return (
@@ -63,7 +81,6 @@ export default function AccountSettings() {
             transition={{ type: 'timing', duration: 400 }}
             style={{ flex: 1 }}
           >
-
             <Header />
 
             {/* Account Details */}
@@ -81,145 +98,220 @@ export default function AccountSettings() {
               <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
                 Created At: {user?.created_at ? new Date(user.created_at).toLocaleString() : 'N/A'}
               </Text>
-              <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
-                Status: {user?.confirmed_at ? 'Active' : 'Inactive'}
-              </Text>
+
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  alignSelf: 'flex-start',
+                  marginBottom: 6,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 12,
+                  backgroundColor: user?.confirmed_at ? '#dcfce7' : '#fee2e2',
+                }}
+              >
+                <View
+                  style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: 6,
+                    marginRight: 8,
+                    backgroundColor: user?.confirmed_at ? '#22c55e' : '#ef4444',
+                  }}
+                />
+                <Text
+                  sx={{
+                    fontSize: 14,
+                    fontFamily: 'Poppins-Bold',
+                    color: user?.confirmed_at ? '#166534' : '#991b1b',
+                  }}
+                >
+                  {user?.confirmed_at ? 'Active' : 'Inactive'}
+                </Text>
+              </View>
             </View>
 
             {/* Personal Information */}
             <View
-            style={{
+              style={{
                 backgroundColor: '#ffffffcc',
                 borderRadius: 12,
                 padding: 16,
                 marginBottom: 20,
-            }}
+              }}
             >
-            <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
+              <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
                 Personal Information
-            </Text>
+              </Text>
 
-            {/* First Name */}
-            <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
+              {/* First Name */}
+              <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
                 First Name: {user?.user_metadata?.first_name || 'N/A'}
-            </Text>
+              </Text>
 
-            {/* Last Name */}
-            <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
+              {/* Last Name */}
+              <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
                 Last Name: {user?.user_metadata?.last_name || 'N/A'}
-            </Text>
+              </Text>
 
-            {/* Email */}
-            <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
+              {/* Email */}
+              <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
                 Email: {user?.email || 'N/A'}
-            </Text>
+              </Text>
 
-            {/* Age */}
-            <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
+              {/* Age */}
+              <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
                 Age: {user?.user_metadata?.age || 'N/A'}
-            </Text>
+              </Text>
 
-            {/* Contact Number (Editable) */}
-            <View style={{ marginBottom: 12 }}>
+              {/* Contact Number */}
+              <View style={{ marginBottom: 12 }}>
                 <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                Contact:
+                  Contact:
                 </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text sx={{ fontSize: 14, mr: 6 }}>🇵🇭 +63</Text>
-                <TextInput
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: '#d1d5db',
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 10,
+                      backgroundColor: '#f9fafb',
+                    }}
+                  >
+                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular' }}>🇵🇭 +63</Text>
+                    <View
+                      style={{
+                        width: 1,
+                        height: '100%',
+                        backgroundColor: '#d1d5db',
+                        marginLeft: 8,
+                      }}
+                    />
+                  </View>
+
+                  <TextInput
                     defaultValue={user?.user_metadata?.contact_number || ''}
                     placeholder="Enter contact number"
+                    keyboardType="number-pad"
                     style={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: '#d1d5db',
-                    borderRadius: 8,
-                    paddingHorizontal: 10,
-                    fontSize: 14,
-                    fontFamily: 'Poppins-Regular',
+                      flex: 1,
+                      paddingHorizontal: 10,
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Regular',
                     }}
-                />
+                  />
                 </View>
+
+                {/* Action buttons */}
                 <View style={{ flexDirection: 'row', marginTop: 6 }}>
-                <Pressable
+                  <Pressable
                     onPress={() => console.log('Remove contact')}
                     style={{
-                    backgroundColor: '#ef4444',
-                    paddingVertical: 6,
-                    paddingHorizontal: 12,
-                    borderRadius: 6,
-                    marginRight: 8,
+                      backgroundColor: '#ef4444',
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      borderRadius: 6,
+                      marginRight: 8,
                     }}
-                >
+                  >
                     <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
-                    Remove
+                      Remove
                     </Text>
-                </Pressable>
-                <Pressable
+                  </Pressable>
+                  <Pressable
                     onPress={() => console.log('Change contact')}
                     style={{
-                    backgroundColor: '#008CFC',
-                    paddingVertical: 6,
-                    paddingHorizontal: 12,
-                    borderRadius: 6,
+                      backgroundColor: '#008CFC',
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      borderRadius: 6,
                     }}
-                >
+                  >
                     <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
-                    Change
+                      Change
                     </Text>
-                </Pressable>
+                  </Pressable>
                 </View>
-            </View>
+              </View>
 
-            {/* Date of Birth (Editable) */}
-            <View>
+              {/* Date of Birth (Calendar Picker) */}
+              <View style={{ marginBottom: 12 }}>
                 <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                Date of Birth:
+                  Date of Birth:
                 </Text>
-                <TextInput
-                defaultValue={user?.user_metadata?.dob || ''}
-                placeholder="YYYY-MM-DD"
-                style={{
+
+                <Pressable
+                  onPress={() => setShowPicker(true)}
+                  style={{
                     borderWidth: 1,
                     borderColor: '#d1d5db',
                     borderRadius: 8,
                     paddingHorizontal: 10,
-                    fontSize: 14,
-                    fontFamily: 'Poppins-Regular',
-                }}
-                />
-                <View style={{ flexDirection: 'row', marginTop: 6 }}>
-                <Pressable
-                    onPress={() => console.log('Remove DOB')}
-                    style={{
-                    backgroundColor: '#ef4444',
-                    paddingVertical: 6,
-                    paddingHorizontal: 12,
-                    borderRadius: 6,
-                    marginRight: 8,
-                    }}
+                    paddingVertical: 12,
+                  }}
                 >
-                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
-                    Remove
-                    </Text>
-                </Pressable>
-                <Pressable
-                    onPress={() => console.log('Change DOB')}
-                    style={{
-                    backgroundColor: '#008CFC',
-                    paddingVertical: 6,
-                    paddingHorizontal: 12,
-                    borderRadius: 6,
+                  <Text
+                    sx={{
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Regular',
+                      color: dob ? '#000' : '#9ca3af',
                     }}
-                >
-                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
-                    Change
-                    </Text>
+                  >
+                    {dob || 'Select date'}
+                  </Text>
                 </Pressable>
-                </View>
-            </View>
-            </View>
 
+                <DateTimePickerModal
+                    isVisible={showPicker}
+                    mode="date"
+                    onConfirm={handleConfirmDob}
+                    onCancel={() => setShowPicker(false)}
+                    date={dob ? new Date(dob) : new Date()}
+                  />
+
+                  {/* Action buttons */}
+                    <View style={{ flexDirection: 'row', marginTop: 6 }}>
+                      <Pressable
+                        onPress={() => setDob('')}
+                        style={{
+                          backgroundColor: '#ef4444',
+                          paddingVertical: 6,
+                          paddingHorizontal: 12,
+                          borderRadius: 6,
+                          marginRight: 8,
+                        }}
+                      >
+                        <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
+                          Remove
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => console.log('Change DOB to', dob)}
+                        style={{
+                          backgroundColor: '#008CFC',
+                          paddingVertical: 6,
+                          paddingHorizontal: 12,
+                          borderRadius: 6,
+                        }}
+                      >
+                        <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
+                          Change
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+            </View>
 
             {/* Social Media */}
             <View
@@ -233,23 +325,82 @@ export default function AccountSettings() {
               <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
                 Social Media
               </Text>
-              <Pressable
-                onPress={() => router.push(user?.user_metadata?.facebook || 'https://facebook.com')}
-                sx={{ flexDirection: 'row', alignItems: 'center', mb: 10 }}
-              >
-                <Ionicons name="logo-facebook" size={22} color="#1877F2" style={{ marginRight: 8 }} />
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#1877F2' }}>
-                  {user?.user_metadata?.facebook || 'Facebook'}
-                </Text>
-              </Pressable>
 
+              {/* Facebook */}
+              <View style={{ marginBottom: 12 }}>
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
+                  Facebook:
+                </Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: '#d1d5db',
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Ionicons name="logo-facebook" size={22} color="#1877F2" style={{ marginHorizontal: 8 }} />
+                  <TextInput
+                    value={facebook}
+                    onChangeText={setFacebook}
+                    placeholder="Enter Facebook profile link"
+                    style={{
+                      flex: 1,
+                      paddingHorizontal: 10,
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Regular',
+                    }}
+                  />
+                </View>
+              </View>
+
+              {/* Instagram */}
+              <View style={{ marginBottom: 12 }}>
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
+                  Instagram:
+                </Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: '#d1d5db',
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Ionicons name="logo-instagram" size={22} color="#C13584" style={{ marginHorizontal: 8 }} />
+                  <TextInput
+                    value={instagram}
+                    onChangeText={setInstagram}
+                    placeholder="Enter Instagram profile link"
+                    style={{
+                      flex: 1,
+                      paddingHorizontal: 10,
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Regular',
+                    }}
+                  />
+                </View>
+              </View>
+
+              {/* Update Button */}
               <Pressable
-                onPress={() => router.push(user?.user_metadata?.instagram || 'https://instagram.com')}
-                sx={{ flexDirection: 'row', alignItems: 'center' }}
+                onPress={() => {
+                  console.log("Update social media info", { facebook, instagram })
+                  router.push("/clientpage/home")
+                }}
+                style={{
+                  backgroundColor: '#008CFC',
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                }}
               >
-                <Ionicons name="logo-instagram" size={22} color="#C13584" style={{ marginRight: 8 }} />
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#C13584' }}>
-                  {user?.user_metadata?.instagram || 'Instagram'}
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
+                  Update Information
                 </Text>
               </Pressable>
             </View>
