@@ -83,54 +83,77 @@ const handleConfirmDob = (selectedDate: Date) => {
           >
             <Header />
 
-            {/* Account Details */}
+        {/* Account Details */}
+        <View
+          style={{
+            backgroundColor: '#ffffffcc',
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 20,
+          }}
+        >
+          {/* Header */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 12,
+            }}
+          >
+            {/* Profile */}
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons
+                name="person-outline"
+                size={22}
+                color="#374151"
+                style={{ marginRight: 8 }}
+              />
+              <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold' }}>Profile</Text>
+            </View>
+
+            {/* Active/Inactive */}
             <View
               style={{
-                backgroundColor: '#ffffffcc',
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 12,
+                paddingVertical: 6,
                 borderRadius: 12,
-                padding: 16,
-                marginBottom: 20,
+                backgroundColor: user?.confirmed_at ? '#dcfce7' : '#fee2e2',
               }}
             >
-              <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
-                Account Details
-              </Text>
-              <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
-                Created At: {user?.created_at ? new Date(user.created_at).toLocaleString() : 'N/A'}
-              </Text>
-
               <View
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  alignSelf: 'flex-start',
-                  marginBottom: 6,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 12,
-                  backgroundColor: user?.confirmed_at ? '#dcfce7' : '#fee2e2',
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  marginRight: 8,
+                  backgroundColor: user?.confirmed_at ? '#22c55e' : '#ef4444',
+                }}
+              />
+              <Text
+                sx={{
+                  fontSize: 14,
+                  fontFamily: 'Poppins-Bold',
+                  color: user?.confirmed_at ? '#166534' : '#991b1b',
                 }}
               >
-                <View
-                  style={{
-                    width: 12,
-                    height: 12,
-                    borderRadius: 6,
-                    marginRight: 8,
-                    backgroundColor: user?.confirmed_at ? '#22c55e' : '#ef4444',
-                  }}
-                />
-                <Text
-                  sx={{
-                    fontSize: 14,
-                    fontFamily: 'Poppins-Bold',
-                    color: user?.confirmed_at ? '#166534' : '#991b1b',
-                  }}
-                >
-                  {user?.confirmed_at ? 'Active' : 'Inactive'}
-                </Text>
-              </View>
+                {user?.confirmed_at ? 'Active' : 'Inactive'}
+              </Text>
             </View>
+          </View>
+
+          {/* Account Created */}
+          <View style={{ marginBottom: 12 }}>
+            <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', mb: 2 }}>
+              ACCOUNT CREATED
+            </Text>
+            <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#374151' }}>
+              {user?.created_at ? new Date(user.created_at).toLocaleString() : 'N/A'}
+            </Text>
+          </View>
+        </View>
 
             {/* Personal Information */}
             <View
@@ -147,8 +170,8 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* First Name */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  First Name:
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                  FIRST NAME:
                 </Text>
                 <TextInput
                   value={user?.user_metadata?.first_name || 'N/A'}
@@ -168,8 +191,8 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* Last Name */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  Last Name:
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                  LAST NAME:
                 </Text>
                 <TextInput
                   value={user?.user_metadata?.last_name || 'N/A'}
@@ -189,8 +212,8 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* Email */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  Email:
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                  EMAIL:
                 </Text>
                 <TextInput
                   value={user?.email || 'N/A'}
@@ -210,8 +233,8 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* Age */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  Age:
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                  AGE:
                 </Text>
                 <TextInput
                   value={user?.user_metadata?.age?.toString() || 'N/A'}
@@ -229,10 +252,10 @@ const handleConfirmDob = (selectedDate: Date) => {
                 />
               </View>
 
-              {/* Contact Number (still editable) */}
+              {/* Contact Number */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                    Contact:
+                  <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                    CONTACT NUMBER:
                   </Text>
                   <View
                     style={{
@@ -310,8 +333,8 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* Date of Birth */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  Date of Birth:
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                  DATE OF BIRTH:
                 </Text>
 
                 <Pressable
@@ -395,8 +418,8 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* Facebook */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  Facebook:
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                  FACEBOOK:
                 </Text>
                 <View
                   style={{
@@ -425,8 +448,8 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* Instagram */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  Instagram:
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                  INSTAGRAM:
                 </Text>
                 <View
                   style={{
@@ -467,7 +490,7 @@ const handleConfirmDob = (selectedDate: Date) => {
                 }}
               >
                 <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
-                  Update Information
+                  Confirm
                 </Text>
               </Pressable>
             </View>
@@ -481,14 +504,21 @@ const handleConfirmDob = (selectedDate: Date) => {
                 marginBottom: 20,
               }}
             >
-              <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
-                Security
-              </Text>
+              {/* Header row with icon + text */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                <Ionicons
+                  name="shield-checkmark-outline"   // ✅ Shield with check icon
+                  size={22}
+                  color="#374151"
+                  style={{ marginRight: 8 }}
+                />
+                <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold' }}>Security</Text>
+              </View>
 
               {/* Current Password */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  Current Password:
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                  CURRENT PASSWORD:
                 </Text>
                 <View
                   style={{
@@ -516,8 +546,8 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* New Password */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  New Password:
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                  NEW PASSWORD:
                 </Text>
                 <View
                   style={{
@@ -545,8 +575,8 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* Confirm New Password */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  Confirm New Password:
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
+                  CONFIRM NEW PASSWORD:
                 </Text>
                 <View
                   style={{
@@ -584,7 +614,6 @@ const handleConfirmDob = (selectedDate: Date) => {
                   borderRadius: 8,
                 }}
               >
-                <Ionicons name="refresh-outline" size={20} color="#fff" style={{ marginRight: 6 }} />
                 <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
                   Update Password
                 </Text>
@@ -595,6 +624,7 @@ const handleConfirmDob = (selectedDate: Date) => {
         </ScrollView>
 
         <ClientNavbar />
+
       </SafeAreaView>
     </ImageBackground>
   )

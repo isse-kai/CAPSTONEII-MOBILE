@@ -42,7 +42,6 @@ export async function loginUser(email: string, password: string) {
 }
 
 // Client Signup
-
 export async function signupClient({
   email,
   first_name,
@@ -95,6 +94,48 @@ export async function resendSignupOtpEmail(email: string) {
   return data
 }
 
+export async function saveClientRequest({
+  first_name,
+  last_name,
+  email,
+  phone,
+  barangay,
+  street,
+  more_address,
+  photo_url,
+}: {
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  barangay: string
+  street: string
+  more_address: string
+  photo_url: string | null
+}) {
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) throw new Error('User not authenticated')
+
+  // Insert into client_requests table
+  const { error } = await supabase.from('client_requests').insert([
+    {
+      user_id: user.id,
+      first_name,
+      last_name,
+      email,
+      phone,
+      barangay,
+      street,
+      more_address,
+      photo_url,
+    },
+  ])
+
+  if (error) throw new Error('Failed to save client request: ' + error.message)
+  return true
+}
+
 // Worker Signup
 export async function signupWorker({
   email,
@@ -127,6 +168,22 @@ export async function signupWorker({
 
   if (error) throw new Error(error.message)
   return data
+}
+
+// Request password reset email
+export async function requestPasswordReset(email: string) {
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'app://auth/callback',
+  })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+// Update password after reset
+export async function updatePassword(newPassword: string) {
+  const { data, error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) throw new Error(error.message)
+  return data.user
 }
 
 // Verification Email

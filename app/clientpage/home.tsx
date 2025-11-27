@@ -134,7 +134,7 @@ export default function ClientHome() {
               </Text>
 
               <Pressable
-                onPress={() => router.push('/_sitemap')}
+                onPress={() => router.push('./clientforms/request')}
                 sx={{
                   borderWidth: 2,
                   borderColor: '#008CFC',
