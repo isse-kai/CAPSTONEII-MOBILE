@@ -146,72 +146,135 @@ const handleConfirmDob = (selectedDate: Date) => {
               </Text>
 
               {/* First Name */}
-              <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
-                First Name: {user?.user_metadata?.first_name || 'N/A'}
-              </Text>
-
-              {/* Last Name */}
-              <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
-                Last Name: {user?.user_metadata?.last_name || 'N/A'}
-              </Text>
-
-              {/* Email */}
-              <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
-                Email: {user?.email || 'N/A'}
-              </Text>
-
-              {/* Age */}
-              <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 6 }}>
-                Age: {user?.user_metadata?.age || 'N/A'}
-              </Text>
-
-              {/* Contact Number */}
               <View style={{ marginBottom: 12 }}>
                 <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
-                  Contact:
+                  First Name:
                 </Text>
-
-                <View
+                <TextInput
+                  value={user?.user_metadata?.first_name || 'N/A'}
+                  editable={false}
                   style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
                     borderWidth: 1,
                     borderColor: '#d1d5db',
                     borderRadius: 8,
-                    overflow: 'hidden',
+                    paddingHorizontal: 10,
+                    fontSize: 14,
+                    fontFamily: 'Poppins-Regular',
+                    backgroundColor: '#f9fafb',
+                    color: '#374151',
                   }}
-                >
+                />
+              </View>
+
+              {/* Last Name */}
+              <View style={{ marginBottom: 12 }}>
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
+                  Last Name:
+                </Text>
+                <TextInput
+                  value={user?.user_metadata?.last_name || 'N/A'}
+                  editable={false}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#d1d5db',
+                    borderRadius: 8,
+                    paddingHorizontal: 10,
+                    fontSize: 14,
+                    fontFamily: 'Poppins-Regular',
+                    backgroundColor: '#f9fafb',
+                    color: '#374151',
+                  }}
+                />
+              </View>
+
+              {/* Email */}
+              <View style={{ marginBottom: 12 }}>
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
+                  Email:
+                </Text>
+                <TextInput
+                  value={user?.email || 'N/A'}
+                  editable={false}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#d1d5db',
+                    borderRadius: 8,
+                    paddingHorizontal: 10,
+                    fontSize: 14,
+                    fontFamily: 'Poppins-Regular',
+                    backgroundColor: '#f9fafb',
+                    color: '#374151',
+                  }}
+                />
+              </View>
+
+              {/* Age */}
+              <View style={{ marginBottom: 12 }}>
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
+                  Age:
+                </Text>
+                <TextInput
+                  value={user?.user_metadata?.age?.toString() || 'N/A'}
+                  editable={false}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#d1d5db',
+                    borderRadius: 8,
+                    paddingHorizontal: 10,
+                    fontSize: 14,
+                    fontFamily: 'Poppins-Regular',
+                    backgroundColor: '#f9fafb',
+                    color: '#374151',
+                  }}
+                />
+              </View>
+
+              {/* Contact Number (still editable) */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
+                    Contact:
+                  </Text>
                   <View
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      paddingHorizontal: 10,
-                      backgroundColor: '#f9fafb',
+                      borderWidth: 1,
+                      borderColor: '#d1d5db',
+                      borderRadius: 8,
+                      overflow: 'hidden',
                     }}
                   >
-                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular' }}>🇵🇭 +63</Text>
                     <View
                       style={{
-                        width: 1,
-                        height: '100%',
-                        backgroundColor: '#d1d5db',
-                        marginLeft: 8,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 10,
+                        backgroundColor: '#f9fafb',
+                      }}
+                    >
+                      <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular' }}>🇵🇭 +63</Text>
+                      <View
+                        style={{
+                          width: 1,
+                          height: '100%',
+                          backgroundColor: '#d1d5db',
+                          marginLeft: 8,
+                        }}
+                      />
+                    </View>
+
+                    <TextInput
+                      defaultValue={user?.user_metadata?.contact_number || ''}
+                      placeholder="Enter contact number"
+                      keyboardType="number-pad"
+                      style={{
+                        flex: 1,
+                        paddingHorizontal: 10,
+                        fontSize: 14,
+                        fontFamily: 'Poppins-Regular',
                       }}
                     />
                   </View>
-
-                  <TextInput
-                    defaultValue={user?.user_metadata?.contact_number || ''}
-                    placeholder="Enter contact number"
-                    keyboardType="number-pad"
-                    style={{
-                      flex: 1,
-                      paddingHorizontal: 10,
-                      fontSize: 14,
-                      fontFamily: 'Poppins-Regular',
-                    }}
-                  />
-                </View>
 
                 {/* Action buttons */}
                 <View style={{ flexDirection: 'row', marginTop: 6 }}>
@@ -245,7 +308,7 @@ const handleConfirmDob = (selectedDate: Date) => {
                 </View>
               </View>
 
-              {/* Date of Birth (Calendar Picker) */}
+              {/* Date of Birth */}
               <View style={{ marginBottom: 12 }}>
                 <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
                   Date of Birth:
@@ -254,6 +317,9 @@ const handleConfirmDob = (selectedDate: Date) => {
                 <Pressable
                   onPress={() => setShowPicker(true)}
                   style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                     borderWidth: 1,
                     borderColor: '#d1d5db',
                     borderRadius: 8,
@@ -270,47 +336,48 @@ const handleConfirmDob = (selectedDate: Date) => {
                   >
                     {dob || 'Select date'}
                   </Text>
+
+                  <Ionicons name="calendar-outline" size={20} color="#6b7280" />
                 </Pressable>
 
                 <DateTimePickerModal
-                    isVisible={showPicker}
-                    mode="date"
-                    onConfirm={handleConfirmDob}
-                    onCancel={() => setShowPicker(false)}
-                    date={dob ? new Date(dob) : new Date()}
-                  />
+                  isVisible={showPicker}
+                  mode="date"
+                  onConfirm={handleConfirmDob}
+                  onCancel={() => setShowPicker(false)}
+                  date={dob ? new Date(dob) : new Date()}
+                />
 
-                  {/* Action buttons */}
-                    <View style={{ flexDirection: 'row', marginTop: 6 }}>
-                      <Pressable
-                        onPress={() => setDob('')}
-                        style={{
-                          backgroundColor: '#ef4444',
-                          paddingVertical: 6,
-                          paddingHorizontal: 12,
-                          borderRadius: 6,
-                          marginRight: 8,
-                        }}
-                      >
-                        <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
-                          Remove
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        onPress={() => console.log('Change DOB to', dob)}
-                        style={{
-                          backgroundColor: '#008CFC',
-                          paddingVertical: 6,
-                          paddingHorizontal: 12,
-                          borderRadius: 6,
-                        }}
-                      >
-                        <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
-                          Change
-                        </Text>
-                      </Pressable>
-                    </View>
-                  </View>
+                <View style={{ flexDirection: 'row', marginTop: 6 }}>
+                  <Pressable
+                    onPress={() => setDob('')}
+                    style={{
+                      backgroundColor: '#ef4444',
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      borderRadius: 6,
+                      marginRight: 8,
+                    }}
+                  >
+                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
+                      Remove
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => console.log('Change DOB to', dob)}
+                    style={{
+                      backgroundColor: '#008CFC',
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      borderRadius: 6,
+                    }}
+                  >
+                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
+                      Change
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
             </View>
 
             {/* Social Media */}
@@ -404,6 +471,126 @@ const handleConfirmDob = (selectedDate: Date) => {
                 </Text>
               </Pressable>
             </View>
+
+            {/* Security */}
+            <View
+              style={{
+                backgroundColor: '#ffffffcc',
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 20,
+              }}
+            >
+              <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
+                Security
+              </Text>
+
+              {/* Current Password */}
+              <View style={{ marginBottom: 12 }}>
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
+                  Current Password:
+                </Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: '#d1d5db',
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Ionicons name="lock-closed-outline" size={20} color="#6b7280" style={{ marginHorizontal: 8 }} />
+                  <TextInput
+                    placeholder="Enter current password"
+                    secureTextEntry
+                    style={{
+                      flex: 1,
+                      paddingHorizontal: 10,
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Regular',
+                    }}
+                  />
+                </View>
+              </View>
+
+              {/* New Password */}
+              <View style={{ marginBottom: 12 }}>
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
+                  New Password:
+                </Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: '#d1d5db',
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Ionicons name="key-outline" size={20} color="#6b7280" style={{ marginHorizontal: 8 }} />
+                  <TextInput
+                    placeholder="Enter new password"
+                    secureTextEntry
+                    style={{
+                      flex: 1,
+                      paddingHorizontal: 10,
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Regular',
+                    }}
+                  />
+                </View>
+              </View>
+
+              {/* Confirm New Password */}
+              <View style={{ marginBottom: 12 }}>
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', mb: 4 }}>
+                  Confirm New Password:
+                </Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: '#d1d5db',
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Ionicons name="checkmark-done-outline" size={20} color="#6b7280" style={{ marginHorizontal: 8 }} />
+                  <TextInput
+                    placeholder="Confirm new password"
+                    secureTextEntry
+                    style={{
+                      flex: 1,
+                      paddingHorizontal: 10,
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Regular',
+                    }}
+                  />
+                </View>
+              </View>
+
+              {/* Update Button */}
+              <Pressable
+                onPress={() => console.log("Change password pressed")}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#008CFC',
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                }}
+              >
+                <Ionicons name="refresh-outline" size={20} color="#fff" style={{ marginRight: 6 }} />
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
+                  Update Password
+                </Text>
+              </Pressable>
+            </View>
+
           </MotiView>
         </ScrollView>
 
