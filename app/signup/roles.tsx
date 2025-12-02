@@ -76,7 +76,7 @@ export default function Roles() {
               />
             </MotiView>
 
-            {/* Role Selection Card */}
+            {/* Role Select */}
             <View
               style={{
                 backgroundColor: '#ffffffcc',
@@ -88,7 +88,7 @@ export default function Roles() {
                 maxWidth: 420,
               }}
             >
-              {/* Heading */}
+              {/* Headers */}
               <MotiView
                 from={{ opacity: 0, translateY: -20 }}
                 animate={{ opacity: 1, translateY: 0 }}
@@ -118,7 +118,7 @@ export default function Roles() {
                 </View>
               </MotiView>
 
-              {/* Role Options */}
+              {/* Roles */}
               {roles.map(({ key, label }, index) => {
                 const isSelected = selectedRole === key
                 return (
@@ -171,7 +171,7 @@ export default function Roles() {
                 )
               })}
 
-              {/* Continue Button */}
+              {/* Create Button */}
               <MotiView
                 from={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -209,7 +209,7 @@ export default function Roles() {
                 </Pressable>
               </MotiView>
 
-              {/* Login Link */}
+              {/* Login Button */}
               <MotiView
                 from={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -248,7 +248,6 @@ export default function Roles() {
               </MotiView>
             </View>
 
-            
           </View>
         </ScrollView>
       </SafeAreaView>
