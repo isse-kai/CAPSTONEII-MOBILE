@@ -225,15 +225,15 @@ const WorkerHeader = () => {
           >
             <Pressable onPress={() => setSubmenuOpen(prev => !prev)}>
               <Text sx={{ fontSize: 16, fontFamily: 'Poppins-Bold', color: '#001a33' }}>
-                Manage Jobs
+                Manage Request
               </Text>
             </Pressable>
 
             {submenuOpen && (
               <View sx={{ pl: 12, gap: 8, mt: 8 }}>
-                <Pressable onPress={() => router.replace('/workerpage/workernavbar/burgermenu/current')}>
+                <Pressable onPress={() => router.replace('./workerpage/workernavbar/burgermenu/application')}>
                   <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563' }}>
-                    Current Jobs
+                    Worker Application Status
                   </Text>
                 </Pressable>
                 <Pressable onPress={() => router.replace('./workerpage/workernavbar/burgermenu/completed')}>

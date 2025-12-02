@@ -14,7 +14,7 @@ type Notification = {
   read?: boolean
 }
 
-const Header = () => {
+const ClientHeader = () => {
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [submenuOpen, setSubmenuOpen] = useState(false)
@@ -237,7 +237,7 @@ const Header = () => {
 
             {submenuOpen && (
               <View sx={{ pl: 12, gap: 8, mt: 8 }}>
-                <Pressable onPress={() => router.replace('/clientpage/clientnavbar/burgermenu/current')}>
+                <Pressable onPress={() => router.replace('./clientpage/clientnavbar/burgermenu/request')}>
                   <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: '#4b5563' }}>
                     Current Service Requests
                   </Text>
@@ -262,4 +262,4 @@ const Header = () => {
   )
 }
 
-export default Header
+export default ClientHeader

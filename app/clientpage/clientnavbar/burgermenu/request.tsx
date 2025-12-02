@@ -3,14 +3,14 @@ import { ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Header from '../header'
 
-const CurrentRequests = () => {
+const ServiceRequests = () => {
   return (
     <SafeAreaView>
       <Header />
       <ScrollView>
         <View sx={{ p: 16 }}>
           <Text sx={{ fontSize: 20, fontFamily: 'Poppins-Bold', mb: 12 }}>
-            Current Service Requests
+            Service Requests Status
           </Text>
 
           {/* Example request card */}
@@ -25,4 +25,4 @@ const CurrentRequests = () => {
   )
 }
 
-export default CurrentRequests
+export default ServiceRequests
