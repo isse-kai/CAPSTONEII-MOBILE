@@ -1,14 +1,14 @@
 import { supabase } from '../db'
 
 export async function signupClient(payload: {
-  email: string
+  email_address: string
   first_name: string
   last_name: string
   sex: string
   is_email_opt_in: boolean
 }) {
   const { data, error } = await supabase.auth.signInWithOtp({
-    email: payload.email,
+    email: payload.email_address,
     options: {
       shouldCreateUser: true,
       emailRedirectTo: 'app://auth/callback',
@@ -20,7 +20,7 @@ export async function signupClient(payload: {
 }
 
 export async function signupWorker(payload: {
-  email: string
+  email_address: string
   password: string
   first_name: string
   last_name: string
@@ -28,7 +28,7 @@ export async function signupWorker(payload: {
   is_email_opt_in: boolean
 }) {
   const { data, error } = await supabase.auth.signUp({
-    email: payload.email,
+    email: payload.email_address,
     password: payload.password,
     options: { data: { role: 'worker', ...payload } },
   })
@@ -38,7 +38,7 @@ export async function signupWorker(payload: {
 
 export async function verifyEmailOtp(email: string, otpCode: string) {
   const { data, error } = await supabase.auth.verifyOtp({
-    email,
+    email: email,
     token: otpCode,
     type: 'email',
   })

@@ -107,25 +107,21 @@ export default function ClientRequest1() {
       JSON.stringify({ first, last, phone, email, brgy, street, additional_address: additionalAddr, photo })
     )
 
-    try {
-      await saveClientRequest({
-        first_name: first,
-        last_name: last,
-        email_address: email,
-        phone,
-        barangay: brgy,
-        street,
-<<<<<<< HEAD
-        additional_address: moreAddr,
-=======
-        additional_address: additionalAddr,
->>>>>>> 13ab7732e6273eb2b250cddef2516c322462876d
-        profile_picture_url: photo,
-      })
-      router.push("./clientforms/request2")
-    } catch (err) {
-      console.error(err)
-    }
+try {
+  await saveClientRequest({
+    first_name: first,
+    last_name: last,
+    email_address: email,
+    phone,
+    barangay: brgy,
+    street,
+    additional_address: additionalAddr,
+    profile_picture_url: photo,
+  })
+  router.push("./clientforms/request2")
+} catch (err) {
+  console.error(err)
+}
   }
 
   if (!fontsLoaded) return null

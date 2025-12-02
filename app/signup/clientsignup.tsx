@@ -150,6 +150,18 @@ export default function ClientSignup() {
                 />
               </View>
 
+            {/* Signup Form Card */}
+            <View
+              style={{
+                backgroundColor: '#ffffffcc',
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 20,
+                alignSelf: 'center',
+                width: '100%',
+                maxWidth: 420,
+              }}
+            >
               {/* Title */}
               <View sx={{ alignItems: 'center', mb: 4 }}>
                 <Text sx={{ fontSize: 20, fontFamily: 'Poppins-ExtraBold', color: '#000000' }}>
@@ -158,7 +170,7 @@ export default function ClientSignup() {
               </View>
 
               {/* First + Last Name */}
-              <View style={{ flexDirection: 'row', gap: 10 }}>
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
                 <View style={{ flex: 1 }}>
                   <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>First Name</Text>
                   <TextInput
@@ -182,7 +194,7 @@ export default function ClientSignup() {
               </View>
 
               {/* Sex Dropdown */}
-              <View style={{ position: 'relative' }}>
+              <View style={{ position: 'relative', marginBottom: 12 }}>
                 <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Sex</Text>
                 <TouchableOpacity
                   onPress={() => setShowSexDropdown(prev => !prev)}
@@ -247,7 +259,7 @@ export default function ClientSignup() {
               </View>
 
               {/* Email */}
-              <View>
+              <View style={{ marginBottom: 12 }}>
                 <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Email Address</Text>
                 <TextInput
                   value={email_address}
@@ -259,7 +271,7 @@ export default function ClientSignup() {
               </View>
 
               {/* Password */}
-              <View style={{ position: 'relative' }}>
+              <View style={{ position: 'relative', marginBottom: 12 }}>
                 <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Password</Text>
                 <TextInput
                   value={password}
@@ -278,7 +290,7 @@ export default function ClientSignup() {
               </View>
 
               {/* Confirm Password */}
-              <View style={{ position: 'relative' }}>
+              <View style={{ position: 'relative', marginBottom: 12 }}>
                 <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Confirm Password</Text>
                 <TextInput
                   value={confirm_password}
@@ -393,7 +405,10 @@ export default function ClientSignup() {
                   </Text>
                 </Pressable>
               </View>
+            </View>
+
             </MotiView>
+            
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>

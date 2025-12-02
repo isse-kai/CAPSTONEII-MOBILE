@@ -99,123 +99,140 @@ export default function Login() {
                 />
                 </View>
 
-
-              {/* Title */}
-              <View sx={{ alignItems: 'left', mt: -10, mb: 4 }}>
+              {/* Login */}
+              <View
+                style={{
+                  backgroundColor: '#ffffffcc',
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 20,
+                  alignSelf: 'center',
+                  width: '90%',
+                  maxWidth: 400,
+                }}
+              >
+                {/* Title */}
                 <Text
                   sx={{
                     fontSize: 22,
                     fontFamily: 'Poppins-ExtraBold',
                     color: '#000000',
+                    mb: 12,
+                    textAlign: 'center',
                   }}
                 >
                   LOGIN
                 </Text>
-              </View>
 
-              {/* Email */}
-              <View>
-                <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Email</Text>
-                <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Enter your email"
-                  placeholderTextColor="#ccc"
-                  style={{
-                    backgroundColor: '#ffffffcc',
-                    borderRadius: 10,
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    fontSize: 16,
-                  }}
-                />
-              </View>
-
-              {/* Password */}
-              <View>
-                <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Password</Text>
-                <RNView
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: '#ffffffcc',
-                    borderRadius: 10,
-                    paddingHorizontal: 16,
-                  }}
-                >
+                {/* Email */}
+                <View style={{ marginBottom: 16 }}>
+                  <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Email</Text>
                   <TextInput
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Enter your password"
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="Enter your email"
                     placeholderTextColor="#ccc"
-                    secureTextEntry={!showPassword}
                     style={{
-                      flex: 1,
-                      paddingVertical: 14,
+                      borderWidth: 1,
+                      borderColor: '#d1d5db',
+                      borderRadius: 8,
+                      paddingHorizontal: 12,
+                      paddingVertical: 12,
                       fontSize: 16,
+                      backgroundColor: '#f9fafb',
                     }}
                   />
-                  <TouchableOpacity onPress={() => setShowPassword(prev => !prev)}>
-                    <Image
-                      source={
-                        showPassword
-                          ? require('../../assets/view.png')
-                          : require('../../assets/hide.png')
-                      }
-                      style={{ width: 24, height: 24, tintColor: '#333' }}
-                    />
-                  </TouchableOpacity>
-                </RNView>
-              </View>
+                </View>
 
-              {/* Login Button */}
-              <Pressable
-                onPress={handleLogin}
-                disabled={isLoading}
-                sx={{
-                  bg: '#008CFC',
-                  borderRadius: 10,
-                  py: 14,
-                  alignItems: 'center',
-                }}
-              >
-                <Text
-                  sx={{
-                    fontSize: 18,
-                    fontFamily: 'Poppins-Bold',
-                    color: '#fff',
-                    lineHeight: 22,
-                  }}
-                >
-                  {isLoading ? 'Logging in...' : 'Login'}
-                </Text>
-              </Pressable>
-
-              {/* Sign Up */}
-              <View
-                sx={{
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  mt: 8,
-                }}
-              >
-                <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>
-                  Don’t have an account?{' '}
-                </Text>
-                <Pressable onPress={() => router.push('/signup/roles')}>
-                  <Text
-                    sx={{
-                      fontSize: 14,
-                      fontFamily: 'Poppins-Bold',
-                      color: '#008CFC',
-                      textDecorationLine: 'underline',
+                {/* Password */}
+                <View style={{ marginBottom: 16 }}>
+                  <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Password</Text>
+                  <RNView
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: '#d1d5db',
+                      borderRadius: 8,
+                      backgroundColor: '#f9fafb',
+                      paddingHorizontal: 12,
                     }}
                   >
-                    Sign up
+                    <TextInput
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder="Enter your password"
+                      placeholderTextColor="#ccc"
+                      secureTextEntry={!showPassword}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 12,
+                        fontSize: 16,
+                      }}
+                    />
+                    <TouchableOpacity onPress={() => setShowPassword(prev => !prev)}>
+                      <Image
+                        source={
+                          showPassword
+                            ? require('../../assets/view.png')
+                            : require('../../assets/hide.png')
+                        }
+                        style={{ width: 24, height: 24, tintColor: '#333' }}
+                      />
+                    </TouchableOpacity>
+                  </RNView>
+                </View>
+
+                {/* Login Button */}
+                <Pressable
+                  onPress={handleLogin}
+                  disabled={isLoading}
+                  sx={{
+                    bg: '#008CFC',
+                    borderRadius: 10,
+                    py: 14,
+                    alignItems: 'center',
+                    mb: 16,
+                  }}
+                >
+                  <Text
+                    sx={{
+                      fontSize: 18,
+                      fontFamily: 'Poppins-Bold',
+                      color: '#fff',
+                      lineHeight: 22,
+                    }}
+                  >
+                    {isLoading ? 'Logging in...' : 'Login'}
                   </Text>
                 </Pressable>
+
+                {/* Sign Up */}
+                <View
+                  sx={{
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>
+                    Don’t have an account?{' '}
+                  </Text>
+                  <Pressable onPress={() => router.push('/signup/roles')}>
+                    <Text
+                      sx={{
+                        fontSize: 14,
+                        fontFamily: 'Poppins-Bold',
+                        color: '#008CFC',
+                        textDecorationLine: 'underline',
+                      }}
+                    >
+                      Sign up
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
+
             </MotiView>
           </ScrollView>
         </SafeAreaView>
