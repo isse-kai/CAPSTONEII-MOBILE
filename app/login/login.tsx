@@ -16,7 +16,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { loginUser } from '../../supabase/auth'
+import { loginUser } from '../../supabase/services/loginservice'
 
 export default function Login() {
   const router = useRouter()

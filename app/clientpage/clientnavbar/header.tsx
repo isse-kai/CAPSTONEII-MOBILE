@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 import { AnimatePresence, MotiView } from 'moti'
 import { useEffect, useState } from 'react'
 import { Image, Pressable, TextInput } from 'react-native'
-import { getNotificationsForCurrentUser } from '../../../supabase/auth'
+import { getNotificationsForCurrentUser } from '../../../supabase/services/notificationservice'
 
 type Notification = {
   id: string

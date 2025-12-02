@@ -8,13 +8,13 @@ import { useRouter } from "expo-router"
 import { MotiView } from "moti"
 import React, { useEffect, useMemo, useState } from "react"
 import {
-    Dimensions,
-    Image,
-    ImageBackground,
-    KeyboardTypeOptions,
+  Dimensions,
+  Image,
+  ImageBackground,
+  KeyboardTypeOptions,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
-import { saveClientRequest } from "../../../supabase/auth"
+import { saveClientRequest } from "../../../supabase/services/clientservice"
 import Header from "../clientnavbar/header"
 import ClientNavbar from "../clientnavbar/navbar"
 
@@ -112,12 +112,12 @@ export default function ClientRequest1() {
       await saveClientRequest({
         first_name: first,
         last_name: last,
-        email,
+        email_address: email,
         phone,
         barangay: brgy,
         street,
-        more_address: moreAddr,
-        photo_url: photo,
+        additional_address: moreAddr,
+        profile_picture_url: photo,
       })
       router.push("./clientforms/request2")
     } catch (err) {

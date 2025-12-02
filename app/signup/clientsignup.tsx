@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { resendSignupEmail, signupClient, verifyEmailOtp } from '../../supabase/auth'
+import { resendSignupEmail, signupClient, verifyEmailOtp } from '../../supabase/services/signupservice'
 import VerificationModal from './verification/verificationmodal'
 
 export default function ClientSignup() {

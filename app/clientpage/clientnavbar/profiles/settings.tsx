@@ -8,7 +8,7 @@ import React from 'react'
 import { ImageBackground, ScrollView, TextInput, View } from 'react-native'
 import DateTimePickerModal from "react-native-modal-datetime-picker"
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { getCurrentUser } from '../../../../supabase/auth'
+import { getCurrentUser } from '../../../../supabase/services/loginservice'
 import Header from '../../clientnavbar/header'
 import ClientNavbar from '../../clientnavbar/navbar'
 

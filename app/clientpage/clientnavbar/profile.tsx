@@ -6,7 +6,7 @@ import { MotiImage, MotiView } from 'moti'
 import React from 'react'
 import { Dimensions, ImageBackground, ScrollView, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { getCurrentUser, logoutUser } from '../../../supabase/auth'
+import { getCurrentUser, logoutUser } from '../../../supabase/services/loginservice'
 import Header from '../clientnavbar/header'
 import ClientNavbar from '../clientnavbar/navbar'
 

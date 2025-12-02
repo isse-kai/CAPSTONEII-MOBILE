@@ -1,16 +1,16 @@
 import { Text, View } from 'dripsy'
 import { useFonts } from 'expo-font'
-import { useRouter } from 'expo-router'
+import { useRouter, type Href } from 'expo-router'
 import { MotiView } from 'moti'
 import { useEffect, useState } from 'react'
 import {
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { supabase } from '../../../supabase/auth'
+import { supabase } from '../../../supabase/db'
 import Header from './header'
 
 export default function NotificationsPage() {
@@ -89,7 +89,7 @@ export default function NotificationsPage() {
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
                 <Pressable
-                  onPress={() => router.push(`/clientpage/clientnavbar/notifications/${item.id}`)}
+                  onPress={() => router.push(`/clientpage/clientnavbar/notifications/${item.id}` as Href)}
                 >
                   <View
                     sx={{
