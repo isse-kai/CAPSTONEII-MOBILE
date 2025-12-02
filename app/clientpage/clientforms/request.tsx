@@ -29,7 +29,6 @@ const C = {
   track: "#e5e7eb",
 }
 
-const BTN_PY = 14
 const STORAGE_KEY = "request_step1"
 
 const BARANGAYS: string[] = [
@@ -57,7 +56,7 @@ export default function ClientRequest1() {
   const [email, setEmail] = useState("")
   const [brgy, setBrgy] = useState<string>(BARANGAYS[0])
   const [street, setStreet] = useState("")
-  const [moreAddr, setMoreAddr] = useState("")
+  const [additionalAddr, setAdditionalAddr] = useState("")
   const [photo, setPhoto] = useState<string | null>(null)
 
   useEffect(() => {
@@ -71,7 +70,7 @@ export default function ClientRequest1() {
       setEmail(v.email ?? "")
       setBrgy(v.brgy ?? BARANGAYS[0])
       setStreet(v.street ?? "")
-      setMoreAddr(v.moreAddr ?? "")
+      setAdditionalAddr(v.additional_address ?? "")
       setPhoto(v.photo ?? null)
     })()
   }, [])
@@ -87,7 +86,7 @@ export default function ClientRequest1() {
       phoneOk &&
       brgyOk &&
       street.trim() &&
-      moreAddr.trim()
+      additionalAddr.trim()
   )
 
   const choosePhoto = async () => {
@@ -105,7 +104,7 @@ export default function ClientRequest1() {
 
     await AsyncStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ first, last, phone, email, brgy, street, moreAddr, photo })
+      JSON.stringify({ first, last, phone, email, brgy, street, additional_address: additionalAddr, photo })
     )
 
     try {
@@ -116,7 +115,11 @@ export default function ClientRequest1() {
         phone,
         barangay: brgy,
         street,
+<<<<<<< HEAD
         additional_address: moreAddr,
+=======
+        additional_address: additionalAddr,
+>>>>>>> 13ab7732e6273eb2b250cddef2516c322462876d
         profile_picture_url: photo,
       })
       router.push("./clientforms/request2")
@@ -182,10 +185,58 @@ return (
                 Personal Information
               </Text>
 
-              <Field label="FIRST NAME:" value={first} onChangeText={setFirst} placeholder="Enter first name" />
-              <Field label="LAST NAME:" value={last} onChangeText={setLast} placeholder="Enter last name" />
-              <Field label="EMAIL:" value={email} onChangeText={setEmail} placeholder="Enter email" keyboardType="email-address" />
-              <Field label="CONTACT NUMBER:" value={phone} onChangeText={setPhone} placeholder="9XXXXXXXXX" keyboardType="number-pad" />
+              <Field label="FIRST NAME:" value={first} onChangeText={setFirst} placeholder="Enter first name" editable={!first} />
+              <Field label="LAST NAME:" value={last} onChangeText={setLast} placeholder="Enter last name" editable={!last}/>
+              <Field label="EMAIL:" value={email} onChangeText={setEmail} placeholder="Enter email" keyboardType="email-address" editable={!email}/>
+              
+              <View style={{ marginBottom: 12 }}>
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
+                  CONTACT NUMBER:
+                </Text>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: C.border,
+                    borderRadius: 8,
+                    backgroundColor: "#fff",
+                  }}
+                >
+                  {/* Non-editable prefix */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      paddingHorizontal: 10,
+                      paddingVertical: 12,
+                      borderRightWidth: 1,
+                      borderRightColor: C.border,
+                    }}
+                  >
+                    <Text style={{ fontSize: 16 }}>🇵🇭</Text>
+                    <Text style={{ fontSize: 14, marginLeft: 6, color: C.text }}>+63</Text>
+                  </View>
+
+                  {/* Editable input */}
+                  <TextInput
+                    value={phone}
+                    onChangeText={setPhone}
+                    placeholder="Enter contact number"
+                    placeholderTextColor={C.placeholder}
+                    keyboardType="number-pad"
+                    style={{
+                      flex: 1,
+                      paddingHorizontal: 10,
+                      paddingVertical: 12,
+                      fontSize: 14,
+                      fontFamily: 'Poppins-Regular',
+                      color: C.text,
+                    }}
+                  />
+                </View>
+              </View>
 
               {/* Barangay */}
               <View style={{ marginBottom: 12 }}>
@@ -209,64 +260,66 @@ return (
               </View>
 
               <Field label="STREET:" value={street} onChangeText={setStreet} placeholder="House No. and Street" />
-              <Field label="ADDITIONAL ADDRESS:" value={moreAddr} onChangeText={setMoreAddr} placeholder="Landmark etc." multiline />
+              <Field label="ADDITIONAL ADDRESS:" value={additionalAddr} onChangeText={setAdditionalAddr} placeholder="Landmark etc." multiline />
             </View>
 
             {/* Profile Photo Card */}
             <View style={{ backgroundColor: '#ffffffcc', borderRadius: 12, padding: 16, marginBottom: 20 }}>
-            <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
+              <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
                 Profile Picture
-            </Text>
+              </Text>
 
-            <Pressable
-                onPress={choosePhoto}
+              {/* Preview / No Image */}
+              <View
                 style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                borderWidth: 1,
-                borderColor: C.border,
-                borderRadius: 8,
-                paddingHorizontal: 10,
-                paddingVertical: 12,
-                marginBottom: 16,
+                  alignSelf: 'center',
+                  width: 140,
+                  height: 140,
+                  borderRadius: 70,
+                  borderWidth: 1,
+                  borderColor: C.border,
+                  backgroundColor: '#f9fafb',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  marginBottom: 16, // spacing before button
                 }}
-            >
-                <Ionicons name="camera-outline" size={22} color={C.text} style={{ marginRight: 8 }} />
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: C.text }}>
-                Choose Photo
-                </Text>
-            </Pressable>
-
-            <View
-                style={{
-                alignSelf: 'center',
-                width: 140,
-                height: 140,
-                borderRadius: 70,
-                borderWidth: 1,
-                borderColor: C.border,
-                backgroundColor: '#f9fafb',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-                }}
-            >
+              >
                 {photo ? (
-                <Image
+                  <Image
                     source={{ uri: photo }}
                     style={{ width: '100%', height: '100%' }}
                     resizeMode="cover"
-                />
+                  />
                 ) : (
-                <View style={{ alignItems: 'center' }}>
+                  <View style={{ alignItems: 'center' }}>
                     <Ionicons name="image-outline" size={32} color="#9aa9bc" />
                     <Text sx={{ color: '#9aa9bc', marginTop: 8, fontSize: 14 }}>
-                    No Image Selected
+                      No Image Selected
                     </Text>
-                </View>
+                  </View>
                 )}
-            </View>
+              </View>
+
+              {/* Choose Photo button */}
+              <Pressable
+                onPress={choosePhoto}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 1,
+                  borderColor: C.border,
+                  borderRadius: 8,
+                  paddingHorizontal: 10,
+                  paddingVertical: 12,
+                }}
+              >
+                <Ionicons name="camera-outline" size={22} color={C.text} style={{ marginRight: 8 }} />
+                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: C.text }}>
+                  Choose Photo
+                </Text>
+              </Pressable>
             </View>
 
           </MotiView>
@@ -274,7 +327,21 @@ return (
         </View>
 
         {/* Sticky bottom actions */}
-        <View style={{ flexDirection: "row", paddingHorizontal: 18, paddingBottom: insets.bottom, paddingTop: 10 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            paddingHorizontal: 18,
+            paddingBottom: insets.bottom,
+            paddingTop: 10,
+            backgroundColor: "#fff",
+            borderTopLeftRadius: 10,
+            borderTopRightRadius: 10,
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3
+          }}
+        >
           <Pressable
             onPress={() => router.back()}
             style={{
@@ -284,7 +351,7 @@ return (
               borderRadius: 18,
               alignItems: "center",
               justifyContent: "center",
-              paddingVertical: BTN_PY,
+              paddingVertical: 8,
               backgroundColor: "#fff",
             }}
           >
@@ -297,15 +364,15 @@ return (
             style={{
               flex: 1.25,
               borderRadius: 18,
-              alignItems: "center",
+              alignItems: "flex-start",
               justifyContent: "center",
-              paddingVertical: BTN_PY,
+              paddingVertical: 12,
               backgroundColor: canNext ? C.blue : "#a7c8ff",
               opacity: canNext ? 1 : 0.9,
               marginLeft: 12,
             }}
           >
-            <Text sx={{ color: "#fff", fontWeight: "900", fontSize: 16 }}>
+            <Text sx={{ color: "#fff", fontWeight: "900", fontSize: 16, paddingLeft: 14 }}>
               Next : Service Request Details
             </Text>
           </Pressable>
@@ -325,6 +392,7 @@ type FieldProps = {
   placeholder: string
   multiline?: boolean
   keyboardType?: KeyboardTypeOptions
+  editable?: boolean
 }
 
 function Field({
@@ -334,6 +402,7 @@ function Field({
   placeholder,
   multiline = false,
   keyboardType = "default",
+  editable = true,
 }: FieldProps) {
   return (
     <View style={{ marginBottom: 12 }}>
@@ -345,6 +414,7 @@ function Field({
         placeholderTextColor={C.placeholder}
         keyboardType={keyboardType}
         multiline={multiline}
+        editable={editable}
         style={{
           borderWidth: 1,
           borderColor: C.border,
@@ -353,7 +423,7 @@ function Field({
           paddingVertical: 12,
           fontSize: 14,
           fontFamily: 'Poppins-Regular',
-          backgroundColor: '#fff',
+          backgroundColor: editable? '#fff' : '#f1f5f9',
           color: C.text,
           minHeight: multiline ? 80 : undefined,
         }}

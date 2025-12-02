@@ -79,7 +79,7 @@ export default function ClientSignup() {
 
   try {
     await signupClient({
-      email: email_address,
+      email_address,
       first_name,
       last_name,
       sex,
