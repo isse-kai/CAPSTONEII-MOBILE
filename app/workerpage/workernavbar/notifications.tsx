@@ -4,22 +4,22 @@ import { useRouter, type Href } from 'expo-router'
 import { MotiView } from 'moti'
 import { useEffect, useState } from 'react'
 import {
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../../supabase/db'
 import WorkerHeader from './header'
 
-export default function WorkerNotificationsPage() {
+export default function WorkerNotifications() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
 
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('../../../assets/fonts/Poppins/Poppins-Regular.ttf'),
-    'Poppins-Bold': require('../../../assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-Bold': require('../../../assets/fonts/Poppins/Poppins-Bold.ttf'),
   })
 
   type Notification = {

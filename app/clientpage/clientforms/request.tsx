@@ -14,7 +14,9 @@ import {
   KeyboardTypeOptions,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
-import { saveClientRequest } from "../../../supabase/services/clientservice"
+import { supabase } from '../../../supabase/db'
+import { getClientByAuthUid } from "../../../supabase/services/clientprofileservice"
+import { saveClientRequest } from "../../../supabase/services/clientrequestservice"
 import Header from "../clientnavbar/header"
 import ClientNavbar from "../clientnavbar/navbar"
 
@@ -108,20 +110,41 @@ export default function ClientRequest1() {
     )
 
 try {
+  // ✅ Get authenticated user
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) {
+    console.error("No authenticated user", error)
+    return
+  }
+  const authUid = user.id
+
+  // ✅ Get client profile to retrieve client_id
+  const clientProfile = await getClientByAuthUid(authUid)
+  if (!clientProfile) {
+    console.error("No client profile found")
+    return
+  }
+  const clientId = clientProfile.id
+
+  // ✅ Save client request with both IDs
   await saveClientRequest({
+    client_id: clientId,
+    auth_uid: authUid,
     first_name: first,
     last_name: last,
     email_address: email,
-    phone,
+    contact_number: phone,
     barangay: brgy,
     street,
     additional_address: additionalAddr,
-    profile_picture_url: photo,
+    profile_picture_url: photo ?? undefined, // normalize null → undefined
   })
+
   router.push("./clientforms/request2")
 } catch (err) {
   console.error(err)
 }
+
   }
 
   if (!fontsLoaded) return null

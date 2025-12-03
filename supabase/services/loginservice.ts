@@ -1,5 +1,5 @@
 import { supabase } from '../db'
-import { getClientByEmail } from './clientservice'
+import { getClientByEmail } from './clientprofileservice'
 // import { getWorkerByEmail } from './worker'
 
 export async function loginUser(email: string, password: string) {

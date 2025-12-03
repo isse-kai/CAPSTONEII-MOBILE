@@ -23,5 +23,6 @@
     "titleBar.inactiveBackground": "#6a1e5599",
     "titleBar.inactiveForeground": "#e7e7e799"
   },
-  "peacock.color": "#6A1E55"
+  "peacock.color": "#6A1E55",
+  "CodeGPT.apiKey": "Gemini CLI"
 }

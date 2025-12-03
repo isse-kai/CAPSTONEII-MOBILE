@@ -1,14 +1,15 @@
 import { Ionicons } from '@expo/vector-icons'
 import { Pressable, Text } from 'dripsy'
 import { useFonts } from 'expo-font'
-import { useRouter } from 'expo-router'
 import moment from "moment"
 import { MotiView } from 'moti'
 import React from 'react'
 import { ImageBackground, ScrollView, TextInput, View } from 'react-native'
 import DateTimePickerModal from "react-native-modal-datetime-picker"
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { getClientByAuthUid, updateClientProfile } from '../../../../supabase/services/clientprofileservice'
 import { getCurrentUser } from '../../../../supabase/services/loginservice'
+
 import Header from '../../clientnavbar/header'
 import ClientNavbar from '../../clientnavbar/navbar'
 
@@ -16,7 +17,7 @@ export default function AccountSettings() {
   const [user, setUser] = React.useState<any>(null)
   const [facebook, setFacebook] = React.useState("")
   const [instagram, setInstagram] = React.useState("")
-  const router = useRouter()
+  // const router = useRouter()
   const insets = useSafeAreaInsets()
 
   const [fontsLoaded] = useFonts({
@@ -26,32 +27,64 @@ export default function AccountSettings() {
   })
 
   const [dob, setDob] = React.useState<string>('')
+  const [contactNumber, setContactNumber] = React.useState<string>("")
+  // const age = React.useMemo(() => calculateAge(dob), [dob])
   const [showPicker, setShowPicker] = React.useState(false)
+
+  const handleUpdateProfile = async () => {
+  try {
+    if (!user) return
+
+    const newAge = calculateAge(dob)
+
+    await updateClientProfile(user.id, {
+      contact_number: contactNumber || null,
+      date_of_birth: dob || null,
+      age: newAge,
+      social_facebook: facebook || null,
+      social_instagram: instagram || null,
+    })
+
+    console.log("Profile updated successfully")
+    // router.push("/clientpage/home")
+  } catch (err) {
+    console.error("Failed to update profile:", err)
+  }
+}
+
+  function calculateAge(dob: string): string {
+  if (!dob) return ""
+  const birthDate = new Date(dob)
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const m = today.getMonth() - birthDate.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+  return age.toString()
+}
 
   React.useEffect(() => {
     const fetchUser = async () => {
       try {
         const u = await getCurrentUser()
         setUser(u)
-        setFacebook(u?.user_metadata?.facebook || "")
-        setInstagram(u?.user_metadata?.instagram || "")
-        if (u?.user_metadata?.dob) {
-          setDob(u.user_metadata.dob)
-        }
+
+        if (!u) return
+
+        const profile = await getClientByAuthUid(u.id)
+        setDob(profile?.date_of_birth || "")
+        setContactNumber(profile?.contact_number || "")
+        setFacebook(profile?.social_facebook || "")
+        setInstagram(profile?.social_instagram || "")
+        setDob(profile?.date_of_birth || "")
       } catch (err) {
-        console.error(err)
+        console.error("Error fetching account settings:", err)
       }
     }
     fetchUser()
   }, [])
 
-const handleConfirmDob = (selectedDate: Date) => {
-  setShowPicker(false)
-  if (selectedDate) {
-    const formatted = moment(selectedDate).format("YYYY-MM-DD")
-    setDob(formatted)
-  }
-}
   if (!fontsLoaded) return null
 
   return (
@@ -233,11 +266,9 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* Age */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
-                  AGE:
-                </Text>
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>AGE:</Text>
                 <TextInput
-                  value={user?.user_metadata?.age?.toString() || 'N/A'}
+                  value={calculateAge(dob).toString()}
                   editable={false}
                   style={{
                     borderWidth: 1,
@@ -287,7 +318,8 @@ const handleConfirmDob = (selectedDate: Date) => {
                     </View>
 
                     <TextInput
-                      defaultValue={user?.user_metadata?.contact_number || ''}
+                      value={contactNumber}
+                      onChangeText={setContactNumber}
                       placeholder="Enter contact number"
                       keyboardType="number-pad"
                       style={{
@@ -316,7 +348,7 @@ const handleConfirmDob = (selectedDate: Date) => {
                     </Text>
                   </Pressable>
                   <Pressable
-                    onPress={() => console.log('Change contact')}
+                    onPress={handleUpdateProfile}
                     style={{
                       backgroundColor: '#008CFC',
                       paddingVertical: 6,
@@ -366,7 +398,13 @@ const handleConfirmDob = (selectedDate: Date) => {
                 <DateTimePickerModal
                   isVisible={showPicker}
                   mode="date"
-                  onConfirm={handleConfirmDob}
+                  onConfirm={(selectedDate) => {
+                    setShowPicker(false)
+                    if (selectedDate) {
+                      const formatted = moment(selectedDate).format("YYYY-MM-DD")
+                      setDob(formatted)
+                    }
+                  }}
                   onCancel={() => setShowPicker(false)}
                   date={dob ? new Date(dob) : new Date()}
                 />
@@ -387,7 +425,7 @@ const handleConfirmDob = (selectedDate: Date) => {
                     </Text>
                   </Pressable>
                   <Pressable
-                    onPress={() => console.log('Change DOB to', dob)}
+                    onPress={handleUpdateProfile}
                     style={{
                       backgroundColor: '#008CFC',
                       paddingVertical: 6,
@@ -478,10 +516,7 @@ const handleConfirmDob = (selectedDate: Date) => {
 
               {/* Update Button */}
               <Pressable
-                onPress={() => {
-                  console.log("Update social media info", { facebook, instagram })
-                  router.push("/clientpage/home")
-                }}
+                onPress={handleUpdateProfile}
                 style={{
                   backgroundColor: '#008CFC',
                   paddingVertical: 10,
