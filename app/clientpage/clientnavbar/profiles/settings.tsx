@@ -684,7 +684,7 @@ const handleRemoveInstagram = async () => {
           </MotiView>
         </ScrollView>
 
-                {successMessage ? (
+        {successMessage ? (
         <View
           style={{
             position: "absolute",

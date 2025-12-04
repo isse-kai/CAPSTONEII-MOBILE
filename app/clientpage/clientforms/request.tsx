@@ -61,21 +61,25 @@ export default function ClientRequest1() {
   const [additionalAddr, setAdditionalAddr] = useState("")
   const [photo, setPhoto] = useState<string | null>(null)
 
-  useEffect(() => {
-    (async () => {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY)
-      if (!raw) return
-      const v = JSON.parse(raw)
-      setFirst(v.first ?? "")
-      setLast(v.last ?? "")
-      setPhone(v.phone ?? "")
-      setEmail(v.email ?? "")
-      setBrgy(v.brgy ?? BARANGAYS[0])
-      setStreet(v.street ?? "")
-      setAdditionalAddr(v.additional_address ?? "")
-      setPhoto(v.photo ?? null)
-    })()
-  }, [])
+useEffect(() => {
+  (async () => {
+    try {
+      // get current user
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (error || !user) return
+
+      const profile = await getClientByAuthUid(user.id)
+      if (!profile) return
+
+      // populate state
+      setFirst(profile.first_name ?? "")
+      setLast(profile.last_name ?? "")
+      setEmail(profile.email_address ?? "")
+    } catch (err) {
+      console.error("Error fetching profile:", err)
+    }
+  })()
+}, [])
 
   const emailOk = useMemo(() => /\S+@\S+\.\S+/.test(email), [email])
   const phoneOk = useMemo(() => phone.trim().length === 10, [phone])
