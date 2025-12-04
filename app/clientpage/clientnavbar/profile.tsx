@@ -41,9 +41,13 @@ export default function ClientProfile() {
   const handleLogout = async () => {
     try {
       await logoutUser()
-      router.replace('../login/login')
+      console.log("Logged out successfully")
+
+      setUser(null)
+
+      router.push("../../login/login")
     } catch (err) {
-      console.error(err)
+      console.error("Failed to logout:", err)
     }
   }
 

@@ -39,6 +39,24 @@ export async function updateClientProfile(auth_uid: string, updates: Partial<Cli
     .update(updates)
     .eq('auth_uid', auth_uid)
     .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function removeClientProfile(auth_uid: string, fields: (keyof ClientInformation)[]) {
+  const updates: Partial<ClientInformation> = {}
+  fields.forEach((f) => {
+    updates[f] = null
+  })
+
+  const { data, error } = await supabase
+    .from("user_client")
+    .update(updates)
+    .eq("auth_uid", auth_uid)
+    .select()
+    .single()
+
   if (error) throw error
   return data
 }

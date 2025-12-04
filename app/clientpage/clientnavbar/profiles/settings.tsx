@@ -9,7 +9,6 @@ import DateTimePickerModal from "react-native-modal-datetime-picker"
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getClientByAuthUid, updateClientProfile } from '../../../../supabase/services/clientprofileservice'
 import { getCurrentUser } from '../../../../supabase/services/loginservice'
-
 import Header from '../../clientnavbar/header'
 import ClientNavbar from '../../clientnavbar/navbar'
 
@@ -17,6 +16,7 @@ export default function AccountSettings() {
   const [user, setUser] = React.useState<any>(null)
   const [facebook, setFacebook] = React.useState("")
   const [instagram, setInstagram] = React.useState("")
+  const [successMessage, setSuccessMessage] = React.useState<string>("")
   // const router = useRouter()
   const insets = useSafeAreaInsets()
 
@@ -31,24 +31,90 @@ export default function AccountSettings() {
   // const age = React.useMemo(() => calculateAge(dob), [dob])
   const [showPicker, setShowPicker] = React.useState(false)
 
-  const handleUpdateProfile = async () => {
+const handleUpdateContact = async () => {
   try {
     if (!user) return
+    await updateClientProfile(user.id, { contact_number: contactNumber || null })
 
-    const newAge = calculateAge(dob)
-
-    await updateClientProfile(user.id, {
-      contact_number: contactNumber || null,
-      date_of_birth: dob || null,
-      age: newAge,
-      social_facebook: facebook || null,
-      social_instagram: instagram || null,
-    })
-
-    console.log("Profile updated successfully")
-    // router.push("/clientpage/home")
+    setSuccessMessage("Contact number updated successfully")
+    setTimeout(() => setSuccessMessage(""), 3000)
   } catch (err) {
-    console.error("Failed to update profile:", err)
+    console.error("Failed to update contact number:", err)
+  }
+}
+
+const handleUpdateDob = async () => {
+  try {
+    if (!user) return
+    const newAge = calculateAge(dob)
+    await updateClientProfile(user.id, { date_of_birth: dob || null, age: newAge })
+    console.log("DOB and age updated successfully")
+  } catch (err) {
+    console.error("Failed to update DOB:", err)
+  }
+}
+
+const handleUpdateFacebook = async () => {
+  try {
+    if (!user) return
+    await updateClientProfile(user.id, { social_facebook: facebook || null })
+    console.log("Facebook updated successfully")
+  } catch (err) {
+    console.error("Failed to update Facebook:", err)
+  }
+}
+
+const handleUpdateInstagram = async () => {
+  try {
+    if (!user) return
+    await updateClientProfile(user.id, { social_instagram: instagram || null })
+    console.log("Instagram updated successfully")
+  } catch (err) {
+    console.error("Failed to update Instagram:", err)
+  }
+}
+
+const handleRemoveContact = async () => {
+  try {
+    if (!user) return
+    await updateClientProfile(user.id, { contact_number: null })
+    setContactNumber("")
+    console.log("Contact number removed successfully")
+  } catch (err) {
+    console.error("Failed to remove contact number:", err)
+  }
+}
+
+const handleRemoveDob = async () => {
+  try {
+    if (!user) return
+    await updateClientProfile(user.id, { date_of_birth: null, age: null })
+    setDob("")
+    console.log("DOB and age removed successfully")
+  } catch (err) {
+    console.error("Failed to remove DOB:", err)
+  }
+}
+
+const handleRemoveFacebook = async () => {
+  try {
+    if (!user) return
+    await updateClientProfile(user.id, { social_facebook: null })
+    setFacebook("")
+    console.log("Facebook removed successfully")
+  } catch (err) {
+    console.error("Failed to remove Facebook:", err)
+  }
+}
+
+const handleRemoveInstagram = async () => {
+  try {
+    if (!user) return
+    await updateClientProfile(user.id, { social_instagram: null })
+    setInstagram("")
+    console.log("Instagram removed successfully")
+  } catch (err) {
+    console.error("Failed to remove Instagram:", err)
   }
 }
 
@@ -334,7 +400,7 @@ export default function AccountSettings() {
                 {/* Action buttons */}
                 <View style={{ flexDirection: 'row', marginTop: 6 }}>
                   <Pressable
-                    onPress={() => console.log('Remove contact')}
+                    onPress={handleRemoveContact}
                     style={{
                       backgroundColor: '#ef4444',
                       paddingVertical: 6,
@@ -348,7 +414,7 @@ export default function AccountSettings() {
                     </Text>
                   </Pressable>
                   <Pressable
-                    onPress={handleUpdateProfile}
+                    onPress={handleUpdateContact}
                     style={{
                       backgroundColor: '#008CFC',
                       paddingVertical: 6,
@@ -411,7 +477,7 @@ export default function AccountSettings() {
 
                 <View style={{ flexDirection: 'row', marginTop: 6 }}>
                   <Pressable
-                    onPress={() => setDob('')}
+                    onPress={handleRemoveDob}
                     style={{
                       backgroundColor: '#ef4444',
                       paddingVertical: 6,
@@ -425,7 +491,7 @@ export default function AccountSettings() {
                     </Text>
                   </Pressable>
                   <Pressable
-                    onPress={handleUpdateProfile}
+                    onPress={handleUpdateDob}
                     style={{
                       backgroundColor: '#008CFC',
                       paddingVertical: 6,
@@ -442,92 +508,52 @@ export default function AccountSettings() {
             </View>
 
             {/* Social Media */}
-            <View
-              style={{
-                backgroundColor: '#ffffffcc',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 20,
-              }}
-            >
-              <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
-                Social Media
-              </Text>
+            <View style={{ backgroundColor: '#ffffffcc', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+              <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>Social Media</Text>
 
               {/* Facebook */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
-                  FACEBOOK:
-                </Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: '#d1d5db',
-                    borderRadius: 8,
-                    overflow: 'hidden',
-                  }}
-                >
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>FACEBOOK:</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, overflow: 'hidden' }}>
                   <Ionicons name="logo-facebook" size={22} color="#1877F2" style={{ marginHorizontal: 8 }} />
                   <TextInput
                     value={facebook}
                     onChangeText={setFacebook}
                     placeholder="Enter Facebook profile link"
-                    style={{
-                      flex: 1,
-                      paddingHorizontal: 10,
-                      fontSize: 14,
-                      fontFamily: 'Poppins-Regular',
-                    }}
+                    style={{ flex: 1, paddingHorizontal: 10, fontSize: 14, fontFamily: 'Poppins-Regular' }}
                   />
+                </View>
+                <View style={{ flexDirection: 'row', marginTop: 6 }}>
+                  <Pressable onPress={handleRemoveFacebook} style={{ backgroundColor: '#ef4444', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6, marginRight: 8 }}>
+                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>Remove</Text>
+                  </Pressable>
+                  <Pressable onPress={handleUpdateFacebook} style={{ backgroundColor: '#008CFC', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6 }}>
+                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>Update</Text>
+                  </Pressable>
                 </View>
               </View>
 
               {/* Instagram */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>
-                  INSTAGRAM:
-                </Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: '#d1d5db',
-                    borderRadius: 8,
-                    overflow: 'hidden',
-                  }}
-                >
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>INSTAGRAM:</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, overflow: 'hidden' }}>
                   <Ionicons name="logo-instagram" size={22} color="#C13584" style={{ marginHorizontal: 8 }} />
                   <TextInput
                     value={instagram}
                     onChangeText={setInstagram}
                     placeholder="Enter Instagram profile link"
-                    style={{
-                      flex: 1,
-                      paddingHorizontal: 10,
-                      fontSize: 14,
-                      fontFamily: 'Poppins-Regular',
-                    }}
+                    style={{ flex: 1, paddingHorizontal: 10, fontSize: 14, fontFamily: 'Poppins-Regular' }}
                   />
                 </View>
+                <View style={{ flexDirection: 'row', marginTop: 6 }}>
+                  <Pressable onPress={handleRemoveInstagram} style={{ backgroundColor: '#ef4444', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6, marginRight: 8 }}>
+                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>Remove</Text>
+                  </Pressable>
+                  <Pressable onPress={handleUpdateInstagram} style={{ backgroundColor: '#008CFC', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6 }}>
+                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>Update</Text>
+                  </Pressable>
+                </View>
               </View>
-
-              {/* Update Button */}
-              <Pressable
-                onPress={handleUpdateProfile}
-                style={{
-                  backgroundColor: '#008CFC',
-                  paddingVertical: 10,
-                  borderRadius: 8,
-                  alignItems: 'center',
-                }}
-              >
-                <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: '#fff' }}>
-                  Confirm
-                </Text>
-              </Pressable>
             </View>
 
             {/* Security */}
@@ -542,7 +568,7 @@ export default function AccountSettings() {
               {/* Header row with icon + text */}
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                 <Ionicons
-                  name="shield-checkmark-outline"   // ✅ Shield with check icon
+                  name="shield-checkmark-outline"
                   size={22}
                   color="#374151"
                   style={{ marginRight: 8 }}
@@ -657,6 +683,32 @@ export default function AccountSettings() {
 
           </MotiView>
         </ScrollView>
+
+                {successMessage ? (
+        <View
+          style={{
+            position: "absolute",
+            bottom: 20,
+            left: 0,
+            right: 0,
+            alignItems: "center",
+          }}
+        >
+          <Text
+            sx={{
+              fontSize: 14,
+              fontFamily: "Poppins-Bold",
+              color: "#22c55e",
+              backgroundColor: "#dcfce7",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderRadius: 8,
+            }}
+          >
+            {successMessage}
+          </Text>
+        </View>
+        ) : null}
 
         <ClientNavbar />
 

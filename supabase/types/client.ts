@@ -21,7 +21,7 @@ export type ClientInformation = {
   agreed_at?: Timestamp
   address?: string
   date_of_birth?: string | null
-  age?: string
+  age?: string | null
 }
 
 export type ClientRequest = {
