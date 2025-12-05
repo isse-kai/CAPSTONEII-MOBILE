@@ -15,8 +15,12 @@ import {
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { supabase } from '../../../supabase/db'
-import { getClientByAuthUid } from "../../../supabase/services/clientprofileservice"
-import { saveClientRequest } from "../../../supabase/services/clientrequestservice"
+import {
+  getClientInformationByAuthUid,
+  getUserClientByAuthUid,
+  saveClientProfile,
+  updateClientProfile
+} from "../../../supabase/services/clientprofileservice"
 import Header from "../clientnavbar/header"
 import ClientNavbar from "../clientnavbar/navbar"
 
@@ -61,25 +65,35 @@ export default function ClientRequest1() {
   const [additionalAddr, setAdditionalAddr] = useState("")
   const [photo, setPhoto] = useState<string | null>(null)
 
-useEffect(() => {
-  (async () => {
-    try {
-      // get current user
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (error || !user) return
+  // ✅ Prefill from Supabase
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (error || !user) return
 
-      const profile = await getClientByAuthUid(user.id)
-      if (!profile) return
+        // Personal info
+        const userClient = await getUserClientByAuthUid(user.id)
+        if (userClient) {
+          setFirst(userClient.first_name ?? "")
+          setLast(userClient.last_name ?? "")
+          setEmail(userClient.email_address ?? "")
+          setPhone(userClient.contact_number ?? "")
+        }
 
-      // populate state
-      setFirst(profile.first_name ?? "")
-      setLast(profile.last_name ?? "")
-      setEmail(profile.email_address ?? "")
-    } catch (err) {
-      console.error("Error fetching profile:", err)
-    }
-  })()
-}, [])
+        // Address/photo info
+        const clientInfo = await getClientInformationByAuthUid(user.id)
+        if (clientInfo) {
+          setBrgy(clientInfo.barangay ?? BARANGAYS[0])
+          setStreet(clientInfo.street ?? "")
+          setAdditionalAddr(clientInfo.additional_address ?? "")
+          setPhoto(clientInfo.profile_picture_url ?? null)
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err)
+      }
+    })()
+  }, [])
 
   const emailOk = useMemo(() => /\S+@\S+\.\S+/.test(email), [email])
   const phoneOk = useMemo(() => phone.trim().length === 10, [phone])
@@ -87,12 +101,12 @@ useEffect(() => {
 
   const canNext = Boolean(
     first.trim() &&
-      last.trim() &&
-      emailOk &&
-      phoneOk &&
-      brgyOk &&
-      street.trim() &&
-      additionalAddr.trim()
+    last.trim() &&
+    emailOk &&
+    phoneOk &&
+    brgyOk &&
+    street.trim() &&
+    additionalAddr.trim()
   )
 
   const choosePhoto = async () => {
@@ -105,6 +119,7 @@ useEffect(() => {
     if (!res.canceled) setPhoto(res.assets[0]?.uri ?? null)
   }
 
+  // ✅ Save before navigating
   const onNext = async () => {
     if (!canNext) return
 
@@ -113,46 +128,51 @@ useEffect(() => {
       JSON.stringify({ first, last, phone, email, brgy, street, additional_address: additionalAddr, photo })
     )
 
-try {
-  // ✅ Get authenticated user
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) {
-    console.error("No authenticated user", error)
-    return
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (error || !user) {
+        console.error("No authenticated user", error)
+        return
+      }
+      const authUid = user.id
+
+      const userClient = await getUserClientByAuthUid(authUid)
+      // const clientInfo = await getClientInformationByAuthUid(authUid)
+
+      // ✅ If no user_client row, create it
+    if (!userClient) {
+      await updateClientProfile(authUid, {
+        first_name: first,
+        last_name: last,
+        email_address: email,
+        contact_number: phone,
+      })
+    } else {
+      await updateClientProfile(authUid, {
+        first_name: first,
+        last_name: last,
+        email_address: email,
+        contact_number: phone,
+      })
+    }
+
+    // ✅ If no client_information row, upsert it
+    await saveClientProfile(authUid, {
+      auth_uid: authUid,
+      barangay: brgy,
+      street,
+      additional_address: additionalAddr,
+      profile_picture_url: photo ?? null,
+    })
+
+    router.push("./request2")
+  } catch (err) {
+    console.error("Error saving profile:", err)
   }
-  const authUid = user.id
-
-  // ✅ Get client profile to retrieve client_id
-  const clientProfile = await getClientByAuthUid(authUid)
-  if (!clientProfile) {
-    console.error("No client profile found")
-    return
-  }
-  const clientId = clientProfile.id
-
-  // ✅ Save client request with both IDs
-  await saveClientRequest({
-    client_id: clientId,
-    auth_uid: authUid,
-    first_name: first,
-    last_name: last,
-    email_address: email,
-    contact_number: phone,
-    barangay: brgy,
-    street,
-    additional_address: additionalAddr,
-    profile_picture_url: photo ?? undefined, // normalize null → undefined
-  })
-
-  router.push("./clientforms/request2")
-} catch (err) {
-  console.error(err)
 }
 
-  }
-
   if (!fontsLoaded) return null
-
+  
 return (
     <ImageBackground
         source={require("../../../assets/welcome.jpg")}

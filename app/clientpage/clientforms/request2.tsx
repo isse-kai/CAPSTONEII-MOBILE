@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { Picker } from "@react-native-picker/picker"
 import { Pressable, ScrollView, Text, TextInput, View } from "dripsy"
 import { useFonts } from "expo-font"
 import * as ImagePicker from "expo-image-picker"
@@ -12,6 +13,8 @@ import {
   ImageBackground,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
+import { supabase } from "../../../supabase/db"
+import { saveClientRequest } from "../../../supabase/services/clientrequestservice"
 import Header from "../clientnavbar/header"
 import ClientNavbar from "../clientnavbar/navbar"
 
@@ -47,19 +50,45 @@ export default function ClientRequest2() {
   const [desc, setDesc] = useState("")
   const [photo, setPhoto] = useState<string | null>(null)
 
+  // add state for clientId and email
+  const [clientId, setClientId] = useState("")
+  const [email, setEmail] = useState("")
+
+  const choosePhoto = async () => {
+  const res = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [4, 3],
+    quality: 0.9,
+  })
+  if (!res.canceled) {
+    setPhoto(res.assets[0]?.uri ?? null)
+  }
+}
+
   useEffect(() => {
     (async () => {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY)
-      if (!raw) return
-      const v = JSON.parse(raw)
-      setServiceType(v.serviceType ?? "")
-      setServiceTask(v.serviceTask ?? "")
-      setDate(v.date ?? "")
-      setTime(v.time ?? "")
-      setToolsProvided(v.toolsProvided ?? "")
-      setUrgent(v.urgent ?? "")
-      setDesc(v.desc ?? "")
-      setPhoto(v.photo ?? null)
+      // load step1 values
+      const rawStep1 = await AsyncStorage.getItem("request_step1")
+      if (rawStep1) {
+        const v1 = JSON.parse(rawStep1)
+        setClientId(v1.client_id ?? "")
+        setEmail(v1.email_address ?? "")
+      }
+
+      // load step2 values
+      const rawStep2 = await AsyncStorage.getItem(STORAGE_KEY)
+      if (rawStep2) {
+        const v2 = JSON.parse(rawStep2)
+        setServiceType(v2.serviceType ?? "")
+        setServiceTask(v2.serviceTask ?? "")
+        setDate(v2.date ?? "")
+        setTime(v2.time ?? "")
+        setToolsProvided(v2.toolsProvided ?? "")
+        setUrgent(v2.urgent ?? "")
+        setDesc(v2.desc ?? "")
+        setPhoto(v2.photo ?? null)
+      }
     })()
   }, [])
 
@@ -73,23 +102,42 @@ export default function ClientRequest2() {
     desc.trim().length >= 3
   )
 
-  const choosePhoto = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.9,
-    })
-    if (!res.canceled) setPhoto(res.assets[0]?.uri ?? null)
-  }
-
   const onNext = async () => {
     if (!canNext) return
+
     await AsyncStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ serviceType, serviceTask, date, time, toolsProvided, urgent, desc, photo })
     )
-    router.push("./clientforms/request3")
+
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (error || !user) {
+        console.error("No authenticated user", error)
+        return
+      }
+      const authUid = user.id
+
+      // ✅ Save request to backend
+      await saveClientRequest({
+        client_id: clientId,              // loaded from step1
+        auth_uid: authUid,
+        email_address: email,             // loaded from step1
+        category: "General",              // or whatever category you need
+        service_type: serviceType,
+        service_task: serviceTask,
+        preferred_date: date,
+        preferred_time: time,
+        tools_provided: toolsProvided,
+        is_urgent: urgent === "Yes",      // convert string to boolean
+        description: desc,
+        request_image_url: photo ?? null,
+      })
+
+      router.push("./clientforms/request3")
+    } catch (err) {
+      console.error("Error saving request:", err)
+    }
   }
 
   if (!fontsLoaded) return null
@@ -153,7 +201,6 @@ export default function ClientRequest2() {
                 <Field label="PREFERRED DATE:" value={date} onChangeText={setDate} placeholder="dd/mm/yyyy" />
                 <Field label="PREFERRED TIME:" value={time} onChangeText={setTime} placeholder="--:-- --" />
                 <Field label="TOOLS PROVIDED:" value={toolsProvided} onChangeText={setToolsProvided} placeholder="Yes or No" />
-                <Field label="URGENT:" value={urgent} onChangeText={setUrgent} placeholder="Yes or No" />
                 <Field label="DESCRIPTION:" value={desc} onChangeText={setDesc} placeholder="Describe the service" multiline />
               </View>
 
@@ -209,6 +256,31 @@ export default function ClientRequest2() {
                   </Text>
                 </Pressable>
               </View>
+
+              {/* Urgent dropdown */}
+              <View style={{ marginBottom: 12 }}>
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>URGENT:</Text>
+                <View
+                  style={{
+                    borderWidth: 1,
+                    borderColor: C.border,
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    backgroundColor: '#fff',
+                  }}
+                >
+                  <Picker
+                    selectedValue={urgent}
+                    onValueChange={(itemValue) => setUrgent(itemValue)}
+                    style={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: C.text }}
+                  >
+                    <Picker.Item label="Select urgency" value="" color={C.placeholder} />
+                    <Picker.Item label="Yes" value="Yes" color={C.text} />
+                    <Picker.Item label="No" value="No" color={C.text} />
+                  </Picker>
+                </View>
+              </View>
+
             </MotiView>
           </ScrollView>
         </View>

@@ -7,7 +7,7 @@ import React from 'react'
 import { ImageBackground, ScrollView, TextInput, View } from 'react-native'
 import DateTimePickerModal from "react-native-modal-datetime-picker"
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { getClientByAuthUid, updateClientProfile } from '../../../../supabase/services/clientprofileservice'
+import { getUserClientByAuthUid, updateClientProfile } from '../../../../supabase/services/clientprofileservice'
 import { getCurrentUser } from '../../../../supabase/services/loginservice'
 import Header from '../../clientnavbar/header'
 import ClientNavbar from '../../clientnavbar/navbar'
@@ -138,7 +138,7 @@ const handleRemoveInstagram = async () => {
 
         if (!u) return
 
-        const profile = await getClientByAuthUid(u.id)
+        const profile = await getUserClientByAuthUid(u.id)
         setDob(profile?.date_of_birth || "")
         setContactNumber(profile?.contact_number || "")
         setFacebook(profile?.social_facebook || "")

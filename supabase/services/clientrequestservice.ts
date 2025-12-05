@@ -3,7 +3,7 @@ import { ClientRequest } from '../types/client'
 
 export async function saveClientRequest(payload: ClientRequest) {
   const { data, error } = await supabase
-    .from('client_requests')
+    .from('client_service_request_details')
     .insert([payload])
     .select()
   if (error) throw error

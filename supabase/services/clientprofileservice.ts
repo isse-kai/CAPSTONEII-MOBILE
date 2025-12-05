@@ -1,24 +1,43 @@
 import { supabase } from '../db'
-import { ClientInformation } from '../types/client'
+import { ClientInformation, OtherClientProfile } from '../types/client'
 
 export async function getClientByEmail(email: string) {
   const { data, error } = await supabase
-    .from('user_client')
-    .select('*')
-    .eq('email_address', email)
+    .from("user_client")
+    .select("id, auth_uid, first_name, last_name, email_address, contact_number")
+    .eq("email_address", email)
     .single()
-  if (error) return null
+
+  if (error) {
+    console.warn("getClientByEmail error:", error.message)
+    return null
+  }
   return data
 }
 
-export async function getClientByAuthUid(auth_uid: string) {
+export async function getUserClientByAuthUid(auth_uid: string) {
   const { data, error } = await supabase
     .from('user_client')
     .select('id, first_name, last_name, email_address, contact_number, date_of_birth, social_facebook, social_instagram')
     .eq('auth_uid', auth_uid)
     .single()
+
   if (error) {
-    console.warn('getClientByAuthUid error:', error.message)
+    console.warn('getUserClientByAuthUid error:', error.message)
+    return null
+  }
+  return data
+}
+
+export async function getClientInformationByAuthUid(auth_uid: string) {
+  const { data, error } = await supabase
+    .from('client_information')
+    .select('id, auth_uid, barangay, street, additional_address, profile_picture_url')
+    .eq('auth_uid', auth_uid)
+    .single()
+
+  if (error) {
+    console.warn('getClientInformationByAuthUid error:', error.message)
     return null
   }
   return data
@@ -43,6 +62,18 @@ export async function updateClientProfile(auth_uid: string, updates: Partial<Cli
   if (error) throw error
   return data
 }
+
+export async function saveClientProfile(auth_uid: string, payload: OtherClientProfile) {
+  const { data, error } = await supabase
+    .from("client_information")
+    .update(payload)
+    .eq("auth_uid", auth_uid)
+    .select()
+
+  if (error) throw error
+  return data
+}
+
 
 export async function removeClientProfile(auth_uid: string, fields: (keyof ClientInformation)[]) {
   const updates: Partial<ClientInformation> = {}
