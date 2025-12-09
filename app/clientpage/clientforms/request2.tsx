@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import DateTimePicker, { Event } from '@react-native-community/datetimepicker'
 import { Picker } from "@react-native-picker/picker"
 import { Pressable, ScrollView, Text, TextInput, View } from "dripsy"
 import { useFonts } from "expo-font"
@@ -11,6 +12,10 @@ import {
   Dimensions,
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  TouchableOpacity,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { supabase } from "../../../supabase/db"
@@ -30,6 +35,50 @@ const C = {
 }
 
 const STORAGE_KEY = "request_step2"
+
+/**
+ * SERVICE TASKS map:
+ * Edit these lists anytime if you need to change available tasks for each type.
+ */
+const SERVICE_TASKS_MAP: Record<string, string[]> = {
+  "": [], // default
+  "Car Washing": [
+    "Exterior Wash",
+    "Interior Cleaning",
+    "Wax & Polish",
+    "Underbody Cleaning",
+    "Engine Bay Cleaning",
+    "Headlight Restoration",
+    "Ceramic Coating",
+    "Tire & Rim Cleaning",
+    "Vacuum & Odor Removal",
+    "Paint Protection Film Application",
+  ],
+  "Carpentry": [
+    "General Carpentry",
+    "Furniture Repair",
+    "Cabinet Installation",
+    "Door/Window Repair",
+  ],
+  "Electrical Works": [
+    "Wiring Repair",
+    "Light Fixture Installation",
+    "Outlet/Switch Repair",
+    "Appliance Wiring",
+  ],
+  "Laundry": [
+    "Wash & Fold",
+    "Dry Cleaning",
+    "Pressing/Ironing",
+    "Stain Treatment",
+  ],
+  "Plumbing": [
+    "Leak Repair",
+    "Drain Cleaning",
+    "Toilet Repair",
+    "Pipe Replacement",
+  ],
+}
 
 export default function ClientRequest2() {
   const router = useRouter()
@@ -54,17 +103,25 @@ export default function ClientRequest2() {
   const [clientId, setClientId] = useState("")
   const [email, setEmail] = useState("")
 
+  // modal controls for dropdown-like UX
+  const [showTypePicker, setShowTypePicker] = useState(false)
+  const [showTaskPicker, setShowTaskPicker] = useState(false)
+
+  // date picker state
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [dateObj, setDateObj] = useState<Date>(new Date()) // selected Date object for native control
+
   const choosePhoto = async () => {
-  const res = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    aspect: [4, 3],
-    quality: 0.9,
-  })
-  if (!res.canceled) {
-    setPhoto(res.assets[0]?.uri ?? null)
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.9,
+    })
+    if (!res.canceled) {
+      setPhoto(res.assets[0]?.uri ?? null)
+    }
   }
-}
 
   useEffect(() => {
     (async () => {
@@ -88,9 +145,24 @@ export default function ClientRequest2() {
         setUrgent(v2.urgent ?? "")
         setDesc(v2.desc ?? "")
         setPhoto(v2.photo ?? null)
+
+        // if saved date exists, parse into dateObj so picker shows it
+        if (v2.date) {
+          const parts = (v2.date as string).split("/")
+          if (parts.length === 3) {
+            const dd = Number(parts[0]), mm = Number(parts[1]) - 1, yy = Number(parts[2])
+            const parsed = new Date(yy, mm, dd)
+            if (!isNaN(parsed.getTime())) setDateObj(parsed)
+          }
+        }
       }
     })()
   }, [])
+
+  // reset task whenever type changes (UI convenience only)
+  useEffect(() => {
+    setServiceTask("")
+  }, [serviceType])
 
   const canNext = Boolean(
     serviceType.trim() &&
@@ -142,6 +214,52 @@ export default function ClientRequest2() {
 
   if (!fontsLoaded) return null
 
+  // list of top-level service types (you can change order or add later)
+  const SERVICE_TYPES = [
+    "Car Washing",
+    "Carpentry",
+    "Electrical Works",
+    "Laundry",
+    "Plumbing",
+  ]
+
+  // derived list of tasks for the currently selected type
+  const currentTasks = SERVICE_TASKS_MAP[serviceType] ?? []
+
+  // helpers ------------------------------------------------
+  const formatDate = (d: Date) => {
+    const dd = `${d.getDate()}`.padStart(2, "0")
+    const mm = `${d.getMonth() + 1}`.padStart(2, "0")
+    const yy = d.getFullYear()
+    return `${dd}/${mm}/${yy}`
+  }
+
+  // Handler for native DateTimePicker change
+  const onDateChange = (event: Event, selected?: Date | undefined) => {
+    // Android: event.type === "dismissed" or selection
+    // iOS: selected updates live
+    if (Platform.OS === "android") {
+      // On Android the picker is shown as a dialog and closes automatically.
+      setShowDatePicker(false)
+      if (selected) {
+        setDateObj(selected)
+        setDate(formatDate(selected))
+      }
+    } else {
+      // iOS behavior: selected may be undefined on cancel
+      if (selected) {
+        setDateObj(selected)
+        setDate(formatDate(selected))
+      }
+    }
+  }
+
+  // open date picker, seed with existing dateObj if present
+  const openDatePicker = () => {
+    // If there's already a selected date string parse into dateObj (already done on mount)
+    setShowDatePicker(true)
+  }
+
   return (
     <ImageBackground
       source={require("../../../assets/welcome.jpg")}
@@ -159,6 +277,7 @@ export default function ClientRequest2() {
           <ScrollView
             contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
             <MotiView
               from={{ opacity: 0, translateY: 20 }}
@@ -196,9 +315,200 @@ export default function ClientRequest2() {
                   Service Request Details
                 </Text>
 
-                <Field label="SERVICE TYPE:" value={serviceType} onChangeText={setServiceType} placeholder="Enter service type" />
-                <Field label="SERVICE TASK:" value={serviceTask} onChangeText={setServiceTask} placeholder="Enter specific task" />
-                <Field label="PREFERRED DATE:" value={date} onChangeText={setDate} placeholder="dd/mm/yyyy" />
+                {/* SERVICE TYPE - tappable row that opens a modal picker */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
+                    SERVICE TYPE:
+                  </Text>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setShowTypePicker(true)}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: C.border,
+                      borderRadius: 8,
+                      backgroundColor: '#fff',
+                      paddingHorizontal: 12,
+                      paddingVertical: 12,
+                      justifyContent: 'center',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: serviceType ? C.text : C.placeholder }}>
+                      {serviceType || 'Select service type'}
+                    </Text>
+                    <Ionicons name="chevron-down" size={20} color={C.sub} />
+                  </TouchableOpacity>
+
+                  <Modal
+                    visible={showTypePicker}
+                    transparent
+                    animationType="slide"
+                    onRequestClose={() => setShowTypePicker(false)}
+                  >
+                    <TouchableOpacity
+                      style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}
+                      activeOpacity={1}
+                      onPressOut={() => setShowTypePicker(false)}
+                    >
+                      <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                        style={{ justifyContent: 'flex-end', flex: 1 }}
+                      >
+                        <View style={{ backgroundColor: '#fff', paddingBottom: 20 }}>
+                          <Picker
+                            selectedValue={serviceType}
+                            onValueChange={(val) => setServiceType(val)}
+                          >
+                            <Picker.Item label="Select service type" value="" color={C.placeholder} />
+                            {SERVICE_TYPES.map((t) => (
+                              <Picker.Item key={t} label={t} value={t} color={C.text} />
+                            ))}
+                          </Picker>
+
+                          <View style={{ paddingHorizontal: 18, marginTop: 8 }}>
+                            <Pressable
+                              onPress={() => setShowTypePicker(false)}
+                              style={{
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: 8,
+                                paddingVertical: 12,
+                                backgroundColor: C.blue
+                              }}
+                            >
+                              <Text sx={{ color: '#fff', fontFamily: 'Poppins-Bold' }}>Done</Text>
+                            </Pressable>
+                          </View>
+                        </View>
+                      </KeyboardAvoidingView>
+                    </TouchableOpacity>
+                  </Modal>
+                </View>
+
+                {/* SERVICE TASK - tappable row that opens a modal picker (disabled when no tasks) */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
+                    SERVICE TASK:
+                  </Text>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => { if (currentTasks.length > 0) setShowTaskPicker(true) }}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: C.border,
+                      borderRadius: 8,
+                      backgroundColor: currentTasks.length > 0 ? '#fff' : '#f3f4f6',
+                      paddingHorizontal: 12,
+                      paddingVertical: 12,
+                      justifyContent: 'center',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: serviceTask ? C.text : (currentTasks.length > 0 ? C.placeholder : C.sub) }}>
+                      {serviceTask || (currentTasks.length > 0 ? 'Select task' : 'Select service type first')}
+                    </Text>
+                    <Ionicons name="chevron-down" size={20} color={currentTasks.length > 0 ? C.sub : '#e5e7eb'} />
+                  </TouchableOpacity>
+
+                  <Modal
+                    visible={showTaskPicker}
+                    transparent
+                    animationType="slide"
+                    onRequestClose={() => setShowTaskPicker(false)}
+                  >
+                    <TouchableOpacity
+                      style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}
+                      activeOpacity={1}
+                      onPressOut={() => setShowTaskPicker(false)}
+                    >
+                      <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                        style={{ justifyContent: 'flex-end', flex: 1 }}
+                      >
+                        <View style={{ backgroundColor: '#fff', paddingBottom: 20 }}>
+                          <Picker
+                            selectedValue={serviceTask}
+                            onValueChange={(val) => setServiceTask(val)}
+                            enabled={currentTasks.length > 0}
+                          >
+                            <Picker.Item
+                              label={currentTasks.length > 0 ? "Select task" : "Select service type first"}
+                              value=""
+                              color={C.placeholder}
+                            />
+                            {currentTasks.map((t) => (
+                              <Picker.Item key={t} label={t} value={t} color={C.text} />
+                            ))}
+                          </Picker>
+
+                          <View style={{ paddingHorizontal: 18, marginTop: 8 }}>
+                            <Pressable
+                              onPress={() => setShowTaskPicker(false)}
+                              style={{
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: 8,
+                                paddingVertical: 12,
+                                backgroundColor: C.blue
+                              }}
+                            >
+                              <Text sx={{ color: '#fff', fontFamily: 'Poppins-Bold' }}>Done</Text>
+                            </Pressable>
+                          </View>
+                        </View>
+                      </KeyboardAvoidingView>
+                    </TouchableOpacity>
+                  </Modal>
+                </View>
+
+                {/* PREFERRED DATE - tappable row that opens native calendar picker */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
+                    PREFERRED DATE:
+                  </Text>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => openDatePicker()}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: C.border,
+                      borderRadius: 8,
+                      backgroundColor: '#fff',
+                      paddingHorizontal: 12,
+                      paddingVertical: 12,
+                      justifyContent: 'center',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: date ? C.text : C.placeholder }}>
+                      {date || 'Select preferred date'}
+                    </Text>
+                    <Ionicons name="calendar-outline" size={20} color={C.sub} />
+                  </TouchableOpacity>
+
+                  {/* On iOS we show the picker inline/modal; on Android DateTimePicker shows a dialog automatically */}
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={dateObj || new Date()}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "calendar"}
+                      onChange={onDateChange}
+                      minimumDate={new Date()} // prevent selecting past dates
+                    />
+                  )}
+                </View>
+
+                {/* Keep other fields as plain text inputs (unchanged) */}
                 <Field label="PREFERRED TIME:" value={time} onChangeText={setTime} placeholder="--:-- --" />
                 <Field label="TOOLS PROVIDED:" value={toolsProvided} onChangeText={setToolsProvided} placeholder="Yes or No" />
                 <Field label="DESCRIPTION:" value={desc} onChangeText={setDesc} placeholder="Describe the service" multiline />
@@ -335,7 +645,7 @@ export default function ClientRequest2() {
           >
             <Text
               sx={{
-                color: "#fff",
+                color: "#ffffffff",
                 fontWeight: "900",
                 fontSize: 16,
                 paddingLeft: 14,
