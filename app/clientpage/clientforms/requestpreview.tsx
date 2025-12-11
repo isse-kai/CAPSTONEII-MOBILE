@@ -1,21 +1,20 @@
-// app/forms/requestpreview.tsx  (Step 4: Review & Submit)
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image, Pressable, ScrollView, Text, View } from "dripsy";
 import { useRouter, type Href } from "expo-router";
 import {
-    ArrowLeft,
-    Banknote,
-    Calendar,
-    CheckCircle2,
-    ChevronRight,
-    Clock,
-    Image as ImageIcon,
-    Info,
-    Mail,
-    MapPin,
-    Pencil,
-    Phone,
-    Wrench,
+  ArrowLeft,
+  Banknote,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Image as ImageIcon,
+  Info,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Wrench,
 } from "lucide-react-native";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Dimensions, Modal, Platform } from "react-native";
