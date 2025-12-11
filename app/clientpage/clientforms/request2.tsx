@@ -72,7 +72,6 @@ const SERVICE_TASKS: Record<string, string[]> = {
     "Toilet Repair",
     "Pipe Replacement",
   ],
-  "Others": [],
 }
 
 const SERVICE_TYPES = [
@@ -80,8 +79,7 @@ const SERVICE_TYPES = [
   "Carpentry",
   "Electrical Works",
   "Laundry",
-  "Plumbing",
-  "Others",
+  "Plumbing"
 ]
 
 export default function ClientRequest2() {
@@ -302,52 +300,31 @@ export default function ClientRequest2() {
                   <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
                     SERVICE TASK:
                   </Text>
-
-                  {serviceType === "Others" ? (
-                    <TextInput
-                      value={serviceTask}
-                      onChangeText={setServiceTask}
-                      placeholder="Enter specific task"
-                      placeholderTextColor={C.placeholder}
-                      style={{
-                        borderWidth: 1,
-                        borderColor: C.border,
-                        borderRadius: 8,
-                        paddingHorizontal: 10,
-                        paddingVertical: 12,
-                        fontSize: 14,
-                        fontFamily: 'Poppins-Regular',
-                        backgroundColor: '#fff',
-                        color: C.text,
-                      }}
-                    />
-                  ) : (
-                    <View
-                      style={{
-                        borderWidth: 1,
-                        borderColor: C.border,
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                        backgroundColor: currentTasks.length > 0 ? '#fff' : '#f3f4f6',
-                      }}
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderColor: C.border,
+                      borderRadius: 8,
+                      overflow: 'hidden',
+                      backgroundColor: currentTasks.length > 0 ? '#fff' : '#f3f4f6',
+                    }}
+                  >
+                    <Picker
+                      selectedValue={serviceTask}
+                      onValueChange={(val) => setServiceTask(val)}
+                      enabled={currentTasks.length > 0}
+                      style={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: C.text }}
                     >
-                      <Picker
-                        selectedValue={serviceTask}
-                        onValueChange={(val) => setServiceTask(val)}
-                        enabled={currentTasks.length > 0}
-                        style={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: C.text }}
-                      >
-                        <Picker.Item
-                          label={currentTasks.length > 0 ? "Select task" : "Select service type first"}
-                          value=""
-                          color={C.placeholder}
-                        />
-                        {currentTasks.map((t) => (
-                          <Picker.Item key={t} label={t} value={t} color={C.text} />
-                        ))}
-                      </Picker>
-                    </View>
-                  )}
+                      <Picker.Item
+                        label={currentTasks.length > 0 ? "Select task" : "Select service type first"}
+                        value=""
+                        color={C.placeholder}
+                      />
+                      {currentTasks.map((t) => (
+                        <Picker.Item key={t} label={t} value={t} color={C.text} />
+                      ))}
+                    </Picker>
+                  </View>
                 </View>
 
                 {/* PREFERRED DATE */}
