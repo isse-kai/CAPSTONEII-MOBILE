@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import DateTimePicker from '@react-native-community/datetimepicker'
 import { Picker } from "@react-native-picker/picker"
 import { Pressable, ScrollView, Text, TextInput, View } from "dripsy"
 import { useFonts } from "expo-font"
@@ -11,6 +12,8 @@ import {
   Dimensions,
   Image,
   ImageBackground,
+  Platform,
+  TouchableOpacity
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { supabase } from "../../../supabase/db"
@@ -31,8 +34,8 @@ const C = {
 
 const STORAGE_KEY = "request_step2"
 
-const SERVICE_TASKS_MAP: Record<string, string[]> = {
-  "": [], // default
+const SERVICE_TASKS: Record<string, string[]> = {
+  "": [],
   "Car Washing": [
     "Exterior Wash",
     "Interior Cleaning",
@@ -69,7 +72,17 @@ const SERVICE_TASKS_MAP: Record<string, string[]> = {
     "Toilet Repair",
     "Pipe Replacement",
   ],
+  "Others": [],
 }
+
+const SERVICE_TYPES = [
+  "Car Washing",
+  "Carpentry",
+  "Electrical Works",
+  "Laundry",
+  "Plumbing",
+  "Others",
+]
 
 export default function ClientRequest2() {
   const router = useRouter()
@@ -90,6 +103,8 @@ export default function ClientRequest2() {
   const [desc, setDesc] = useState("")
   const [photo, setPhoto] = useState<string | null>(null)
 
+  const currentTasks = SERVICE_TASKS[serviceType] ?? []
+
   // add state for clientId and email
   const [clientId, setClientId] = useState("")
   const [email, setEmail] = useState("")
@@ -105,6 +120,34 @@ export default function ClientRequest2() {
     setPhoto(res.assets[0]?.uri ?? null)
   }
 }
+
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [dateObj, setDateObj] = useState<Date | null>(null)
+
+  const [showTimePicker, setShowTimePicker] = useState(false)
+  const [timeObj, setTimeObj] = useState<Date | null>(null)
+
+  const onDateChange = (_event: any, selectedDate?: Date) => {
+    setShowDatePicker(false)
+    if (selectedDate) {
+      setDateObj(selectedDate)
+      setDate(selectedDate.toLocaleDateString("en-GB"))
+    }
+  }
+
+  const onTimeChange = (_event: any, selectedTime?: Date) => {
+    setShowTimePicker(false)
+    if (selectedTime) {
+      setTimeObj(selectedTime)
+      setTime(
+        selectedTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      )
+    }
+  }
+
 
   useEffect(() => {
     (async () => {
@@ -160,16 +203,16 @@ export default function ClientRequest2() {
 
       // ✅ Save request to backend
       await saveClientRequest({
-        client_id: clientId,              // loaded from step1
+        client_id: clientId,
         auth_uid: authUid,
-        email_address: email,             // loaded from step1
-        category: "General",              // or whatever category you need
+        email_address: email,
+        category: "General",
         service_type: serviceType,
         service_task: serviceTask,
         preferred_date: date,
         preferred_time: time,
         tools_provided: toolsProvided,
-        is_urgent: urgent === "Yes",      // convert string to boolean
+        is_urgent: urgent === "Yes",
         description: desc,
         request_image_url: photo ?? null,
       })
@@ -235,14 +278,172 @@ export default function ClientRequest2() {
                 <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
                   Service Request Details
                 </Text>
+                {/* SERVICE TYPE */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>SERVICE TYPE:</Text>
+                  <View style={{ borderWidth: 1, borderColor: C.border, borderRadius: 8, backgroundColor: '#fff' }}>
+                    <Picker
+                      selectedValue={serviceType}
+                      onValueChange={(val) => {
+                        setServiceType(val)
+                        setServiceTask("")
+                      }}
+                    >
+                      <Picker.Item label="Select service type" value="" color={C.placeholder} />
+                      {SERVICE_TYPES.map((t) => (
+                        <Picker.Item key={t} label={t} value={t} color={C.text} />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
 
-                <Field label="SERVICE TYPE:" value={serviceType} onChangeText={setServiceType} placeholder="Enter service type" />
-                <Field label="SERVICE TASK:" value={serviceTask} onChangeText={setServiceTask} placeholder="Enter specific task" />
-                <Field label="PREFERRED DATE:" value={date} onChangeText={setDate} placeholder="dd/mm/yyyy" />
-                <Field label="PREFERRED TIME:" value={time} onChangeText={setTime} placeholder="--:-- --" />
-                <Field label="TOOLS PROVIDED:" value={toolsProvided} onChangeText={setToolsProvided} placeholder="Yes or No" />
+                {/* SERVICE TASK */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
+                    SERVICE TASK:
+                  </Text>
+
+                  {serviceType === "Others" ? (
+                    <TextInput
+                      value={serviceTask}
+                      onChangeText={setServiceTask}
+                      placeholder="Enter specific task"
+                      placeholderTextColor={C.placeholder}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: C.border,
+                        borderRadius: 8,
+                        paddingHorizontal: 10,
+                        paddingVertical: 12,
+                        fontSize: 14,
+                        fontFamily: 'Poppins-Regular',
+                        backgroundColor: '#fff',
+                        color: C.text,
+                      }}
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        borderWidth: 1,
+                        borderColor: C.border,
+                        borderRadius: 8,
+                        overflow: 'hidden',
+                        backgroundColor: currentTasks.length > 0 ? '#fff' : '#f3f4f6',
+                      }}
+                    >
+                      <Picker
+                        selectedValue={serviceTask}
+                        onValueChange={(val) => setServiceTask(val)}
+                        enabled={currentTasks.length > 0}
+                        style={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: C.text }}
+                      >
+                        <Picker.Item
+                          label={currentTasks.length > 0 ? "Select task" : "Select service type first"}
+                          value=""
+                          color={C.placeholder}
+                        />
+                        {currentTasks.map((t) => (
+                          <Picker.Item key={t} label={t} value={t} color={C.text} />
+                        ))}
+                      </Picker>
+                    </View>
+                  )}
+                </View>
+
+                {/* PREFERRED DATE */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
+                    PREFERRED DATE:
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(true)}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: C.border,
+                      borderRadius: 8,
+                      backgroundColor: '#fff',
+                      padding: 12,
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Text
+                      sx={{
+                        fontSize: 14,
+                        fontFamily: 'Poppins-Regular',
+                        color: date ? C.text : C.placeholder,
+                      }}
+                    >
+                      {date || 'Select preferred date'}
+                    </Text>
+                    <Ionicons name="calendar-outline" size={20} color={C.sub} />
+                  </TouchableOpacity>
+
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={dateObj || new Date()}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
+                      onChange={onDateChange}
+                    />
+                  )}
+                </View>
+
+                {/* PREFERRED TIME */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
+                    PREFERRED TIME:
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowTimePicker(true)}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: C.border,
+                      borderRadius: 8,
+                      backgroundColor: '#fff',
+                      padding: 12,
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Text
+                      sx={{
+                        fontSize: 14,
+                        fontFamily: 'Poppins-Regular',
+                        color: time ? C.text : C.placeholder,
+                      }}
+                    >
+                      {time || '--:-- --'}
+                    </Text>
+                    <Ionicons name="time-outline" size={20} color={C.sub} />
+                  </TouchableOpacity>
+
+                  {showTimePicker && (
+                    <DateTimePicker
+                      value={timeObj || new Date()}
+                      mode="time"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'clock'}
+                      onChange={onTimeChange}
+                    />
+                  )}
+                </View>
+
+                {/* TOOLS PROVIDED */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>TOOLS PROVIDED:</Text>
+                  <View style={{ borderWidth: 1, borderColor: C.border, borderRadius: 8, backgroundColor: '#fff' }}>
+                    <Picker selectedValue={toolsProvided} onValueChange={(val) => setToolsProvided(val)}>
+                      <Picker.Item label="Select option" value="" color={C.placeholder} />
+                      <Picker.Item label="Yes" value="Yes" color={C.text} />
+                      <Picker.Item label="No" value="No" color={C.text} />
+                    </Picker>
+                  </View>
+                </View>
+
+                {/* DESCRIPTION */}
                 <Field label="DESCRIPTION:" value={desc} onChangeText={setDesc} placeholder="Describe the service" multiline />
               </View>
+
 
               {/* Upload Image Card */}
               <View style={{ backgroundColor: '#ffffffcc', borderRadius: 12, padding: 16, marginBottom: 20 }}>
@@ -299,7 +500,7 @@ export default function ClientRequest2() {
 
               {/* Urgent dropdown */}
               <View style={{ marginBottom: 12 }}>
-                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>URGENT:</Text>
+                <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>IS THIS URGENT?</Text>
                 <View
                   style={{
                     borderWidth: 1,
