@@ -1,3 +1,5 @@
+// app/workerpage/profiles/index.tsx
+
 import { Ionicons } from '@expo/vector-icons'
 import { Pressable, Text } from 'dripsy'
 import { useFonts } from 'expo-font'
@@ -41,7 +43,7 @@ export default function WorkerProfile() {
   const handleLogout = async () => {
     try {
       await logoutUser()
-      router.replace('../login/login')
+      router.replace('/login/login')
     } catch (err) {
       console.error(err)
     }
@@ -50,9 +52,9 @@ export default function WorkerProfile() {
   return (
     <ImageBackground
       source={require('../../../assets/login.jpg')}
-      style={{ 
+      style={{
         flex: 1,
-        height: height
+        height: height,
       }}
       resizeMode="cover"
     >
@@ -71,7 +73,6 @@ export default function WorkerProfile() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          {/* Animated account section */}
           <MotiView
             from={{ opacity: 0, translateY: 20 }}
             animate={{ opacity: 1, translateY: 0 }}
@@ -112,7 +113,9 @@ export default function WorkerProfile() {
                     mb: 4,
                   }}
                 >
-                  {`${user?.user_metadata?.first_name ?? ''} ${user?.user_metadata?.last_name ?? ''}`.trim() || 'Full Name'}
+                  {`${user?.user_metadata?.first_name ?? ''} ${
+                    user?.user_metadata?.last_name ?? ''
+                  }`.trim() || 'Full Name'}
                 </Text>
 
                 <Text
@@ -127,9 +130,9 @@ export default function WorkerProfile() {
               </View>
             </View>
 
-            {/* Buttons */}
+            {/* Account Settings Button */}
             <Pressable
-              onPress={() => router.push('./profiles/settings')}
+              onPress={() => router.push('/workerpage/profiles/settings')}
               sx={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -140,12 +143,25 @@ export default function WorkerProfile() {
                 mb: 12,
               }}
             >
-              <Ionicons name="settings-outline" size={22} color="#333" style={{ marginRight: 12 }} />
-              <Text sx={{ fontSize: width * 0.04, fontFamily: 'Poppins-Bold', color: '#000', lineHeight: 22 }}>
+              <Ionicons
+                name="settings-outline"
+                size={22}
+                color="#333"
+                style={{ marginRight: 12 }}
+              />
+              <Text
+                sx={{
+                  fontSize: width * 0.04,
+                  fontFamily: 'Poppins-Bold',
+                  color: '#000',
+                  lineHeight: 22,
+                }}
+              >
                 Account Settings
               </Text>
             </Pressable>
 
+            {/* Logout Button */}
             <Pressable
               onPress={handleLogout}
               sx={{
@@ -157,8 +173,20 @@ export default function WorkerProfile() {
                 py: height * 0.02,
               }}
             >
-              <Ionicons name="log-out-outline" size={22} color="#333" style={{ marginRight: 12 }} />
-              <Text sx={{ fontSize: width * 0.04, fontFamily: 'Poppins-Bold', color: '#000', lineHeight: 22 }}>
+              <Ionicons
+                name="log-out-outline"
+                size={22}
+                color="#333"
+                style={{ marginRight: 12 }}
+              />
+              <Text
+                sx={{
+                  fontSize: width * 0.04,
+                  fontFamily: 'Poppins-Bold',
+                  color: '#000',
+                  lineHeight: 22,
+                }}
+              >
                 Logout
               </Text>
             </Pressable>

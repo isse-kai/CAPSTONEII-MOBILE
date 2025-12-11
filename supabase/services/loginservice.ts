@@ -1,21 +1,34 @@
+// supabase/services/loginservice.ts
 import { supabase } from '../db'
 import { getClientByEmail } from './clientprofileservice'
-// import { getWorkerByEmail } from './worker'
+import { getWorkerByEmail } from './workerprofileservice'
+
+export type UserRole = 'client' | 'worker'
 
 export async function loginUser(email: string, password: string) {
+  // 1) Login with Supabase Auth
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) throw new Error(error.message)
+  if (error) {
+    throw new Error(error.message)
+  }
 
-  const token = data.session?.access_token
+  const token = data.session?.access_token || null
+
+  // 2) Try to find profile as CLIENT first
+  let role: UserRole = 'client'
   let profile = await getClientByEmail(email)
-  let role: 'client' | 'worker' = 'client'
 
-//   if (!profile) {
-//     profile = await getWorkerByEmail(email)
-//     role = 'worker'
-//   }
+  // 3) If not found as client, try WORKER
+  if (!profile) {
+    profile = await getWorkerByEmail(email)
+    role = 'worker'
+  }
 
-  if (!profile) throw new Error('User not found in profile table')
+  // 4) If still nothing, user has no profile
+  if (!profile) {
+    throw new Error('User not found in profile table')
+  }
+
   return { token, role, profile }
 }
 

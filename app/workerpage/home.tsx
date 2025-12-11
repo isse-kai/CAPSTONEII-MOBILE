@@ -1,3 +1,5 @@
+// app/workerpage/home.tsx (WorkerHome)
+
 import { Ionicons } from '@expo/vector-icons'
 import { Pressable, Text, View } from 'dripsy'
 import { useFonts } from 'expo-font'
@@ -5,12 +7,12 @@ import { useRouter } from 'expo-router'
 import { AnimatePresence, MotiImage, MotiView } from 'moti'
 import React, { useEffect, useRef, useState } from 'react'
 import {
-    Dimensions,
-    Image,
-    ImageBackground,
-    NativeScrollEvent,
-    NativeSyntheticEvent,
-    ScrollView
+  Dimensions,
+  Image,
+  ImageBackground,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
 } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Header from './workernavbar/header'
@@ -53,11 +55,11 @@ export default function WorkerHome() {
   }, [])
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) =>
-    setScrollX(event.nativeEvent.contentOffset.x);
+    setScrollX(event.nativeEvent.contentOffset.x)
 
   const scrollBy = (offset: number) => {
-    scrollRef.current?.scrollTo({ x: scrollX + offset, animated: true });
-  };
+    scrollRef.current?.scrollTo({ x: scrollX + offset, animated: true })
+  }
 
   if (!fontsLoaded) return null
 
@@ -125,14 +127,15 @@ export default function WorkerHome() {
                   fontSize: 18,
                   fontFamily: 'Poppins-Bold',
                   color: '#001a33',
-                  mb: 10
+                  mb: 10,
                 }}
               >
                 Job Opportunities
               </Text>
 
               <Pressable
-                onPress={() => router.push('./workerforms/jobs')}
+                // ⬇️ navigate directly to Worker Information step
+                onPress={() => router.push('/workerpage/WorkerForms/Workerinformation')}
                 sx={{
                   borderWidth: 2,
                   borderColor: '#008CFC',
@@ -141,7 +144,13 @@ export default function WorkerHome() {
                   bg: 'white',
                 }}
               >
-                <View sx={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View
+                  sx={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                  }}
+                >
                   <Image
                     source={require('../../assets/add-icon.png')}
                     style={{ width: 42, height: 42, resizeMode: 'contain' }}
@@ -155,7 +164,7 @@ export default function WorkerHome() {
                         marginBottom: 4,
                       }}
                     >
-                      Browse Available Jobs
+                      + Become a worker
                     </Text>
                     <Text
                       sx={{
@@ -164,7 +173,8 @@ export default function WorkerHome() {
                         color: '#4b5563',
                       }}
                     >
-                      No active jobs found. You can browse new job opportunities posted by clients.
+                      No active jobs found. You can browse new job opportunities posted
+                      by clients.
                     </Text>
                   </View>
                 </View>
@@ -175,22 +185,22 @@ export default function WorkerHome() {
             <View sx={{ mt: 24 }}>
               <View
                 sx={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                   mb: 10,
                 }}
               >
                 <Text
                   sx={{
                     fontSize: 18,
-                    fontFamily: "Poppins-Bold",
-                    color: "#001a33",
+                    fontFamily: 'Poppins-Bold',
+                    color: '#001a33',
                   }}
                 >
                   Recent Job Posts
                 </Text>
-                
+
                 <View sx={{ flexDirection: 'row', gap: 12 }}>
                   <Pressable onPress={() => scrollBy(-160)}>
                     <Ionicons name="chevron-back" size={24} color="#001a33" />
@@ -236,9 +246,9 @@ export default function WorkerHome() {
                     <Text
                       sx={{
                         fontSize: 15,
-                        fontFamily: "Poppins-Bold",
-                        color: "#001a33",
-                        textAlign: "center",
+                        fontFamily: 'Poppins-Bold',
+                        color: '#001a33',
+                        textAlign: 'center',
                       }}
                     >
                       {job.title}
@@ -246,9 +256,9 @@ export default function WorkerHome() {
                     <Text
                       sx={{
                         fontSize: 13,
-                        fontFamily: "Poppins-Regular",
-                        color: "#4b5563",
-                        textAlign: "center",
+                        fontFamily: 'Poppins-Regular',
+                        color: '#4b5563',
+                        textAlign: 'center',
                       }}
                     >
                       Client: {job.client}
@@ -258,7 +268,13 @@ export default function WorkerHome() {
               </ScrollView>
 
               {/* Scroll indicator dots */}
-              <View sx={{ flexDirection: 'row', justifyContent: 'center', mt: 12 }}>
+              <View
+                sx={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  mt: 12,
+                }}
+              >
                 {jobs.map((_, index) => {
                   const isActive = Math.round(scrollX / 160) === index
                   return (

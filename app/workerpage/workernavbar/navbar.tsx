@@ -12,7 +12,7 @@ export default function WorkerNavbar() {
   const navItems = [
     {
       label: 'Home',
-      route: '/workerpage/workerhome',
+      route: '/workerpage/home',
       icon: require('../../../assets/home-icon.png'),
     },
     {
