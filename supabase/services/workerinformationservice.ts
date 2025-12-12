@@ -1,16 +1,22 @@
 // supabase/services/workerinformationservice.ts
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { supabase } from "../db"
+
+/* Small helpers for storage keys */
+const keyWorkInfo = (uid: string) => `worker:${uid}:work_info`
+const keyDocs = (uid: string) => `worker:${uid}:required_docs`
+const keyRate = (uid: string) => `worker:${uid}:rate`
+const keyAgreements = (uid: string) => `worker:${uid}:agreements`
 
 /* ──────────────────────────────────────────────
  * STEP 1: Personal Information
- * Table: worker_information
+ * Table: worker_information  (REAL Supabase)
  * ──────────────────────────────────────────────*/
 
 export interface WorkerInformationPayload {
   first_name: string
   last_name: string
-  // used in the UI, but NOT sent as "birthdate" column to the DB
-  birthdate: string | null
+  birthdate: string | null // UI only, not stored as column
   age: number | null
   contact_number: string
   email_address: string
@@ -19,27 +25,32 @@ export interface WorkerInformationPayload {
   profile_picture_url: string | null
 }
 
+/**
+ * FIX: do NOT use .single() / .maybeSingle()
+ * We explicitly order and limit(1) to avoid PGRST116 even
+ * if there are multiple rows for the same auth_uid.
+ */
 export async function getWorkerInformationByAuthUid(authUid: string) {
   const { data, error } = await supabase
     .from("worker_information")
     .select("*")
     .eq("auth_uid", authUid)
-    .maybeSingle()
+    // if you don't have created_at, change this order to "id"
+    .order("created_at", { ascending: false })
+    .limit(1)
 
   if (error) {
     console.error("getWorkerInformationByAuthUid error:", error)
     throw error
   }
 
-  return data
+  return data && data.length > 0 ? data[0] : null
 }
 
 export async function saveWorkerInformation(
   authUid: string,
   payload: WorkerInformationPayload,
 ) {
-  // Build the data object that matches your actual table columns.
-  // NOTE: birthdate is NOT sent because the table does not have that column.
   const baseData: any = {
     auth_uid: authUid,
     first_name: payload.first_name,
@@ -52,52 +63,53 @@ export async function saveWorkerInformation(
     profile_picture_url: payload.profile_picture_url,
   }
 
-  // 1) Check if there is already a row for this auth_uid
-  const { data: existing, error: fetchError } = await supabase
+  // FIX: no maybeSingle here either – same pattern: order + limit(1)
+  const { data: existingRows, error: fetchError } = await supabase
     .from("worker_information")
     .select("id")
     .eq("auth_uid", authUid)
-    .maybeSingle()
+    .order("created_at", { ascending: false })
+    .limit(1)
 
   if (fetchError) {
     console.error("saveWorkerInformation fetch existing error:", fetchError)
     throw fetchError
   }
 
-  // 2) If exists -> UPDATE; otherwise -> INSERT
+  const existing = existingRows && existingRows.length > 0 ? existingRows[0] : null
+
   if (existing?.id) {
     const { data, error } = await supabase
       .from("worker_information")
       .update(baseData)
       .eq("id", existing.id)
       .select()
-      .maybeSingle()
+      .limit(1)
 
     if (error) {
       console.error("saveWorkerInformation update error:", error)
       throw error
     }
 
-    return data
+    return data && data.length > 0 ? data[0] : null
   } else {
     const { data, error } = await supabase
       .from("worker_information")
       .insert(baseData)
       .select()
-      .maybeSingle()
+      .limit(1)
 
     if (error) {
       console.error("saveWorkerInformation insert error:", error)
       throw error
     }
 
-    return data
+    return data && data.length > 0 ? data[0] : null
   }
 }
 
 /* ──────────────────────────────────────────────
- * STEP 2: Work Information
- * Table: worker_work_information  (adjust name if needed)
+ * STEP 2: Work Information (AsyncStorage only)
  * ──────────────────────────────────────────────*/
 
 export interface WorkerWorkInformationPayload {
@@ -112,73 +124,155 @@ export interface WorkerWorkInformationPayload {
 }
 
 export async function getWorkerWorkInformationByAuthUid(authUid: string) {
-  const { data, error } = await supabase
-    .from("worker_work_information")
-    .select("*")
-    .eq("auth_uid", authUid)
-    .maybeSingle()
-
-  if (error) {
-    console.error("getWorkerWorkInformationByAuthUid error:", error)
-    throw error
+  try {
+    const raw = await AsyncStorage.getItem(keyWorkInfo(authUid))
+    if (!raw) return null
+    return JSON.parse(raw) as WorkerWorkInformationPayload
+  } catch (error) {
+    console.error(
+      "getWorkerWorkInformationByAuthUid (AsyncStorage) error:",
+      error,
+    )
+    return null
   }
-
-  return data
 }
 
 export async function saveWorkerWorkInformation(
   authUid: string,
   payload: WorkerWorkInformationPayload,
 ) {
-  const baseData: any = {
+  try {
+    await AsyncStorage.setItem(keyWorkInfo(authUid), JSON.stringify(payload))
+  } catch (error) {
+    console.error("saveWorkerWorkInformation (AsyncStorage) error:", error)
+  }
+
+  return {
     auth_uid: authUid,
-    service_carpenter: payload.service_carpenter,
-    service_electrician: payload.service_electrician,
-    service_plumber: payload.service_plumber,
-    service_carwasher: payload.service_carwasher,
-    service_laundry: payload.service_laundry,
-    description: payload.description,
-    years_experience: payload.years_experience,
-    has_own_tools: payload.has_own_tools,
+    ...payload,
+  }
+}
+
+/* ──────────────────────────────────────────────
+ * STEP 3: Required Documents (AsyncStorage only)
+ * ──────────────────────────────────────────────*/
+
+export interface WorkerRequiredDocumentsPayload {
+  primary_id_front_url: string | null
+  primary_id_back_url: string | null
+  secondary_id_url: string | null
+  nbi_clearance_url: string | null
+  proof_of_address_url: string | null
+  medical_certificate_url: string | null
+  certificates_url: string | null
+}
+
+export async function getWorkerRequiredDocumentsByAuthUid(authUid: string) {
+  try {
+    const raw = await AsyncStorage.getItem(keyDocs(authUid))
+    if (!raw) return null
+    return JSON.parse(raw) as WorkerRequiredDocumentsPayload
+  } catch (error) {
+    console.error(
+      "getWorkerRequiredDocumentsByAuthUid (AsyncStorage) error:",
+      error,
+    )
+    return null
+  }
+}
+
+export async function saveWorkerRequiredDocuments(
+  authUid: string,
+  payload: WorkerRequiredDocumentsPayload,
+) {
+  try {
+    await AsyncStorage.setItem(keyDocs(authUid), JSON.stringify(payload))
+  } catch (error) {
+    console.error("saveWorkerRequiredDocuments (AsyncStorage) error:", error)
   }
 
-  const { data: existing, error: fetchError } = await supabase
-    .from("worker_work_information")
-    .select("id")
-    .eq("auth_uid", authUid)
-    .maybeSingle()
+  return {
+    auth_uid: authUid,
+    ...payload,
+  }
+}
 
-  if (fetchError) {
-    console.error("saveWorkerWorkInformation fetch existing error:", fetchError)
-    throw fetchError
+/* ──────────────────────────────────────────────
+ * STEP 4: Service Rate (AsyncStorage only)
+ * ──────────────────────────────────────────────*/
+
+export type WorkerRateType = "hourly" | "job"
+
+export interface WorkerRatePayload {
+  rate_type: WorkerRateType
+  hourly_min_rate: number | null
+  hourly_max_rate: number | null
+  job_rate: number | null
+}
+
+export async function getWorkerRateByAuthUid(authUid: string) {
+  try {
+    const raw = await AsyncStorage.getItem(keyRate(authUid))
+    if (!raw) return null
+    return JSON.parse(raw) as WorkerRatePayload
+  } catch (error) {
+    console.error("getWorkerRateByAuthUid (AsyncStorage) error:", error)
+    return null
+  }
+}
+
+export async function saveWorkerRate(
+  authUid: string,
+  payload: WorkerRatePayload,
+) {
+  try {
+    await AsyncStorage.setItem(keyRate(authUid), JSON.stringify(payload))
+  } catch (error) {
+    console.error("saveWorkerRate (AsyncStorage) error:", error)
   }
 
-  if (existing?.id) {
-    const { data, error } = await supabase
-      .from("worker_work_information")
-      .update(baseData)
-      .eq("id", existing.id)
-      .select()
-      .maybeSingle()
+  return {
+    auth_uid: authUid,
+    ...payload,
+  }
+}
 
-    if (error) {
-      console.error("saveWorkerWorkInformation update error:", error)
-      throw error
-    }
+/* ──────────────────────────────────────────────
+ * STEP 5: Terms & Agreements (AsyncStorage only)
+ * ──────────────────────────────────────────────*/
 
-    return data
-  } else {
-    const { data, error } = await supabase
-      .from("worker_work_information")
-      .insert(baseData)
-      .select()
-      .maybeSingle()
+export interface WorkerAgreementsPayload {
+  consent_background_check: boolean
+  agree_terms_privacy: boolean
+  consent_data_privacy: boolean
+}
 
-    if (error) {
-      console.error("saveWorkerWorkInformation insert error:", error)
-      throw error
-    }
+export async function getWorkerAgreementsByAuthUid(authUid: string) {
+  try {
+    const raw = await AsyncStorage.getItem(keyAgreements(authUid))
+    if (!raw) return null
+    return JSON.parse(raw) as WorkerAgreementsPayload
+  } catch (error) {
+    console.error(
+      "getWorkerAgreementsByAuthUid (AsyncStorage) error:",
+      error,
+    )
+    return null
+  }
+}
 
-    return data
+export async function saveWorkerAgreements(
+  authUid: string,
+  payload: WorkerAgreementsPayload,
+) {
+  try {
+    await AsyncStorage.setItem(keyAgreements(authUid), JSON.stringify(payload))
+  } catch (error) {
+    console.error("saveWorkerAgreements (AsyncStorage) error:", error)
+  }
+
+  return {
+    auth_uid: authUid,
+    ...payload,
   }
 }

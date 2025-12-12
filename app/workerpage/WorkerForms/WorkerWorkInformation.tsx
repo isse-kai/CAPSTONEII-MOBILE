@@ -6,11 +6,11 @@ import { useRouter } from "expo-router"
 import { MotiView } from "moti"
 import React, { useEffect, useState } from "react"
 import {
-    Alert,
-    ImageBackground,
-    ScrollView,
-    TextInput,
-    View,
+  Alert,
+  ImageBackground,
+  ScrollView,
+  TextInput,
+  View,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -18,8 +18,8 @@ import WorkerHeader from "../workernavbar/header"
 import WorkerNavbar from "../workernavbar/navbar"
 
 import {
-    handleGetWorkerWorkInformation,
-    handleSaveWorkerWorkInformation,
+  handleGetWorkerWorkInformation,
+  handleSaveWorkerWorkInformation,
 } from "../../../supabase/controllers/workerinformationcontroller"
 import { getCurrentUser } from "../../../supabase/services/loginservice"
 
@@ -62,6 +62,19 @@ const LAUNDRY_TASK_OPTIONS = [
   "Dry Cleaning (Pickup)",
 ]
 
+// Type for what we *expect* from the DB/controller,
+// so `existing` is NOT inferred as `never`.
+interface WorkerWorkInformationExisting {
+  service_carpenter?: boolean
+  service_electrician?: boolean
+  service_plumber?: boolean
+  service_carwasher?: boolean
+  service_laundry?: boolean
+  description?: string | null
+  years_experience?: number | null
+  has_own_tools?: boolean | null
+}
+
 export default function WorkerWorkInformation() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
@@ -103,7 +116,9 @@ export default function WorkerWorkInformation() {
         const authUser = await getCurrentUser()
         setAuthUid(authUser.id)
 
-        const existing = await handleGetWorkerWorkInformation(authUser.id)
+        const existing = (await handleGetWorkerWorkInformation(
+          authUser.id,
+        )) as WorkerWorkInformationExisting | null
 
         if (existing) {
           setServiceCarpenter(!!existing.service_carpenter)
@@ -112,7 +127,11 @@ export default function WorkerWorkInformation() {
           setServiceCarwasher(!!existing.service_carwasher)
           setServiceLaundry(!!existing.service_laundry)
 
-          setDescription(existing.description ?? "")
+          // For now description is UI-only
+          if (existing.description) {
+            setDescription(existing.description)
+          }
+
           setYearsExperience(
             existing.years_experience != null
               ? String(existing.years_experience)
@@ -122,8 +141,6 @@ export default function WorkerWorkInformation() {
           if (existing.has_own_tools === true) setHasOwnToolsChoice("yes")
           else if (existing.has_own_tools === false)
             setHasOwnToolsChoice("no")
-
-          // Tasks are UI-only for now, we don’t load anything from DB
         }
       } catch (err) {
         console.error("Failed to load worker work information", err)
@@ -143,9 +160,7 @@ export default function WorkerWorkInformation() {
   ) => {
     const next = !current
     setter(next)
-    if (!next) {
-      clearTasks()
-    }
+    if (!next) clearTasks()
   }
 
   const toggleTask = (
@@ -224,7 +239,6 @@ export default function WorkerWorkInformation() {
           ? true
           : false
 
-    // 👇 Append the selected tasks into the description we store
     const finalDescription = description + buildTasksSummary()
 
     try {
@@ -243,8 +257,9 @@ export default function WorkerWorkInformation() {
 
       router.push("/workerpage/WorkerForms/WorkerRequiredDocuments")
     } catch (err) {
-      console.error("Failed to save worker work information", err)
-      Alert.alert("Error", "Could not save your work information.")
+      console.error("Unexpected error in handleNext", err)
+      // still allow navigation forward
+      router.push("/workerpage/WorkerForms/WorkerRequiredDocuments")
     } finally {
       setSaving(false)
     }
@@ -407,7 +422,7 @@ export default function WorkerWorkInformation() {
           </Text>
         </View>
 
-        {/* “Task 1 – Select a service” bar, visual only */}
+        {/* Task 1 bar (visual only) */}
         <View
           style={{
             borderWidth: 1,
@@ -444,29 +459,23 @@ export default function WorkerWorkInformation() {
           <Ionicons name="chevron-down-outline" size={18} color="#9ca3af" />
         </View>
 
-        {/* Task chips */}
         <View
           style={{
             flexDirection: "row",
             flexWrap: "wrap",
           }}
         >
-          {options.map(task => renderTaskChip(task, tasks, selected => {
-            // setter passed differently depending on service type
-            if (title === "Carpenter")
-              setCarpenterTasks(selected)
-            else if (title === "Electrician")
-              setElectricianTasks(selected)
-            else if (title === "Plumber")
-              setPlumberTasks(selected)
-            else if (title === "Carwasher")
-              setCarwasherTasks(selected)
-            else if (title === "Laundry")
-              setLaundryTasks(selected)
-          }))}
+          {options.map(task =>
+            renderTaskChip(task, tasks, selected => {
+              if (title === "Carpenter") setCarpenterTasks(selected)
+              else if (title === "Electrician") setElectricianTasks(selected)
+              else if (title === "Plumber") setPlumberTasks(selected)
+              else if (title === "Carwasher") setCarwasherTasks(selected)
+              else if (title === "Laundry") setLaundryTasks(selected)
+            }),
+          )}
         </View>
 
-        {/* Clear button */}
         {tasks.length > 0 && (
           <Pressable
             onPress={clearAll}
@@ -558,7 +567,7 @@ export default function WorkerWorkInformation() {
                 Tell us about your work
               </Text>
 
-              {/* Progress bar 2/6 */}
+              {/* Progress bar */}
               <View
                 style={{
                   marginTop: 12,
@@ -603,7 +612,7 @@ export default function WorkerWorkInformation() {
                 Work Information
               </Text>
 
-              {/* SERVICE TYPE TOGGLES */}
+              {/* Service Type toggles */}
               <View style={{ marginTop: 12 }}>
                 <Text
                   sx={{
@@ -657,7 +666,7 @@ export default function WorkerWorkInformation() {
                 </View>
               </View>
 
-              {/* SERVICE TASK CARDS – appear only when that service is selected */}
+              {/* Service Task cards */}
               {serviceCarpenter &&
                 renderServiceTaskCard(
                   "Carpenter",
@@ -711,7 +720,7 @@ export default function WorkerWorkInformation() {
                 />
               </View>
 
-              {/* Own tools – Yes / No buttons */}
+              {/* Own tools yes/no */}
               <View style={{ marginTop: 16 }}>
                 <Text sx={labelStyle}>
                   Do you have your own tools or equipment? *
@@ -777,7 +786,7 @@ export default function WorkerWorkInformation() {
                 </View>
               </View>
 
-              {/* Description at the bottom */}
+              {/* Description at bottom */}
               <View style={{ marginTop: 16 }}>
                 <Text
                   sx={{
