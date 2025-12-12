@@ -41,7 +41,7 @@ export type ClientRequest = {
   category?: string
   service_type: string
   service_task: string
-  description: string
+  service_description: string
   preferred_date: string
   preferred_time: string
   is_urgent: boolean | string
@@ -61,14 +61,25 @@ export type ClientCancelRequest = {
   auth_uid: string
 }
 
-export type ClientServiceRate = {
+export type ClientServiceRates = {
   request_group_id?: string
   client_id: string
   auth_uid: string
   email_address: string
-  rate_type: string
+  rate_type: "hour" | "job"
   rate_from?: number
   rate_to?: number
   rate_value: number
+  created_at?: string
+}
+
+export type ClientTermsAgreements = {
+  request_group_id?: string
+  client_id: string
+  auth_uid: string
+  email_address: string
+  consent_background_checks: boolean
+  consent_data_privacy: boolean
+  consent_terms_privacy: boolean
   created_at?: string
 }

@@ -91,7 +91,6 @@ export default function ClientRequest2() {
     "Poppins-Bold": require("../../../assets/fonts/Poppins/Poppins-Bold.ttf"),
   })
 
-  // form state
   const [serviceType, setServiceType] = useState("")
   const [serviceTask, setServiceTask] = useState("")
   const [date, setDate] = useState("")
@@ -103,8 +102,7 @@ export default function ClientRequest2() {
 
   const currentTasks = SERVICE_TASKS[serviceType] ?? []
 
-  // add state for clientId and email
-  const [clientId, setClientId] = useState("")
+  const [clientId, setClientId] = useState<string | null>(null)
   const [email, setEmail] = useState("")
 
   const choosePhoto = async () => {
@@ -129,7 +127,7 @@ export default function ClientRequest2() {
     setShowDatePicker(false)
     if (selectedDate) {
       setDateObj(selectedDate)
-      setDate(selectedDate.toLocaleDateString("en-GB"))
+      setDate(selectedDate.toISOString().split("T")[0])
     }
   }
 
@@ -137,27 +135,19 @@ export default function ClientRequest2() {
     setShowTimePicker(false)
     if (selectedTime) {
       setTimeObj(selectedTime)
-      setTime(
-        selectedTime.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      )
+      setTime(selectedTime.toTimeString().split(" ")[0])
     }
   }
 
-
   useEffect(() => {
     (async () => {
-      // load step1 values
       const rawStep1 = await AsyncStorage.getItem("request_step1")
       if (rawStep1) {
         const v1 = JSON.parse(rawStep1)
-        setClientId(v1.client_id ?? "")
+        setClientId(v1.client_id ? String(v1.client_id) : null)
         setEmail(v1.email_address ?? "")
       }
 
-      // load step2 values
       const rawStep2 = await AsyncStorage.getItem(STORAGE_KEY)
       if (rawStep2) {
         const v2 = JSON.parse(rawStep2)
@@ -199,23 +189,21 @@ export default function ClientRequest2() {
       }
       const authUid = user.id
 
-      // ✅ Save request to backend
       await saveClientRequest({
-        client_id: clientId,
+        client_id: clientId!,
         auth_uid: authUid,
         email_address: email,
-        category: "General",
         service_type: serviceType,
         service_task: serviceTask,
         preferred_date: date,
         preferred_time: time,
         tools_provided: toolsProvided,
         is_urgent: urgent === "Yes",
-        description: desc,
+        service_description: desc,
         request_image_url: photo ?? null,
       })
 
-      router.push("./clientforms/request3")
+      router.push("./request3")
     } catch (err) {
       console.error("Error saving request:", err)
     }
