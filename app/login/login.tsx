@@ -50,7 +50,7 @@ export default function Login() {
       if (role === 'client') {
         router.push('/clientpage/home')
       } else {
-        router.push('/workerpage/workerhome')
+        router.push('/workerpage/home')
       }
     } catch (err: any) {
       Alert.alert('Login Failed', err.message)
