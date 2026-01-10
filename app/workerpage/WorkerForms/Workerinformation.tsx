@@ -1,6 +1,6 @@
 // app/workerpage/WorkerForms/Workerinformation.tsx
 import { Ionicons } from "@expo/vector-icons"
-import { Picker } from "@react-native-picker/picker"
+// import { Picker } from "@react-native-picker/picker" // REMOVED
 import { Pressable, Text } from "dripsy"
 import { useFonts } from "expo-font"
 import * as ImagePicker from "expo-image-picker"
@@ -24,7 +24,6 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import WorkerHeader from "../workernavbar/header"
 import WorkerNavbar from "../workernavbar/navbar"
 
-// Step 1 controller
 import {
   handleGetWorkerInformation,
   handleSaveWorkerInformation,
@@ -118,12 +117,19 @@ export default function WorkerInformation() {
   const [age, setAge] = useState("")
   const [contactNumber, setContactNumber] = useState("")
   const [emailAddress, setEmailAddress] = useState("")
-  const [barangay, setBarangay] = useState("")
+  const [barangay, setBarangay] = useState<string | null>(null)
   const [street, setStreet] = useState("")
   const [profileImageUri, setProfileImageUri] = useState<string | null>(null)
 
   const [showDobPicker, setShowDobPicker] = useState(false)
   const [showBarangayPicker, setShowBarangayPicker] = useState(false)
+
+  // Optional: search/filter inside barangay modal
+  const [barangaySearch, setBarangaySearch] = useState("")
+
+  const filteredBarangays = BACOLOD_BARANGAYS.filter(name =>
+    name.toLowerCase().includes(barangaySearch.toLowerCase()),
+  )
 
   useEffect(() => {
     const load = async () => {
@@ -180,7 +186,9 @@ export default function WorkerInformation() {
           setAge(String(srcAge))
         }
 
-        setBarangay(workerInfo?.barangay ?? "")
+        const infoBarangay = workerInfo?.barangay ?? ""
+        setBarangay(infoBarangay || null)
+
         setStreet(workerInfo?.street ?? workerInfo?.address ?? "")
 
         setProfileImageUri(workerInfo?.profile_picture_url ?? null)
@@ -229,9 +237,9 @@ export default function WorkerInformation() {
     setAge(computedAge.toString())
   }
 
-  const handleSelectBarangay = (value: string | number) => {
-    const val = String(value)
-    setBarangay(val)
+  // Alternative barangay selection: simple list
+  const handleSelectBarangay = (name: string) => {
+    setBarangay(name)
     setShowBarangayPicker(false)
   }
 
@@ -256,7 +264,7 @@ export default function WorkerInformation() {
       await handleSaveWorkerInformation(authUid, {
         first_name: firstName,
         last_name: lastName,
-        birthdate: dob || null, // UI only, service ignores for DB
+        birthdate: dob || null,
         age: age ? Number(age) : null,
         contact_number: contactNumber,
         email_address: emailAddress,
@@ -448,8 +456,12 @@ export default function WorkerInformation() {
                   <Text sx={labelStyle}>First Name</Text>
                   <TextInput
                     value={firstName}
-                    onChangeText={setFirstName}
-                    style={inputStyle}
+                    editable={false}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#e5e7eb",
+                      color: "#4b5563",
+                    }}
                     placeholder="First Name"
                     placeholderTextColor="#9ca3af"
                   />
@@ -458,8 +470,12 @@ export default function WorkerInformation() {
                   <Text sx={labelStyle}>Last Name</Text>
                   <TextInput
                     value={lastName}
-                    onChangeText={setLastName}
-                    style={inputStyle}
+                    editable={false}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#e5e7eb",
+                      color: "#4b5563",
+                    }}
                     placeholder="Last Name"
                     placeholderTextColor="#9ca3af"
                   />
@@ -477,22 +493,23 @@ export default function WorkerInformation() {
                 <View style={{ flex: 1 }}>
                   <Text sx={labelStyle}>Birthdate</Text>
                   <Pressable
-                    onPress={() => setShowDobPicker(true)}
+                    disabled
                     style={{
                       ...inputStyle,
                       flexDirection: "row",
                       justifyContent: "space-between",
                       alignItems: "center",
+                      backgroundColor: "#e5e7eb",
                     }}
                   >
                     <Text
                       sx={{
                         fontSize: 14,
                         fontFamily: "Poppins-Regular",
-                        color: dob ? "#111827" : "#9ca3af",
+                        color: dob ? "#4b5563" : "#9ca3af",
                       }}
                     >
-                      {dob || "Select birthdate"}
+                      {dob || "No birthdate"}
                     </Text>
                     <Ionicons
                       name="calendar-outline"
@@ -533,7 +550,7 @@ export default function WorkerInformation() {
                       borderWidth: 1,
                       borderColor: "#d1d5db",
                       borderRadius: 10,
-                      backgroundColor: "#f9fafb",
+                      backgroundColor: "#e5e7eb",
                       paddingHorizontal: 10,
                       paddingVertical: 8,
                     }}
@@ -543,6 +560,7 @@ export default function WorkerInformation() {
                         fontSize: 14,
                         fontFamily: "Poppins-Regular",
                         mr: 8,
+                        color: "#4b5563",
                       }}
                     >
                       🇵🇭 +63
@@ -557,7 +575,7 @@ export default function WorkerInformation() {
                     />
                     <TextInput
                       value={contactNumber}
-                      onChangeText={setContactNumber}
+                      editable={false}
                       keyboardType="number-pad"
                       placeholder="9xxxxxxxxx"
                       placeholderTextColor="#9ca3af"
@@ -565,6 +583,7 @@ export default function WorkerInformation() {
                         flex: 1,
                         fontSize: 14,
                         fontFamily: "Poppins-Regular",
+                        color: "#4b5563",
                       }}
                     />
                   </View>
@@ -574,10 +593,14 @@ export default function WorkerInformation() {
                   <Text sx={labelStyle}>Email Address</Text>
                   <TextInput
                     value={emailAddress}
-                    onChangeText={setEmailAddress}
+                    editable={false}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    style={inputStyle}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#e5e7eb",
+                      color: "#4b5563",
+                    }}
                     placeholder="Email"
                     placeholderTextColor="#9ca3af"
                   />
@@ -592,11 +615,14 @@ export default function WorkerInformation() {
                   marginBottom: 10,
                 }}
               >
-                {/* Barangay field opens modal */}
+                {/* Barangay field opens custom modal list */}
                 <View style={{ flex: 1 }}>
                   <Text sx={labelStyle}>Barangay</Text>
                   <Pressable
-                    onPress={() => setShowBarangayPicker(true)}
+                    onPress={() => {
+                      setBarangaySearch("")
+                      setShowBarangayPicker(true)
+                    }}
                     style={{
                       ...inputStyle,
                       flexDirection: "row",
@@ -610,6 +636,7 @@ export default function WorkerInformation() {
                         fontFamily: "Poppins-Regular",
                         color: barangay ? "#111827" : "#9ca3af",
                       }}
+                      numberOfLines={1}
                     >
                       {barangay || "Select Barangay"}
                     </Text>
@@ -775,7 +802,7 @@ export default function WorkerInformation() {
           </MotiView>
         </ScrollView>
 
-        {/* DOB picker */}
+        {/* DOB picker (kept, but birthdate field is read-only now) */}
         <DateTimePickerModal
           isVisible={showDobPicker}
           mode="date"
@@ -784,7 +811,7 @@ export default function WorkerInformation() {
           onCancel={() => setShowDobPicker(false)}
         />
 
-        {/* Barangay picker modal */}
+        {/* Barangay picker modal – custom list instead of <Picker> */}
         <Modal
           visible={showBarangayPicker}
           transparent
@@ -804,6 +831,7 @@ export default function WorkerInformation() {
                 borderTopLeftRadius: 16,
                 borderTopRightRadius: 16,
                 paddingBottom: insets.bottom || 16,
+                maxHeight: "70%",
               }}
             >
               {/* Header actions */}
@@ -814,7 +842,7 @@ export default function WorkerInformation() {
                   alignItems: "center",
                   paddingHorizontal: 16,
                   paddingTop: 12,
-                  paddingBottom: 4,
+                  paddingBottom: 8,
                   borderBottomWidth: 1,
                   borderBottomColor: "#e5e7eb",
                 }}
@@ -839,37 +867,96 @@ export default function WorkerInformation() {
                 >
                   Select Barangay
                 </Text>
-                <Pressable onPress={() => setShowBarangayPicker(false)}>
-                  <Text
-                    sx={{
-                      fontSize: 14,
-                      fontFamily: "Poppins-Bold",
-                      color: "#008CFC",
-                    }}
-                  >
-                    Done
-                  </Text>
-                </Pressable>
+                {/* spacer to balance header */}
+                <View style={{ width: 50 }} />
               </View>
 
-              {/* Picker body */}
+              {/* Search input */}
               <View
                 style={{
                   paddingHorizontal: 16,
-                  paddingVertical: 8,
+                  paddingTop: 8,
+                  paddingBottom: 4,
                 }}
               >
-                <Picker
-                  selectedValue={barangay}
-                  onValueChange={handleSelectBarangay}
-                  style={{ width: "100%" }}
-                >
-                  <Picker.Item label="Select Barangay" value="" />
-                  {BACOLOD_BARANGAYS.map(name => (
-                    <Picker.Item key={name} label={name} value={name} />
-                  ))}
-                </Picker>
+                <TextInput
+                  value={barangaySearch}
+                  onChangeText={setBarangaySearch}
+                  placeholder="Search barangay..."
+                  placeholderTextColor="#9ca3af"
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "#d1d5db",
+                    borderRadius: 10,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    fontSize: 14,
+                    fontFamily: "Poppins-Regular",
+                    color: "#111827",
+                  }}
+                />
               </View>
+
+              {/* List of barangays */}
+              <ScrollView
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 4,
+                }}
+              >
+                {filteredBarangays.map(name => {
+                  const selected = barangay === name
+                  return (
+                    <Pressable
+                      key={name}
+                      onPress={() => handleSelectBarangay(name)}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        paddingVertical: 10,
+                        borderBottomWidth: 1,
+                        borderBottomColor: "#e5e7eb",
+                      }}
+                    >
+                      <Text
+                        sx={{
+                          fontSize: 14,
+                          fontFamily: "Poppins-Regular",
+                          color: "#111827",
+                        }}
+                      >
+                        {name}
+                      </Text>
+                      {selected && (
+                        <Ionicons
+                          name="checkmark"
+                          size={18}
+                          color="#008CFC"
+                        />
+                      )}
+                    </Pressable>
+                  )
+                })}
+                {filteredBarangays.length === 0 && (
+                  <View
+                    style={{
+                      paddingVertical: 16,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text
+                      sx={{
+                        fontSize: 14,
+                        fontFamily: "Poppins-Regular",
+                        color: "#6b7280",
+                      }}
+                    >
+                      No barangays found.
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
             </View>
           </View>
         </Modal>

@@ -5,13 +5,13 @@ import { useRouter } from "expo-router"
 import { MotiView } from "moti"
 import React, { useMemo, useState } from "react"
 import {
-  Image,
-  ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
+    Image,
+    ImageBackground,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    TextInput,
+    TouchableOpacity,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { resendSignupEmail, signupClient, verifyEmailOtp } from "../../supabase/services/signupservice"
@@ -151,25 +151,25 @@ export default function ClientSignup() {
 
               {/* Back Button */}
                 <View style={{ position: "relative", marginBottom: 6 }}>
-                  <TouchableOpacity
+                <TouchableOpacity
                     onPress={() => router.push("../login/login")}
                     style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      paddingVertical: 6,
-                      paddingHorizontal: 6,
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingVertical: 6,
+                    paddingHorizontal: 6,
                     }}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  >
+                >
                     <Ionicons name="chevron-back" size={22} color="#111" />
                     <Text sx={{ fontSize: 14, fontFamily: "Poppins-Bold", color: "#111" }}>Back</Text>
-                  </TouchableOpacity>
+                </TouchableOpacity>
 
-                  {/* Spacer so title doesn't overlap the back button */}
-                  <View style={{ height: 28 }} />
+                {/* Spacer so title doesn't overlap the back button */}
+                <View style={{ height: 28 }} />
                 </View>
 
               {/* Signup Form Card */}
@@ -189,7 +189,7 @@ export default function ClientSignup() {
                   <Text sx={{ fontSize: 20, fontFamily: "Poppins-ExtraBold", color: "#000000" }}>
                     Sign Up as{" "}
                     <Text sx={{ fontSize: 20, fontFamily: "Poppins-ExtraBold", color: "#008CFC" }}>
-                      Client
+                      Worker
                     </Text>
                   </Text>
                 </View>
@@ -321,7 +321,7 @@ export default function ClientSignup() {
                   </Pressable>
                 </View>
 
-                {/* ✅ Legal Agreements Section */}
+                {/* ✅ Legal Agreements Section (component-based, minimal lines here) */}
                 <LegalAgreementsSection docs={LEGAL_DOCS} onAllAgreedChange={setIsAgreedToTerms} />
 
                 {/* Error Message */}

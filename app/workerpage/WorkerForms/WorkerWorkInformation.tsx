@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react"
 import {
   Alert,
   ImageBackground,
+  Modal,
   ScrollView,
   TextInput,
   View,
@@ -23,47 +24,70 @@ import {
 } from "../../../supabase/controllers/workerinformationcontroller"
 import { getCurrentUser } from "../../../supabase/services/loginservice"
 
-// ----- Task options per service type -----
+// ----- Task options per service type (with prices) -----
 const CARPENTER_TASK_OPTIONS = [
-  "General Carpentry",
-  "Furniture Repair",
-  "Wood Polishing",
-  "Door & Window Fitting",
-  "Custom Furniture Design",
-  "Modular Kitchen Installation",
-  "Flooring & Decking",
-  "Cabinet & Wardrobe Fixing",
-  "Wall Paneling & False Ceiling",
+  "General Carpentry – ₱500–₱1,000 per job",
+  "Door Repair / Alignment – ₱500–₱1,200",
+  "Window Repair / Installation – ₱600–₱1,500",
+  "Furniture Repair – ₱700–₱2,000",
+  "Wood Polishing / Revarnish – ₱800–₱2,500",
+  "Custom Shelves / Cabinets – ₱2,000–₱5,000",
+  "Modular Kitchen Installation – ₱5,000+ per project",
+  "Flooring / Decking – ₱250–₱450 per sq.m.",
+  "Wall Paneling / False Ceiling – ₱350–₱600 per sq.m.",
+  "Partition Wall (Drywall / Plyboard) – ₱400–₱700 per sq.m.",
+  "Roof Framing / Trusses – ₱4,000–₱10,000+ per project",
 ]
 
 const ELECTRICIAN_TASK_OPTIONS = [
-  "House Wiring",
-  "Lighting Installation",
-  "Outlet & Switch Repair",
-  "Circuit Breaker Setup",
+  "Basic Check-up & Minor Repair – ₱400–₱800",
+  "Outlet & Switch Repair – ₱400–₱900",
+  "New Outlet / Switch Installation – ₱500–₱1,000",
+  "Lighting Installation (per light) – ₱300–₱800",
+  "Ceiling Fan Installation – ₱600–₱1,200",
+  "House Wiring (per room) – ₱1,500–₱3,500",
+  "Circuit Breaker / Panel Setup – ₱2,500–₱6,000",
+  "Appliance Wiring / Hook-up – ₱500–₱1,500",
+  "Emergency Power Check (Brownout issues) – ₱500–₱1,200",
+  "Grounding / Earthing Installation – ₱1,500–₱3,000",
 ]
 
 const PLUMBER_TASK_OPTIONS = [
-  "Leak Repair",
-  "Pipe Installation",
-  "Toilet & Sink Repair",
-  "Water Heater Installation",
+  "Leak Repair – ₱400–₱900",
+  "Clogged Drain / Toilet – ₱500–₱1,200",
+  "Pipe Installation / Replacement – ₱1,500–₱4,000",
+  "Toilet & Sink Installation – ₱1,500–₱3,000",
+  "Faucet / Shower Replacement – ₱500–₱1,200",
+  "Water Heater Installation – ₱2,000–₱4,000",
+  "Water Line Check-up – ₱400–₱800",
+  "Septic Tank Check / Basic Service – ₱2,000–₱4,000",
+  "Outdoor Faucet / Garden Line Setup – ₱800–₱2,000",
 ]
 
 const CARWASHER_TASK_OPTIONS = [
-  "Basic Car Wash",
-  "Interior Detailing",
-  "Engine Wash",
+  "Sedan – Basic Wash – ₱150–₱250",
+  "Sedan – Wash + Vacuum – ₱250–₱400",
+  "SUV / MPV – Basic Wash – ₱200–₱300",
+  "SUV / MPV – Wash + Vacuum – ₱300–₱500",
+  "Engine Wash – ₱300–₱600",
+  "Interior Detailing – ₱800–₱2,000",
+  "Full Detailing Package – ₱1,500–₱3,500",
+  "Motorcycle Wash – ₱80–₱150",
+  "Ceramic Coating / Wax – ₱1,500–₱4,000",
 ]
 
 const LAUNDRY_TASK_OPTIONS = [
-  "Wash & Fold",
-  "Ironing",
-  "Dry Cleaning (Pickup)",
+  "Wash & Fold – Regular Clothes – ₱40–₱60/kg",
+  "Wash, Dry & Iron – ₱60–₱80/kg",
+  "Bedsheets / Curtains – ₱80–₱120/kg",
+  "Blankets / Comforters – ₱150–₱250 per piece",
+  "Delicate / Special Fabrics – ₱80–₱120/kg",
+  "Uniforms / Office Attire – ₱60–₱90/kg",
+  "Pickup & Delivery Service – add ₱50–₱150",
+  "Express Service (Same Day) – add ₱50–₱100",
 ]
 
-// Type for what we *expect* from the DB/controller,
-// so `existing` is NOT inferred as `never`.
+// Type for what we *expect* from the DB/controller
 interface WorkerWorkInformationExisting {
   service_carpenter?: boolean
   service_electrician?: boolean
@@ -73,6 +97,49 @@ interface WorkerWorkInformationExisting {
   description?: string | null
   years_experience?: number | null
   has_own_tools?: boolean | null
+}
+
+const SUMMARY_MARKER = "Selected services (with price ranges):"
+
+/**
+ * Remove any previously appended service-summary text from the description.
+ * Handles:
+ *  - Our new marker line "Selected services (with price ranges):"
+ *  - Older data that may already contain "Carpenter:", "Electrician:", etc.
+ */
+const cleanDescriptionFromSummary = (raw: string | null | undefined): string => {
+  if (!raw) return ""
+
+  let text = raw
+
+  // Case 1: we already have the explicit marker
+  const idx = text.indexOf(SUMMARY_MARKER)
+  if (idx !== -1) {
+    text = text.slice(0, idx)
+  }
+
+  // Case 2: older data that appended lines like "Carpenter: ..."
+  const lines = text.split("\n")
+  const filtered: string[] = []
+
+  for (const line of lines) {
+    const t = line.trim()
+    if (!t) {
+      filtered.push(line)
+      continue
+    }
+
+    if (t.startsWith("Selected services")) continue
+    if (t.startsWith("Carpenter:")) continue
+    if (t.startsWith("Electrician:")) continue
+    if (t.startsWith("Plumber:")) continue
+    if (t.startsWith("Carwasher:")) continue
+    if (t.startsWith("Laundry:")) continue
+
+    filtered.push(line)
+  }
+
+  return filtered.join("\n").trimEnd()
 }
 
 export default function WorkerWorkInformation() {
@@ -96,12 +163,24 @@ export default function WorkerWorkInformation() {
   const [serviceCarwasher, setServiceCarwasher] = useState(false)
   const [serviceLaundry, setServiceLaundry] = useState(false)
 
-  // Task selections per service type
+  // Selected services per service type
   const [carpenterTasks, setCarpenterTasks] = useState<string[]>([])
   const [electricianTasks, setElectricianTasks] = useState<string[]>([])
   const [plumberTasks, setPlumberTasks] = useState<string[]>([])
   const [carwasherTasks, setCarwasherTasks] = useState<string[]>([])
   const [laundryTasks, setLaundryTasks] = useState<string[]>([])
+
+  // Dropdown (modal) visibility per service type
+  const [showCarpenterServicesModal, setShowCarpenterServicesModal] =
+    useState(false)
+  const [showElectricianServicesModal, setShowElectricianServicesModal] =
+    useState(false)
+  const [showPlumberServicesModal, setShowPlumberServicesModal] =
+    useState(false)
+  const [showCarwasherServicesModal, setShowCarwasherServicesModal] =
+    useState(false)
+  const [showLaundryServicesModal, setShowLaundryServicesModal] =
+    useState(false)
 
   // Other fields
   const [description, setDescription] = useState("")
@@ -127,9 +206,8 @@ export default function WorkerWorkInformation() {
           setServiceCarwasher(!!existing.service_carwasher)
           setServiceLaundry(!!existing.service_laundry)
 
-          // For now description is UI-only
           if (existing.description) {
-            setDescription(existing.description)
+            setDescription(cleanDescriptionFromSummary(existing.description))
           }
 
           setYearsExperience(
@@ -163,18 +241,6 @@ export default function WorkerWorkInformation() {
     if (!next) clearTasks()
   }
 
-  const toggleTask = (
-    task: string,
-    selected: string[],
-    setter: React.Dispatch<React.SetStateAction<string[]>>,
-  ) => {
-    if (selected.includes(task)) {
-      setter(selected.filter(t => t !== task))
-    } else {
-      setter([...selected, task])
-    }
-  }
-
   const anyServiceSelected =
     serviceCarpenter ||
     serviceElectrician ||
@@ -203,7 +269,7 @@ export default function WorkerWorkInformation() {
 
     if (!lines.length) return ""
 
-    return `\n\nSelected tasks:\n${lines.join("\n")}`
+    return `\n\n${SUMMARY_MARKER}:\n${lines.join("\n")}`
   }
 
   const handleNext = async () => {
@@ -218,6 +284,27 @@ export default function WorkerWorkInformation() {
       Alert.alert(
         "Missing details",
         "Please provide a short description of your service.",
+      )
+      return
+    }
+
+    // Optional: require at least one service per enabled type
+    const missingServices: string[] = []
+    if (serviceCarpenter && carpenterTasks.length === 0)
+      missingServices.push("Carpenter")
+    if (serviceElectrician && electricianTasks.length === 0)
+      missingServices.push("Electrician")
+    if (servicePlumber && plumberTasks.length === 0)
+      missingServices.push("Plumber")
+    if (serviceCarwasher && carwasherTasks.length === 0)
+      missingServices.push("Carwasher")
+    if (serviceLaundry && laundryTasks.length === 0)
+      missingServices.push("Laundry")
+
+    if (missingServices.length) {
+      Alert.alert(
+        "Missing services",
+        `Please select at least one service for: ${missingServices.join(", ")}`,
       )
       return
     }
@@ -239,7 +326,9 @@ export default function WorkerWorkInformation() {
           ? true
           : false
 
-    const finalDescription = description + buildTasksSummary()
+    // Always strip any old summary before appending a fresh one
+    const baseDescription = cleanDescriptionFromSummary(description)
+    const finalDescription = baseDescription + buildTasksSummary()
 
     try {
       setSaving(true)
@@ -258,7 +347,6 @@ export default function WorkerWorkInformation() {
       router.push("/workerpage/WorkerForms/WorkerRequiredDocuments")
     } catch (err) {
       console.error("Unexpected error in handleNext", err)
-      // still allow navigation forward
       router.push("/workerpage/WorkerForms/WorkerRequiredDocuments")
     } finally {
       setSaving(false)
@@ -339,54 +427,22 @@ export default function WorkerWorkInformation() {
     </Pressable>
   )
 
-  const renderTaskChip = (
-    task: string,
+  // Dropdown-like card for selecting services per type
+  const renderServiceDropdownCard = (
+    title:
+      | "Carpenter"
+      | "Electrician"
+      | "Plumber"
+      | "Carwasher"
+      | "Laundry",
     selected: string[],
-    setter: React.Dispatch<React.SetStateAction<string[]>>,
+    onOpen: () => void,
+    onClear: () => void,
   ) => {
-    const active = selected.includes(task)
-    return (
-      <Pressable
-        key={task}
-        onPress={() => toggleTask(task, selected, setter)}
-        sx={{
-          px: 14,
-          py: 8,
-          borderRadius: 999,
-          borderWidth: 1,
-          borderColor: active ? "#008CFC" : "#d1d5db",
-          bg: active ? "#008CFC" : "#ffffff",
-          mr: 8,
-          mb: 8,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text
-          sx={{
-            fontSize: 12,
-            fontFamily: "Poppins-Regular",
-            color: active ? "#ffffff" : "#111827",
-          }}
-        >
-          {task}
-        </Text>
-      </Pressable>
-    )
-  }
-
-  const renderServiceTaskCard = (
-    title: string,
-    tasks: string[],
-    options: string[],
-    clearAll: () => void,
-  ) => {
-    if (!options.length) return null
-
     return (
       <View
         style={{
-          marginTop: 16,
+          marginTop: 12,
           borderWidth: 1,
           borderColor: "#e5e7eb",
           borderRadius: 14,
@@ -418,67 +474,43 @@ export default function WorkerWorkInformation() {
               color: "#6b7280",
             }}
           >
-            {tasks.length} selected
+            {selected.length} selected
           </Text>
         </View>
 
-        {/* Task 1 bar (visual only) */}
-        <View
+        {/* Dropdown bar */}
+        <Pressable
+          onPress={onOpen}
           style={{
             borderWidth: 1,
-            borderColor: "#e5e7eb",
+            borderColor: "#d1d5db",
             borderRadius: 10,
+            paddingHorizontal: 12,
+            paddingVertical: 10,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingHorizontal: 12,
-            paddingVertical: 10,
-            marginBottom: 12,
           }}
         >
           <Text
-            sx={{
-              fontSize: 12,
-              fontFamily: "Poppins-Regular",
-              color: "#6b7280",
-            }}
-          >
-            Task 1
-          </Text>
-          <Text
-            sx={{
+            style={{
               flex: 1,
-              ml: 10,
               fontSize: 14,
               fontFamily: "Poppins-Regular",
-              color: "#9ca3af",
+              color: selected.length ? "#111827" : "#9ca3af",
             }}
+            numberOfLines={2}
           >
-            Select a service
+            {selected.length
+              ? selected.join(", ")
+              : "Select services (with price range)"}
           </Text>
-          <Ionicons name="chevron-down-outline" size={18} color="#9ca3af" />
-        </View>
+          <Ionicons name="chevron-down-outline" size={18} color="#6b7280" />
+        </Pressable>
 
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-          }}
-        >
-          {options.map(task =>
-            renderTaskChip(task, tasks, selected => {
-              if (title === "Carpenter") setCarpenterTasks(selected)
-              else if (title === "Electrician") setElectricianTasks(selected)
-              else if (title === "Plumber") setPlumberTasks(selected)
-              else if (title === "Carwasher") setCarwasherTasks(selected)
-              else if (title === "Laundry") setLaundryTasks(selected)
-            }),
-          )}
-        </View>
-
-        {tasks.length > 0 && (
+        {selected.length > 0 && (
           <Pressable
-            onPress={clearAll}
+            onPress={onClear}
             sx={{
               mt: 8,
               alignSelf: "flex-end",
@@ -493,11 +525,181 @@ export default function WorkerWorkInformation() {
                 color: "#ef4444",
               }}
             >
-              Clear {title}
+              Clear {title} services
             </Text>
           </Pressable>
         )}
       </View>
+    )
+  }
+
+  // Reusable modal for multi-selecting services (prices highlighted)
+  const TaskModal = ({
+    visible,
+    title,
+    options,
+    selected,
+    onClose,
+    onToggle,
+  }: {
+    visible: boolean
+    title: string
+    options: string[]
+    selected: string[]
+    onClose: () => void
+    onToggle: (value: string) => void
+  }) => {
+    if (!visible) return null
+    return (
+      <Modal
+        visible={visible}
+        transparent
+        animationType="slide"
+        onRequestClose={onClose}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            backgroundColor: "rgba(0,0,0,0.4)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderTopLeftRadius: 16,
+              borderTopRightRadius: 16,
+              paddingBottom: insets.bottom || 16,
+              maxHeight: "75%",
+            }}
+          >
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingTop: 12,
+                paddingBottom: 8,
+                borderBottomWidth: 1,
+                borderBottomColor: "#e5e7eb",
+              }}
+            >
+              <Pressable onPress={onClose}>
+                <Text
+                  sx={{
+                    fontSize: 14,
+                    fontFamily: "Poppins-Bold",
+                    color: "#6b7280",
+                  }}
+                >
+                  Cancel
+                </Text>
+              </Pressable>
+              <Text
+                sx={{
+                  fontSize: 16,
+                  fontFamily: "Poppins-Bold",
+                  color: "#111827",
+                }}
+              >
+                {title}
+              </Text>
+              <Pressable onPress={onClose}>
+                <Text
+                  sx={{
+                    fontSize: 14,
+                    fontFamily: "Poppins-Bold",
+                    color: "#008CFC",
+                  }}
+                >
+                  Done
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Options list */}
+            <ScrollView
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+              }}
+            >
+              {options.map(option => {
+                const isSelected = selected.includes(option)
+
+                // Split label and price so price is highlighted
+                const pesoIndex = option.indexOf("₱")
+                const hasPrice = pesoIndex !== -1
+                const labelPart = hasPrice
+                  ? option.slice(0, pesoIndex).trim()
+                  : option
+                const pricePart = hasPrice
+                  ? option.slice(pesoIndex).trim()
+                  : ""
+
+                return (
+                  <Pressable
+                    key={option}
+                    onPress={() => onToggle(option)}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      paddingVertical: 10,
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#e5e7eb",
+                    }}
+                  >
+                    <Text
+                      sx={{
+                        flex: 1,
+                        fontSize: 14,
+                        fontFamily: "Poppins-Regular",
+                        color: "#111827",
+                        mr: 8,
+                      }}
+                    >
+                      {hasPrice ? (
+                        <>
+                          <Text
+                            sx={{
+                              fontSize: 14,
+                              fontFamily: "Poppins-Regular",
+                              color: "#111827",
+                            }}
+                          >
+                            {labelPart}{" "}
+                          </Text>
+                          <Text
+                            sx={{
+                              fontSize: 14,
+                              fontFamily: "Poppins-Bold",
+                              color: "#008CFC",
+                            }}
+                          >
+                            {pricePart}
+                          </Text>
+                        </>
+                      ) : (
+                        option
+                      )}
+                    </Text>
+                    <Ionicons
+                      name={
+                        isSelected ? "checkbox-outline" : "square-outline"
+                      }
+                      size={20}
+                      color={isSelected ? "#008CFC" : "#6b7280"}
+                    />
+                  </Pressable>
+                )
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     )
   }
 
@@ -666,44 +868,44 @@ export default function WorkerWorkInformation() {
                 </View>
               </View>
 
-              {/* Service Task cards */}
+              {/* Service dropdown cards (per enabled service) */}
               {serviceCarpenter &&
-                renderServiceTaskCard(
+                renderServiceDropdownCard(
                   "Carpenter",
                   carpenterTasks,
-                  CARPENTER_TASK_OPTIONS,
+                  () => setShowCarpenterServicesModal(true),
                   () => setCarpenterTasks([]),
                 )}
 
               {serviceElectrician &&
-                renderServiceTaskCard(
+                renderServiceDropdownCard(
                   "Electrician",
                   electricianTasks,
-                  ELECTRICIAN_TASK_OPTIONS,
+                  () => setShowElectricianServicesModal(true),
                   () => setElectricianTasks([]),
                 )}
 
               {servicePlumber &&
-                renderServiceTaskCard(
+                renderServiceDropdownCard(
                   "Plumber",
                   plumberTasks,
-                  PLUMBER_TASK_OPTIONS,
+                  () => setShowPlumberServicesModal(true),
                   () => setPlumberTasks([]),
                 )}
 
               {serviceCarwasher &&
-                renderServiceTaskCard(
+                renderServiceDropdownCard(
                   "Carwasher",
                   carwasherTasks,
-                  CARWASHER_TASK_OPTIONS,
+                  () => setShowCarwasherServicesModal(true),
                   () => setCarwasherTasks([]),
                 )}
 
               {serviceLaundry &&
-                renderServiceTaskCard(
+                renderServiceDropdownCard(
                   "Laundry",
                   laundryTasks,
-                  LAUNDRY_TASK_OPTIONS,
+                  () => setShowLaundryServicesModal(true),
                   () => setLaundryTasks([]),
                 )}
 
@@ -873,6 +1075,78 @@ export default function WorkerWorkInformation() {
             </View>
           </MotiView>
         </ScrollView>
+
+        {/* Service dropdown modals */}
+        <TaskModal
+          visible={showCarpenterServicesModal}
+          title="Carpenter services"
+          options={CARPENTER_TASK_OPTIONS}
+          selected={carpenterTasks}
+          onClose={() => setShowCarpenterServicesModal(false)}
+          onToggle={option =>
+            setCarpenterTasks(prev =>
+              prev.includes(option)
+                ? prev.filter(t => t !== option)
+                : [...prev, option],
+            )
+          }
+        />
+        <TaskModal
+          visible={showElectricianServicesModal}
+          title="Electrician services"
+          options={ELECTRICIAN_TASK_OPTIONS}
+          selected={electricianTasks}
+          onClose={() => setShowElectricianServicesModal(false)}
+          onToggle={option =>
+            setElectricianTasks(prev =>
+              prev.includes(option)
+                ? prev.filter(t => t !== option)
+                : [...prev, option],
+            )
+          }
+        />
+        <TaskModal
+          visible={showPlumberServicesModal}
+          title="Plumber services"
+          options={PLUMBER_TASK_OPTIONS}
+          selected={plumberTasks}
+          onClose={() => setShowPlumberServicesModal(false)}
+          onToggle={option =>
+            setPlumberTasks(prev =>
+              prev.includes(option)
+                ? prev.filter(t => t !== option)
+                : [...prev, option],
+            )
+          }
+        />
+        <TaskModal
+          visible={showCarwasherServicesModal}
+          title="Carwasher services"
+          options={CARWASHER_TASK_OPTIONS}
+          selected={carwasherTasks}
+          onClose={() => setShowCarwasherServicesModal(false)}
+          onToggle={option =>
+            setCarwasherTasks(prev =>
+              prev.includes(option)
+                ? prev.filter(t => t !== option)
+                : [...prev, option],
+            )
+          }
+        />
+        <TaskModal
+          visible={showLaundryServicesModal}
+          title="Laundry services"
+          options={LAUNDRY_TASK_OPTIONS}
+          selected={laundryTasks}
+          onClose={() => setShowLaundryServicesModal(false)}
+          onToggle={option =>
+            setLaundryTasks(prev =>
+              prev.includes(option)
+                ? prev.filter(t => t !== option)
+                : [...prev, option],
+            )
+          }
+        />
 
         <WorkerNavbar />
       </SafeAreaView>

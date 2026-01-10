@@ -1,70 +1,77 @@
 // supabase/services/loginservice.ts
-import { supabase } from '../db'
-import { getClientByEmail } from './clientprofileservice'
-import { getWorkerByEmail } from './workerprofileservice'
+import { supabase } from "../db";
+import { getClientByEmail } from "./clientprofileservice";
+import { getWorkerByEmail } from "./workerprofileservice";
 
-export type UserRole = 'client' | 'worker'
+export type UserRole = "client" | "worker";
 
 export async function loginUser(email: string, password: string) {
-  // 1) Login with Supabase Auth
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) {
-    throw new Error(error.message)
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(error.message);
+
+  const session = data.session;
+
+  // IMPORTANT: never proceed if refresh_token is missing
+  // This prevents “broken sessions” from being persisted and later causing refresh-token crashes.
+  if (!session?.access_token || !session?.refresh_token) {
+    await supabase.auth.signOut();
+    throw new Error("Login failed: session is incomplete. Please try again.");
   }
 
-  const token = data.session?.access_token || null
+  const token = session.access_token;
 
-  // 2) Try to find profile as CLIENT first
-  let role: UserRole = 'client'
-  let profile = await getClientByEmail(email)
+  let role: UserRole = "client";
+  let profile = await getClientByEmail(email);
 
-  // 3) If not found as client, try WORKER
   if (!profile) {
-    profile = await getWorkerByEmail(email)
-    role = 'worker'
+    profile = await getWorkerByEmail(email);
+    role = "worker";
   }
 
-  // 4) If still nothing, user has no profile
   if (!profile) {
-    throw new Error('User not found in profile table')
+    // optional: sign out to avoid keeping a session for a user with no profile row
+    await supabase.auth.signOut();
+    throw new Error("User not found in profile table.");
   }
 
-  return { token, role, profile }
+  return { token, role, profile };
 }
 
 export async function requestPasswordReset(email: string) {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'app://auth/callback',
-  })
-  if (error) throw new Error(error.message)
-  return data
+    redirectTo: "app://auth/callback",
+  });
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 export async function updatePassword(newPassword: string) {
-  const { data, error } = await supabase.auth.updateUser({ password: newPassword })
-  if (error) throw new Error(error.message)
-  return data.user
+  const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw new Error(error.message);
+  return data.user;
 }
 
+// Prefer getSession() over getUser() in RN to avoid network calls that can trigger refresh flows
 export async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) throw new Error('User not authenticated')
-  return data.user
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw new Error(error.message);
+  if (!data.session?.user) throw new Error("User not authenticated");
+  return data.session.user;
 }
 
 export async function logoutUser() {
-  const { error } = await supabase.auth.signOut()
-  if (error) throw new Error('Logout failed')
+  const { error } = await supabase.auth.signOut();
+  if (error) throw new Error(error.message);
 }
 
 export async function getSession() {
-  const { data, error } = await supabase.auth.getSession()
-  if (error) throw new Error('Failed to get session')
-  return data.session
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw new Error(error.message);
+  return data.session;
 }
 
 export async function updateUserMetadata(updates: Record<string, any>) {
-  const { data, error } = await supabase.auth.updateUser({ data: updates })
-  if (error) throw new Error('Failed to update user metadata')
-  return data.user
+  const { data, error } = await supabase.auth.updateUser({ data: updates });
+  if (error) throw new Error(error.message);
+  return data.user;
 }

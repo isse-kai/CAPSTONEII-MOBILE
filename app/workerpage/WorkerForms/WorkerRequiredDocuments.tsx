@@ -7,10 +7,10 @@ import { useRouter } from "expo-router"
 import { MotiView } from "moti"
 import React, { useEffect, useState } from "react"
 import {
-    Alert,
-    ImageBackground,
-    ScrollView,
-    View,
+  Alert,
+  ImageBackground,
+  ScrollView,
+  View,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -18,8 +18,9 @@ import WorkerHeader from "../workernavbar/header"
 import WorkerNavbar from "../workernavbar/navbar"
 
 import {
-    handleGetWorkerRequiredDocuments,
-    handleSaveWorkerRequiredDocuments,
+  handleGetWorkerRequiredDocuments,
+  handleGetWorkerWorkInformation,
+  handleSaveWorkerRequiredDocuments,
 } from "../../../supabase/controllers/workerinformationcontroller"
 import { getCurrentUser } from "../../../supabase/services/loginservice"
 
@@ -31,11 +32,24 @@ type DocKey =
   | "proofOfAddress"
   | "medicalCertificate"
   | "certificates"
+  | "tesdaCarpentry"
+  | "tesdaPlumbing"
+  | "tesdaElectrical"
+  | "tesdaHousekeeping"
+  | "tesdaAutomotive"
 
 interface DocState {
   url: string | null
   name: string | null
   uploading: boolean
+}
+
+interface WorkerWorkInformationExisting {
+  service_carpenter?: boolean
+  service_electrician?: boolean
+  service_plumber?: boolean
+  service_carwasher?: boolean
+  service_laundry?: boolean
 }
 
 export default function WorkerRequiredDocuments() {
@@ -52,6 +66,14 @@ export default function WorkerRequiredDocuments() {
   const [saving, setSaving] = useState(false)
   const [authUid, setAuthUid] = useState<string | null>(null)
 
+  // --- Service types from Step 2 (for TESDA requirements) ---
+  const [serviceCarpenter, setServiceCarpenter] = useState(false)
+  const [serviceElectrician, setServiceElectrician] = useState(false)
+  const [servicePlumber, setServicePlumber] = useState(false)
+  const [serviceCarwasher, setServiceCarwasher] = useState(false)
+  const [serviceLaundry, setServiceLaundry] = useState(false)
+
+  // --- Base required documents ---
   const [primaryFront, setPrimaryFront] = useState<DocState>({
     url: null,
     name: null,
@@ -82,7 +104,36 @@ export default function WorkerRequiredDocuments() {
     name: null,
     uploading: false,
   })
+
+  // Optional generic certificates (no UI card now, but still saved if ever used)
   const [certificates, setCertificates] = useState<DocState>({
+    url: null,
+    name: null,
+    uploading: false,
+  })
+
+  // --- TESDA certificate uploads (per service type) ---
+  const [tesdaCarpentry, setTesdaCarpentry] = useState<DocState>({
+    url: null,
+    name: null,
+    uploading: false,
+  })
+  const [tesdaPlumbing, setTesdaPlumbing] = useState<DocState>({
+    url: null,
+    name: null,
+    uploading: false,
+  })
+  const [tesdaElectrical, setTesdaElectrical] = useState<DocState>({
+    url: null,
+    name: null,
+    uploading: false,
+  })
+  const [tesdaHousekeeping, setTesdaHousekeeping] = useState<DocState>({
+    url: null,
+    name: null,
+    uploading: false,
+  })
+  const [tesdaAutomotive, setTesdaAutomotive] = useState<DocState>({
     url: null,
     name: null,
     uploading: false,
@@ -99,6 +150,11 @@ export default function WorkerRequiredDocuments() {
     proofOfAddress: [proofOfAddress, setProofOfAddress],
     medicalCertificate: [medicalCertificate, setMedicalCertificate],
     certificates: [certificates, setCertificates],
+    tesdaCarpentry: [tesdaCarpentry, setTesdaCarpentry],
+    tesdaPlumbing: [tesdaPlumbing, setTesdaPlumbing],
+    tesdaElectrical: [tesdaElectrical, setTesdaElectrical],
+    tesdaHousekeeping: [tesdaHousekeeping, setTesdaHousekeeping],
+    tesdaAutomotive: [tesdaAutomotive, setTesdaAutomotive],
   }
 
   useEffect(() => {
@@ -107,47 +163,75 @@ export default function WorkerRequiredDocuments() {
         const authUser = await getCurrentUser()
         setAuthUid(authUser.id)
 
-        // TEMP: service currently returns null; cast to any so TS is happy
-        const existing = (await handleGetWorkerRequiredDocuments(
-          authUser.id,
-        )) as any
+        const [existingDocs, existingWork] = await Promise.all([
+          handleGetWorkerRequiredDocuments(authUser.id) as any,
+          handleGetWorkerWorkInformation(
+            authUser.id,
+          ) as WorkerWorkInformationExisting | null,
+        ])
 
-        if (existing) {
-          if (existing.primary_id_front_url) {
+        // Existing docs (if any)
+        if (existingDocs) {
+          if (existingDocs.primary_id_front_url) {
             setPrimaryFront({
-              url: existing.primary_id_front_url,
+              url: existingDocs.primary_id_front_url,
               name: "Uploaded file",
               uploading: false,
             })
           }
-          if (existing.primary_id_back_url) {
+          if (existingDocs.primary_id_back_url) {
             setPrimaryBack({
-              url: existing.primary_id_back_url,
+              url: existingDocs.primary_id_back_url,
               name: "Uploaded file",
               uploading: false,
             })
           }
-          if (existing.secondary_id_url) {
+          if (existingDocs.secondary_id_url) {
             setSecondaryId({
-              url: existing.secondary_id_url,
+              url: existingDocs.secondary_id_url,
               name: "Uploaded file",
               uploading: false,
             })
           }
-          if (existing.nbi_clearance_url) {
+          if (existingDocs.nbi_clearance_url) {
             setNbiClearance({
-              url: existing.nbi_clearance_url,
+              url: existingDocs.nbi_clearance_url,
               name: "Uploaded file",
               uploading: false,
             })
           }
-          if (existing.proof_of_address_url) {
+          if (existingDocs.proof_of_address_url) {
             setProofOfAddress({
-              url: existing.proof_of_address_url,
+              url: existingDocs.proof_of_address_url,
               name: "Uploaded file",
               uploading: false,
             })
           }
+          if (existingDocs.medical_certificate_url) {
+            setMedicalCertificate({
+              url: existingDocs.medical_certificate_url,
+              name: "Uploaded file",
+              uploading: false,
+            })
+          }
+          // Optional certificates, if you ever stored them
+          if (existingDocs.certificates_url) {
+            setCertificates({
+              url: existingDocs.certificates_url,
+              name: "Uploaded file",
+              uploading: false,
+            })
+          }
+          // TESDA URLs can also be hydrated here later if backend supports them.
+        }
+
+        // Existing work info (service types)
+        if (existingWork) {
+          setServiceCarpenter(!!existingWork.service_carpenter)
+          setServiceElectrician(!!existingWork.service_electrician)
+          setServicePlumber(!!existingWork.service_plumber)
+          setServiceCarwasher(!!existingWork.service_carwasher)
+          setServiceLaundry(!!existingWork.service_laundry)
         }
       } catch (err) {
         console.error("Failed to load worker required documents", err)
@@ -159,14 +243,43 @@ export default function WorkerRequiredDocuments() {
     load()
   }, [])
 
-  const uploadedCount =
-    (primaryFront.url ? 1 : 0) +
-    (primaryBack.url ? 1 : 0) +
-    (secondaryId.url ? 1 : 0) +
-    (nbiClearance.url ? 1 : 0) +
-    (proofOfAddress.url ? 1 : 0) +
-    (medicalCertificate.url ? 1 : 0) +
-    (certificates.url ? 1 : 0)
+  // ---- Required-docs counters (for header progress) ----
+  const baseRequiredDocs: DocState[] = [
+    primaryFront,
+    primaryBack,
+    secondaryId,
+    nbiClearance,
+    proofOfAddress,
+    medicalCertificate,
+  ]
+  const baseRequiredUploadedCount = baseRequiredDocs.filter(
+    d => !!d.url,
+  ).length
+
+  const tesdaRequiredCount =
+    (serviceCarpenter ? 1 : 0) +
+    (servicePlumber ? 1 : 0) +
+    (serviceElectrician ? 1 : 0) +
+    (serviceLaundry ? 1 : 0) +
+    (serviceCarwasher ? 1 : 0)
+
+  const tesdaUploadedCount =
+    (serviceCarpenter && tesdaCarpentry.url ? 1 : 0) +
+    (servicePlumber && tesdaPlumbing.url ? 1 : 0) +
+    (serviceElectrician && tesdaElectrical.url ? 1 : 0) +
+    (serviceLaundry && tesdaHousekeeping.url ? 1 : 0) +
+    (serviceCarwasher && tesdaAutomotive.url ? 1 : 0)
+
+  const totalRequiredDocs = 6 + tesdaRequiredCount
+  const uploadedRequiredDocsCount =
+    baseRequiredUploadedCount + tesdaUploadedCount
+
+  const anyTesdaRequired =
+    serviceCarpenter ||
+    servicePlumber ||
+    serviceElectrician ||
+    serviceLaundry ||
+    serviceCarwasher
 
   /**
    * ALTERNATIVE “upload”: no Supabase Storage.
@@ -228,7 +341,7 @@ export default function WorkerRequiredDocuments() {
   const handleNext = async () => {
     if (!authUid) return
 
-    // Require all 7 documents to be uploaded (UI rule)
+    // Require base 6 documents + TESDA certificates based on service types
     if (
       !primaryFront.url ||
       !primaryBack.url ||
@@ -236,11 +349,15 @@ export default function WorkerRequiredDocuments() {
       !nbiClearance.url ||
       !proofOfAddress.url ||
       !medicalCertificate.url ||
-      !certificates.url
+      (serviceCarpenter && !tesdaCarpentry.url) ||
+      (servicePlumber && !tesdaPlumbing.url) ||
+      (serviceElectrician && !tesdaElectrical.url) ||
+      (serviceLaundry && !tesdaHousekeeping.url) ||
+      (serviceCarwasher && !tesdaAutomotive.url)
     ) {
       Alert.alert(
         "Missing documents",
-        "Please upload all required documents before continuing.",
+        "Please upload all required documents and TESDA certificates based on your selected service types.",
       )
       return
     }
@@ -248,20 +365,19 @@ export default function WorkerRequiredDocuments() {
     try {
       setSaving(true)
 
-      // TEMP: this call no longer hits Supabase; it just logs and returns a fake object.
       await handleSaveWorkerRequiredDocuments(authUid, {
-          primary_id_front_url: primaryFront.url,
-          primary_id_back_url: primaryBack.url,
-          secondary_id_url: secondaryId.url,
-          nbi_clearance_url: nbiClearance.url,
-          proof_of_address_url: proofOfAddress.url,
-          medical_certificate_url: null,
-          certificates_url: null
+        primary_id_front_url: primaryFront.url,
+        primary_id_back_url: primaryBack.url,
+        secondary_id_url: secondaryId.url,
+        nbi_clearance_url: nbiClearance.url,
+        proof_of_address_url: proofOfAddress.url,
+        medical_certificate_url: medicalCertificate.url,
+        certificates_url: certificates.url, // still sent, but no UI card
+        // TESDA URLs can be added here later once backend supports them
       })
 
       router.push("/workerpage/WorkerForms/WorkerPriceRate")
     } catch (err) {
-      // With the new service this should never trigger, but keep it for safety.
       console.error("Failed to save required documents", err)
       Alert.alert("Error", "Could not save your documents.")
     } finally {
@@ -323,6 +439,7 @@ export default function WorkerRequiredDocuments() {
     key: DocKey,
     state: DocState,
     helperText: string,
+    opts?: { required?: boolean },
   ) => (
     <View
       key={key}
@@ -339,13 +456,13 @@ export default function WorkerRequiredDocuments() {
       <View
         style={{
           flexDirection: "row",
-          justifyContent: "space-between",
+          justifyContent: "space-between", // fixed typo here
           alignItems: "center",
           marginBottom: 8,
         }}
       >
         <Text sx={labelStyle}>{title}</Text>
-        {requiredBadge}
+        {opts?.required === false ? null : requiredBadge}
       </View>
 
       {/* upload area */}
@@ -384,7 +501,7 @@ export default function WorkerRequiredDocuments() {
                 color: "#6b7280",
               }}
             >
-              Click to upload
+              Click to upload or drag and drop
             </Text>
             <Text
               sx={{
@@ -422,6 +539,32 @@ export default function WorkerRequiredDocuments() {
         }}
       >
         {helperText}
+      </Text>
+    </View>
+  )
+
+  const renderTesdaChip = (label: string) => (
+    <View
+      key={label}
+      style={{
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: "#bfdbfe",
+        backgroundColor: "#eff6ff",
+        marginRight: 8,
+        marginBottom: 8,
+      }}
+    >
+      <Text
+        sx={{
+          fontSize: 11,
+          fontFamily: "Poppins-Bold",
+          color: "#1d4ed8",
+        }}
+      >
+        {label}
       </Text>
     </View>
   )
@@ -512,7 +655,7 @@ export default function WorkerRequiredDocuments() {
               </View>
             </View>
 
-            {/* Card container */}
+            {/* Card: Base required documents */}
             <View
               style={{
                 backgroundColor: "#ffffffcc",
@@ -550,11 +693,11 @@ export default function WorkerRequiredDocuments() {
                     color: "#6b7280",
                   }}
                 >
-                  {uploadedCount}/7 uploaded
+                  {uploadedRequiredDocsCount}/{totalRequiredDocs} uploaded
                 </Text>
               </View>
 
-              {/* vertical list of document cards */}
+              {/* vertical list of base document cards */}
               <View>
                 {renderDocCard(
                   "Primary ID (Front) *",
@@ -592,14 +735,109 @@ export default function WorkerRequiredDocuments() {
                   medicalCertificate,
                   "Latest medical / fit-to-work certificate.",
                 )}
-                {renderDocCard(
-                  "Certificates *",
-                  "certificates",
-                  certificates,
-                  "TESDA, Training Certificates, etc.",
-                )}
               </View>
             </View>
+
+            {/* Card: TESDA Certificate Requirement (based on service type) */}
+            {anyTesdaRequired && (
+              <View
+                style={{
+                  backgroundColor: "#ffffffcc",
+                  borderRadius: 16,
+                  padding: 16,
+                  marginBottom: 16,
+                  shadowColor: "#000",
+                  shadowOpacity: 0.06,
+                  shadowRadius: 6,
+                  shadowOffset: { width: 0, height: 3 },
+                  elevation: 3,
+                }}
+              >
+                <Text
+                  sx={{
+                    fontSize: 18,
+                    fontFamily: "Poppins-Bold",
+                    color: "#111827",
+                    mb: 4,
+                  }}
+                >
+                  TESDA Certificate Requirement
+                </Text>
+                <Text
+                  sx={{
+                    fontSize: 12,
+                    fontFamily: "Poppins-Regular",
+                    color: "#6b7280",
+                    mb: 8,
+                  }}
+                >
+                  Based on your selected service types:
+                </Text>
+
+                {/* Chips */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    marginBottom: 12,
+                  }}
+                >
+                  {serviceCarpenter &&
+                    renderTesdaChip("TESDA Carpentry NC II Certificate")}
+                  {servicePlumber &&
+                    renderTesdaChip("TESDA Plumbing NC II Certificate")}
+                  {serviceElectrician &&
+                    renderTesdaChip(
+                      "TESDA Electrical Installation and Maintenance NC II Certificate",
+                    )}
+                  {serviceLaundry &&
+                    renderTesdaChip("TESDA Housekeeping NC II Certificate")}
+                  {serviceCarwasher &&
+                    renderTesdaChip(
+                      "TESDA Automotive Servicing NC II Certificate",
+                    )}
+                </View>
+
+                {/* Upload cards */}
+                <View>
+                  {serviceCarpenter &&
+                    renderDocCard(
+                      "TESDA Carpentry NC II Certificate *",
+                      "tesdaCarpentry",
+                      tesdaCarpentry,
+                      "Upload your TESDA Carpentry NC II certificate (PDF, JPG, or PNG).",
+                    )}
+                  {servicePlumber &&
+                    renderDocCard(
+                      "TESDA Plumbing NC II Certificate *",
+                      "tesdaPlumbing",
+                      tesdaPlumbing,
+                      "Upload your TESDA Plumbing NC II certificate (PDF, JPG, or PNG).",
+                    )}
+                  {serviceElectrician &&
+                    renderDocCard(
+                      "TESDA Electrical Installation and Maintenance NC II Certificate *",
+                      "tesdaElectrical",
+                      tesdaElectrical,
+                      "Upload your TESDA Electrical Installation and Maintenance NC II certificate.",
+                    )}
+                  {serviceLaundry &&
+                    renderDocCard(
+                      "TESDA Housekeeping NC II Certificate *",
+                      "tesdaHousekeeping",
+                      tesdaHousekeeping,
+                      "Upload your TESDA Housekeeping NC II certificate.",
+                    )}
+                  {serviceCarwasher &&
+                    renderDocCard(
+                      "TESDA Automotive Servicing NC II Certificate *",
+                      "tesdaAutomotive",
+                      tesdaAutomotive,
+                      "Upload your TESDA Automotive Servicing NC II certificate.",
+                    )}
+                </View>
+              </View>
+            )}
 
             {/* Footer buttons */}
             <View
