@@ -376,7 +376,8 @@ export default function WorkerRequiredDocuments() {
         // TESDA URLs can be added here later once backend supports them
       })
 
-      router.push("/workerpage/WorkerForms/WorkerPriceRate")
+      // AFTER REQUIRED DOCUMENTS → GO DIRECTLY TO REVIEW APPLICATION
+      router.push("/workerpage/WorkerForms/WorkerReviewApplication")
     } catch (err) {
       console.error("Failed to save required documents", err)
       Alert.alert("Error", "Could not save your documents.")
@@ -456,7 +457,7 @@ export default function WorkerRequiredDocuments() {
       <View
         style={{
           flexDirection: "row",
-          justifyContent: "space-between", // fixed typo here
+          justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 8,
         }}
@@ -612,7 +613,7 @@ export default function WorkerRequiredDocuments() {
                   color: "#6b7280",
                 }}
               >
-                3 of 6 | Post a Worker Application
+                3 of 4 | Post a Worker Application
               </Text>
               <Text
                 sx={{
@@ -647,7 +648,7 @@ export default function WorkerRequiredDocuments() {
               >
                 <View
                   style={{
-                    width: "50%", // 3 of 6
+                    width: "75%", // 3 of 4
                     height: "100%",
                     backgroundColor: "#008CFC",
                   }}
@@ -893,7 +894,7 @@ export default function WorkerRequiredDocuments() {
                     color: "#fff",
                   }}
                 >
-                  {saving ? "Saving..." : "Next: Set Your Price Rate"}
+                  {saving ? "Saving..." : "Next: Review Application"}
                 </Text>
               </Pressable>
             </View>

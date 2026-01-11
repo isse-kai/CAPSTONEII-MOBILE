@@ -2,18 +2,17 @@
 import { Ionicons } from "@expo/vector-icons"
 import { Pressable, Text } from "dripsy"
 import { useFonts } from "expo-font"
-import * as ImagePicker from "expo-image-picker"
 import { useRouter } from "expo-router"
 import { MotiView } from "moti"
 import React, { useEffect, useState } from "react"
 import {
-    Alert,
-    Image,
-    Modal,
-    ScrollView,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -21,12 +20,10 @@ import WorkerHeader from "../workernavbar/header"
 import WorkerNavbar from "../workernavbar/navbar"
 
 import {
-    handleGetWorkerInformation,
-    handleGetWorkerRate,
-    handleGetWorkerWorkInformation,
+  handleGetWorkerInformation,
+  handleGetWorkerWorkInformation,
 } from "../../../supabase/controllers/workerinformationcontroller"
 import { getCurrentUser } from "../../../supabase/services/loginservice"
-import { WorkerRatePayload } from "../../../supabase/services/workerinformationservice"
 
 interface PersonalInfo {
   first_name?: string
@@ -49,8 +46,6 @@ interface WorkInfo {
   has_own_tools?: boolean | null
 }
 
-const APPLICATION_FEE = 150
-
 export default function WorkerReviewApplication() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
@@ -66,18 +61,10 @@ export default function WorkerReviewApplication() {
 
   const [personal, setPersonal] = useState<PersonalInfo>({})
   const [work, setWork] = useState<WorkInfo>({})
-  const [rate, setRate] = useState<WorkerRatePayload | null>(null)
 
-  // payment modal state
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<"qr" | "details">("qr")
-  const [referenceNo, setReferenceNo] = useState("")
-  const [paymentScreenshotUri, setPaymentScreenshotUri] = useState<string | null>(
-    null,
-  )
-  const [paymentScreenshotName, setPaymentScreenshotName] = useState<string | null>(
-    null,
-  )
+  // submit modals
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showSubmittingModal, setShowSubmittingModal] = useState(false)
 
   // ---------- LOAD FROM SUPABASE (with data-wrapper fallback) ----------
   useEffect(() => {
@@ -86,10 +73,9 @@ export default function WorkerReviewApplication() {
         const authUser = await getCurrentUser()
         setAuthUid(authUser.id)
 
-        const [infoRaw, workRaw, rateRaw] = await Promise.all([
+        const [infoRaw, workRaw] = await Promise.all([
           handleGetWorkerInformation(authUser.id),
           handleGetWorkerWorkInformation(authUser.id),
-          handleGetWorkerRate(authUser.id),
         ])
 
         const info =
@@ -100,10 +86,6 @@ export default function WorkerReviewApplication() {
           workRaw && "data" in workRaw && (workRaw as any).data
             ? (workRaw as any).data
             : workRaw
-        const rateInfo =
-          rateRaw && "data" in rateRaw && (rateRaw as any).data
-            ? (rateRaw as any).data
-            : rateRaw
 
         if (info) {
           setPersonal({
@@ -118,12 +100,6 @@ export default function WorkerReviewApplication() {
         }
 
         if (workInfo) setWork(workInfo as WorkInfo)
-        if (rateInfo) setRate(rateInfo as WorkerRatePayload)
-
-        // generate reference number once
-        const ts = Date.now()
-        const rand = Math.floor(Math.random() * 1000000)
-        setReferenceNo(`JDK-${ts}-${rand}`)
       } catch (err) {
         console.error("Failed to load review data", err)
       } finally {
@@ -150,77 +126,37 @@ export default function WorkerReviewApplication() {
   const toolsProvidedLabel =
     work.has_own_tools == null ? "Not specified" : work.has_own_tools ? "Yes" : "No"
 
-  const formatRateSummary = () => {
-    if (!rate) return "Not specified"
-
-    if (rate.rate_type === "hourly") {
-      if (rate.hourly_min_rate != null && rate.hourly_max_rate != null) {
-        return `₱${rate.hourly_min_rate} - ₱${rate.hourly_max_rate} per hour`
-      }
-      if (rate.hourly_min_rate != null) {
-        return `From ₱${rate.hourly_min_rate} per hour`
-      }
-      if (rate.hourly_max_rate != null) {
-        return `Up to ₱${rate.hourly_max_rate} per hour`
-      }
-      return "Hourly rate not set"
-    }
-
-    if (rate.rate_type === "job") {
-      if (rate.job_rate != null) {
-        return `₱${rate.job_rate} per job`
-      }
-      return "Job rate not set"
-    }
-
-    return "Not specified"
+  // quick edit navigation
+  const handleEditPersonal = () => {
+    // if your personal info route is different, adjust this path
+    router.push("/workerpage/WorkerForms/Workerinformation")
   }
 
-  const rateTypeLabel = () => {
-    if (!rate) return "Not specified"
-    return rate.rate_type === "hourly" ? "Hourly Rate" : "By the Job Rate"
+  const handleEditWork = () => {
+    router.push("/workerpage/WorkerForms/WorkerWorkInformation")
+  }
+
+  const handleEditDocuments = () => {
+    router.push("/workerpage/WorkerForms/WorkerRequiredDocuments")
   }
 
   const handleSubmit = () => {
     if (!authUid) {
-      Alert.alert("Session error", "Please log in again before paying.")
+      Alert.alert("Session error", "Please log in again before submitting.")
       return
     }
-    setShowPaymentModal(true)
+    setShowConfirmModal(true)
   }
 
-  const handleConfirmPayment = () => {
-    setShowPaymentModal(false)
-    Alert.alert(
-      "Payment submitted",
-      "Your GCash payment will be verified. We will notify you once your worker application has been reviewed.",
-      [
-        {
-          text: "OK",
-          onPress: () => router.push("/workerpage/home"),
-        },
-      ],
-    )
-  }
+  const handleConfirmSubmit = () => {
+    setShowConfirmModal(false)
+    setShowSubmittingModal(true)
 
-  const handleChooseScreenshot = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (permission.status !== "granted") {
-      Alert.alert("Permission required", "Please allow access to your photos.")
-      return
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.8,
-    })
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const asset = result.assets[0]
-      setPaymentScreenshotUri(asset.uri)
-      setPaymentScreenshotName(asset.fileName ?? "Screenshot selected")
-    }
+    // fake loading for 1.5 seconds then go home
+    setTimeout(() => {
+      setShowSubmittingModal(false)
+      router.push("/workerpage/home")
+    }, 1500)
   }
 
   // ---------- LOADING ----------
@@ -237,7 +173,7 @@ export default function WorkerReviewApplication() {
         <Text
           sx={{
             fontFamily: "Poppins-Regular",
-            fontSize: 16,
+            fontSize: 17,
             color: "#6b7280",
           }}
         >
@@ -249,25 +185,25 @@ export default function WorkerReviewApplication() {
 
   // ---------- SHARED TEXT STYLES ----------
   const labelTitle = {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: "Poppins-Bold" as const,
     color: "#111827",
   }
 
   const labelKey = {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: "Poppins-Bold" as const,
     color: "#6b7280",
   }
 
   const labelValueLink = {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: "Poppins-Bold" as const,
     color: "#2563eb",
   }
 
   const labelValue = {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: "Poppins-Regular" as const,
     color: "#111827",
   }
@@ -283,6 +219,15 @@ export default function WorkerReviewApplication() {
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   } as const
+
+  const editPillStyle = {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#eff6ff",
+  }
 
   // ---------- UI ----------
   return (
@@ -318,33 +263,115 @@ export default function WorkerReviewApplication() {
           >
             <Text
               sx={{
-                fontSize: 12,
+                fontSize: 13,
                 fontFamily: "Poppins-Regular",
                 color: "#6b7280",
               }}
             >
-              6 of 6 | Post a Worker Application
+              4 of 4 | Post a Worker Application
             </Text>
             <Text
               sx={{
-                fontSize: 24,
+                fontSize: 26,
                 fontFamily: "Poppins-ExtraBold",
                 color: "#111827",
                 mt: 4,
               }}
             >
-              Step 6: Review Application
+              Step 4: Review Application
             </Text>
             <Text
               sx={{
-                fontSize: 16,
+                fontSize: 17,
                 fontFamily: "Poppins-Regular",
                 color: "#4b5563",
                 mt: 4,
               }}
             >
-              Make sure everything looks correct before you submit.
+              Quickly review each section and edit anything before submitting.
             </Text>
+
+            {/* quick nav chips */}
+            <View
+              style={{
+                flexDirection: "row",
+                marginTop: 12,
+                columnGap: 8,
+                flexWrap: "wrap",
+              }}
+            >
+              <TouchableOpacity
+                onPress={handleEditPersonal}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 999,
+                  backgroundColor: "#e0f2fe",
+                }}
+              >
+                <Ionicons name="person-outline" size={14} color="#0369a1" />
+                <Text
+                  sx={{
+                    fontSize: 13,
+                    fontFamily: "Poppins-Bold",
+                    color: "#0369a1",
+                    ml: 6,
+                  }}
+                >
+                  Personal Info
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleEditWork}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 999,
+                  backgroundColor: "#dcfce7",
+                }}
+              >
+                <Ionicons name="construct-outline" size={14} color="#15803d" />
+                <Text
+                  sx={{
+                    fontSize: 13,
+                    fontFamily: "Poppins-Bold",
+                    color: "#15803d",
+                    ml: 6,
+                  }}
+                >
+                  Work Details
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleEditDocuments}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 999,
+                  backgroundColor: "#fef3c7",
+                }}
+              >
+                <Ionicons name="document-text-outline" size={14} color="#b45309" />
+                <Text
+                  sx={{
+                    fontSize: 13,
+                    fontFamily: "Poppins-Bold",
+                    color: "#b45309",
+                    ml: 6,
+                  }}
+                >
+                  Documents
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             {/* progress bar */}
             <View
@@ -402,7 +429,7 @@ export default function WorkerReviewApplication() {
             <View style={{ flex: 1 }}>
               <Text
                 sx={{
-                  fontSize: 18,
+                  fontSize: 20,
                   fontFamily: "Poppins-Bold",
                   color: "#111827",
                 }}
@@ -411,7 +438,7 @@ export default function WorkerReviewApplication() {
               </Text>
               <Text
                 sx={{
-                  fontSize: 12,
+                  fontSize: 13,
                   fontFamily: "Poppins-Regular",
                   color: "#6b7280",
                   mt: 2,
@@ -419,44 +446,16 @@ export default function WorkerReviewApplication() {
               >
                 {serviceTypes()}
               </Text>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  marginTop: 8,
-                  alignItems: "center",
+              <Text
+                sx={{
+                  fontSize: 12,
+                  fontFamily: "Poppins-Regular",
+                  color: "#9ca3af",
+                  mt: 4,
                 }}
               >
-                <View
-                  style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 999,
-                    backgroundColor: "#eff6ff",
-                    marginRight: 6,
-                  }}
-                >
-                  <Text
-                    sx={{
-                      fontSize: 11,
-                      fontFamily: "Poppins-Bold",
-                      color: "#1d4ed8",
-                    }}
-                  >
-                    {rateTypeLabel()}
-                  </Text>
-                </View>
-
-                <Text
-                  sx={{
-                    fontSize: 12,
-                    fontFamily: "Poppins-Bold",
-                    color: "#0f766e",
-                  }}
-                >
-                  {formatRateSummary()}
-                </Text>
-              </View>
+                This is how clients will see your basic info.
+              </Text>
             </View>
           </View>
 
@@ -467,22 +466,39 @@ export default function WorkerReviewApplication() {
                 flexDirection: "row",
                 alignItems: "center",
                 marginBottom: 10,
+                justifyContent: "space-between",
               }}
             >
-              <View
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 13,
-                  backgroundColor: "#dbeafe",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 8,
-                }}
-              >
-                <Ionicons name="person-outline" size={16} color="#1d4ed8" />
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <View
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    backgroundColor: "#dbeafe",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 8,
+                  }}
+                >
+                  <Ionicons name="person-outline" size={16} color="#1d4ed8" />
+                </View>
+                <Text sx={labelTitle}>Personal Information</Text>
               </View>
-              <Text sx={labelTitle}>Personal Information</Text>
+
+              <TouchableOpacity onPress={handleEditPersonal} style={editPillStyle}>
+                <Ionicons name="create-outline" size={14} color="#1d4ed8" />
+                <Text
+                  sx={{
+                    fontSize: 12,
+                    fontFamily: "Poppins-Bold",
+                    color: "#1d4ed8",
+                    ml: 4,
+                  }}
+                >
+                  Edit
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <View style={{ marginTop: 4 }}>
@@ -534,22 +550,39 @@ export default function WorkerReviewApplication() {
                 flexDirection: "row",
                 alignItems: "center",
                 marginBottom: 10,
+                justifyContent: "space-between",
               }}
             >
-              <View
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 13,
-                  backgroundColor: "#dcfce7",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 8,
-                }}
-              >
-                <Ionicons name="construct-outline" size={16} color="#15803d" />
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <View
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    backgroundColor: "#dcfce7",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 8,
+                  }}
+                >
+                  <Ionicons name="construct-outline" size={16} color="#15803d" />
+                </View>
+                <Text sx={labelTitle}>Work Details</Text>
               </View>
-              <Text sx={labelTitle}>Work Details</Text>
+
+              <TouchableOpacity onPress={handleEditWork} style={editPillStyle}>
+                <Ionicons name="create-outline" size={14} color="#15803d" />
+                <Text
+                  sx={{
+                    fontSize: 12,
+                    fontFamily: "Poppins-Bold",
+                    color: "#15803d",
+                    ml: 4,
+                  }}
+                >
+                  Edit
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <View style={{ marginBottom: 8 }}>
@@ -593,68 +626,72 @@ export default function WorkerReviewApplication() {
             </View>
           </View>
 
-          {/* SERVICE RATE */}
+          {/* SUMMARY FOOTER */}
           <View style={cardStyle}>
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
                 marginBottom: 10,
+                justifyContent: "space-between",
               }}
             >
-              <View
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 13,
-                  backgroundColor: "#fef3c7",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 8,
+              <Text sx={labelTitle}>Application Summary</Text>
+
+              <TouchableOpacity onPress={handleEditDocuments} style={editPillStyle}>
+                <Ionicons name="create-outline" size={14} color="#b45309" />
+                <Text
+                  sx={{
+                    fontSize: 12,
+                    fontFamily: "Poppins-Bold",
+                    color: "#b45309",
+                    ml: 4,
+                  }}
+                >
+                  Edit
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ marginTop: 2 }}>
+              <Text
+                sx={{
+                  fontSize: 12,
+                  fontFamily: "Poppins-Regular",
+                  color: "#6b7280",
+                  mb: 6,
                 }}
               >
-                <Ionicons name="cash-outline" size={16} color="#b45309" />
-              </View>
-              <Text sx={labelTitle}>Service Rate</Text>
-            </View>
-
-            <View style={{ marginBottom: 8 }}>
-              <Text sx={labelKey}>Rate Type</Text>
-              <Text sx={labelValueLink}>{rateTypeLabel()}</Text>
-            </View>
-
-            <View>
-              <Text sx={labelKey}>Rate</Text>
-              <Text sx={labelValueLink}>{formatRateSummary()}</Text>
-            </View>
-          </View>
-
-          {/* SUMMARY FOOTER */}
-          <View style={cardStyle}>
-            <Text sx={labelTitle}>Application Summary</Text>
-
-            <View style={{ marginTop: 10 }}>
-              <Text sx={labelKey}>Worker</Text>
-              <Text sx={labelValueLink}>{fullName || "—"}</Text>
-            </View>
-
-            <View style={{ marginTop: 8 }}>
-              <Text sx={labelKey}>Primary Service</Text>
-              <Text sx={labelValueLink}>{serviceTypes()}</Text>
-            </View>
-
-            <View style={{ marginTop: 8 }}>
-              <Text sx={labelKey}>Experience</Text>
-              <Text sx={labelValueLink}>
-                {work.years_experience != null
-                  ? `${work.years_experience} year(s)`
-                  : "Not specified"}
+                Final overview before you submit your application.
               </Text>
             </View>
 
-            <View style={{ marginTop: 8 }}>
-              <Text sx={labelKey}>Offered Rate</Text>
-              <Text sx={labelValueLink}>{formatRateSummary()}</Text>
+            <View
+              style={{
+                borderTopWidth: 1,
+                borderTopColor: "#e5e7eb",
+                paddingTop: 8,
+                marginTop: 4,
+              }}
+            >
+              <View style={{ marginTop: 4 }}>
+                <Text sx={labelKey}>Worker</Text>
+                <Text sx={labelValueLink}>{fullName || "—"}</Text>
+              </View>
+
+              <View style={{ marginTop: 8 }}>
+                <Text sx={labelKey}>Primary Service</Text>
+                <Text sx={labelValueLink}>{serviceTypes()}</Text>
+              </View>
+
+              <View style={{ marginTop: 8 }}>
+                <Text sx={labelKey}>Experience</Text>
+                <Text sx={labelValueLink}>
+                  {work.years_experience != null
+                    ? `${work.years_experience} year(s)`
+                    : "Not specified"}
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -668,11 +705,7 @@ export default function WorkerReviewApplication() {
             }}
           >
             <Pressable
-              onPress={() =>
-                router.push(
-                  "/workerpage/WorkerForms/WorkerTermsAndAgreements",
-                )
-              }
+              onPress={handleEditDocuments}
               sx={{
                 flex: 1,
                 borderRadius: 999,
@@ -686,12 +719,12 @@ export default function WorkerReviewApplication() {
             >
               <Text
                 sx={{
-                  fontSize: 14,
+                  fontSize: 15,
                   fontFamily: "Poppins-Bold",
                   color: "#374151",
                 }}
               >
-                Back
+                Back to Documents
               </Text>
             </Pressable>
 
@@ -708,12 +741,12 @@ export default function WorkerReviewApplication() {
             >
               <Text
                 sx={{
-                  fontSize: 14,
+                  fontSize: 15,
                   fontFamily: "Poppins-Bold",
                   color: "#fff",
                 }}
               >
-                Pay &amp; Submit
+                Submit
               </Text>
             </Pressable>
           </View>
@@ -722,12 +755,12 @@ export default function WorkerReviewApplication() {
 
       <WorkerNavbar />
 
-      {/* --------- GCash Payment Modal --------- */}
+      {/* --------- Confirm Submit Modal --------- */}
       <Modal
         transparent
-        animationType="slide"
-        visible={showPaymentModal}
-        onRequestClose={() => setShowPaymentModal(false)}
+        animationType="fade"
+        visible={showConfirmModal}
+        onRequestClose={() => setShowConfirmModal(false)}
       >
         <View
           style={{
@@ -748,255 +781,28 @@ export default function WorkerReviewApplication() {
               paddingVertical: 20,
             }}
           >
-            {/* Header row */}
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 6,
-              }}
-            >
-              <Text
-                sx={{
-                  fontSize: 18,
-                  fontFamily: "Poppins-Bold",
-                  color: "#111827",
-                }}
-              >
-                Pay via GCash
-              </Text>
-              <Text
-                sx={{
-                  fontSize: 13,
-                  fontFamily: "Poppins-Bold",
-                  color: "#111827",
-                }}
-              >
-                Amount:{" "}
-                <Text
-                  sx={{
-                    fontSize: 13,
-                    fontFamily: "Poppins-Bold",
-                    color: "#0ea5e9",
-                  }}
-                >
-                  ₱{APPLICATION_FEE}
-                </Text>
-              </Text>
-            </View>
-
             <Text
               sx={{
-                fontSize: 11,
-                fontFamily: "Poppins-Regular",
-                color: "#6b7280",
+                fontSize: 18,
+                fontFamily: "Poppins-Bold",
+                color: "#111827",
                 mb: 8,
               }}
             >
-              Choose a method
+              Submit Application
             </Text>
-
-            {/* Method tabs */}
-            <View
-              style={{
-                flexDirection: "row",
-                marginBottom: 14,
+            <Text
+              sx={{
+                fontSize: 14,
+                fontFamily: "Poppins-Regular",
+                color: "#4b5563",
+                mb: 16,
               }}
             >
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  paddingVertical: 10,
-                  borderRadius: 999,
-                  borderWidth: 1.2,
-                  borderColor:
-                    paymentMethod === "qr" ? "#008CFC" : "#e5e7eb",
-                  backgroundColor:
-                    paymentMethod === "qr" ? "#eff6ff" : "#f9fafb",
-                  alignItems: "center",
-                  marginRight: 8,
-                }}
-                onPress={() => setPaymentMethod("qr")}
-              >
-                <Text
-                  sx={{
-                    fontSize: 13,
-                    fontFamily: "Poppins-Bold",
-                    color:
-                      paymentMethod === "qr" ? "#008CFC" : "#4b5563",
-                  }}
-                >
-                  GCash QR
-                </Text>
-              </TouchableOpacity>
+              Are you sure you want to submit your worker application? You can no
+              longer edit your details after submitting.
+            </Text>
 
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  paddingVertical: 10,
-                  borderRadius: 999,
-                  borderWidth: 1.2,
-                  borderColor:
-                    paymentMethod === "details" ? "#008CFC" : "#e5e7eb",
-                  backgroundColor:
-                    paymentMethod === "details" ? "#eff6ff" : "#f9fafb",
-                  alignItems: "center",
-                }}
-                onPress={() => setPaymentMethod("details")}
-              >
-                <Text
-                  sx={{
-                    fontSize: 13,
-                    fontFamily: "Poppins-Bold",
-                    color:
-                      paymentMethod === "details" ? "#008CFC" : "#4b5563",
-                  }}
-                >
-                  Fill GCash Details
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* QR / Details content */}
-            {paymentMethod === "qr" ? (
-              <View
-                style={{
-                  alignItems: "center",
-                  marginBottom: 16,
-                }}
-              >
-                {/* IMAGE PLACEHOLDER for QR */}
-                <View
-                  style={{
-                    width: 220,
-                    height: 220,
-                    borderRadius: 18,
-                    borderWidth: 1,
-                    borderColor: "#e5e7eb",
-                    backgroundColor: "#f9fafb",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Image
-                    source={require("../../../assets/QR.jpg")}
-                    style={{ width: 190, height: 190, resizeMode: "contain" }}
-                  />
-                </View>
-
-                <Text
-                  sx={{
-                    fontSize: 11,
-                    fontFamily: "Poppins-Regular",
-                    color: "#6b7280",
-                    mt: 6,
-                  }}
-                >
-                  Scan this QR using GCash
-                </Text>
-              </View>
-            ) : (
-              <View style={{ marginBottom: 16 }}>
-                <Text
-                  sx={{
-                    fontSize: 12,
-                    fontFamily: "Poppins-Regular",
-                    color: "#6b7280",
-                  }}
-                >
-                  Enter your GCash reference number and upload screenshot of your
-                  payment. (Custom details screen can be expanded here.)
-                </Text>
-              </View>
-            )}
-
-            {/* Reference No. */}
-            <View style={{ marginBottom: 10 }}>
-              <Text
-                sx={{
-                  fontSize: 12,
-                  fontFamily: "Poppins-Bold",
-                  color: "#4b5563",
-                  mb: 4,
-                }}
-              >
-                Reference No.
-              </Text>
-              <TextInput
-                value={referenceNo}
-                editable={false}
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#e5e7eb",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  backgroundColor: "#f9fafb",
-                  fontSize: 13,
-                  fontFamily: "Poppins-Regular",
-                  color: "#111827",
-                }}
-              />
-            </View>
-
-            {/* Upload screenshot */}
-            <View style={{ marginBottom: 14 }}>
-              <Text
-                sx={{
-                  fontSize: 12,
-                  fontFamily: "Poppins-Bold",
-                  color: "#4b5563",
-                  mb: 4,
-                }}
-              >
-                Upload Screenshot
-              </Text>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <TouchableOpacity
-                  onPress={handleChooseScreenshot}
-                  style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 9,
-                    borderRadius: 999,
-                    borderWidth: 1,
-                    borderColor: "#d1d5db",
-                    backgroundColor: "#ffffff",
-                    marginRight: 8,
-                  }}
-                >
-                  <Text
-                    sx={{
-                      fontSize: 12,
-                      fontFamily: "Poppins-Bold",
-                      color: "#2563eb",
-                    }}
-                  >
-                    Choose Image
-                  </Text>
-                </TouchableOpacity>
-
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    flex: 1,
-                    fontSize: 11,
-                    fontFamily: "Poppins-Regular",
-                    color: "#6b7280",
-                  }}
-                >
-                  {paymentScreenshotName || "No file chosen"}
-                </Text>
-              </View>
-            </View>
-
-            {/* Modal buttons */}
             <View
               style={{
                 flexDirection: "row",
@@ -1004,7 +810,7 @@ export default function WorkerReviewApplication() {
               }}
             >
               <TouchableOpacity
-                onPress={() => setShowPaymentModal(false)}
+                onPress={() => setShowConfirmModal(false)}
                 style={{
                   flex: 1,
                   paddingVertical: 11,
@@ -1018,7 +824,7 @@ export default function WorkerReviewApplication() {
               >
                 <Text
                   sx={{
-                    fontSize: 13,
+                    fontSize: 14,
                     fontFamily: "Poppins-Bold",
                     color: "#374151",
                   }}
@@ -1028,7 +834,7 @@ export default function WorkerReviewApplication() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={handleConfirmPayment}
+                onPress={handleConfirmSubmit}
                 style={{
                   flex: 1,
                   paddingVertical: 11,
@@ -1039,26 +845,67 @@ export default function WorkerReviewApplication() {
               >
                 <Text
                   sx={{
-                    fontSize: 13,
+                    fontSize: 14,
                     fontFamily: "Poppins-Bold",
                     color: "#ffffff",
                   }}
                 >
-                  Confirm Payment
+                  Yes, Submit
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
 
+      {/* --------- Submitting Loading Modal --------- */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={showSubmittingModal}
+        onRequestClose={() => {}}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.35)",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: 12,
+          }}
+        >
+          <View
+            style={{
+              width: "100%",
+              maxWidth: 320,
+              backgroundColor: "#ffffff",
+              borderRadius: 20,
+              paddingHorizontal: 20,
+              paddingVertical: 22,
+              alignItems: "center",
+            }}
+          >
+            <ActivityIndicator size="large" color="#008CFC" />
             <Text
               sx={{
-                fontSize: 10,
-                fontFamily: "Poppins-Regular",
-                color: "#9ca3af",
-                textAlign: "center",
-                mt: 10,
+                fontSize: 15,
+                fontFamily: "Poppins-Bold",
+                color: "#111827",
+                mt: 12,
               }}
             >
-              GCash only · Secure payment · Non-refundable application fee
+              Submitting your application...
+            </Text>
+            <Text
+              sx={{
+                fontSize: 12,
+                fontFamily: "Poppins-Regular",
+                color: "#6b7280",
+                mt: 4,
+                textAlign: "center",
+              }}
+            >
+              Please wait a moment while we save your details.
             </Text>
           </View>
         </View>

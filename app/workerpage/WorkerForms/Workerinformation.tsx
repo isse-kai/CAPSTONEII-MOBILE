@@ -366,7 +366,7 @@ export default function WorkerInformation() {
                   color: "#6b7280",
                 }}
               >
-                1 of 6 | Post a Worker Application
+                1 of 4 | Post a Worker Application
               </Text>
               <Text
                 sx={{
@@ -389,7 +389,7 @@ export default function WorkerInformation() {
                 Please fill in your details.
               </Text>
 
-              {/* Progress bar 1/6 */}
+              {/* Progress bar 1/4 */}
               <View
                 style={{
                   marginTop: 12,
@@ -401,7 +401,7 @@ export default function WorkerInformation() {
               >
                 <View
                   style={{
-                    width: "16.7%",
+                    width: "25%",
                     height: "100%",
                     backgroundColor: "#008CFC",
                   }}

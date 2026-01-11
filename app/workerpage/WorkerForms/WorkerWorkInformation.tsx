@@ -24,67 +24,67 @@ import {
 } from "../../../supabase/controllers/workerinformationcontroller"
 import { getCurrentUser } from "../../../supabase/services/loginservice"
 
-// ----- Task options per service type (with prices) -----
+// ----- Task options per service type (no prices) -----
 const CARPENTER_TASK_OPTIONS = [
-  "General Carpentry – ₱500–₱1,000 per job",
-  "Door Repair / Alignment – ₱500–₱1,200",
-  "Window Repair / Installation – ₱600–₱1,500",
-  "Furniture Repair – ₱700–₱2,000",
-  "Wood Polishing / Revarnish – ₱800–₱2,500",
-  "Custom Shelves / Cabinets – ₱2,000–₱5,000",
-  "Modular Kitchen Installation – ₱5,000+ per project",
-  "Flooring / Decking – ₱250–₱450 per sq.m.",
-  "Wall Paneling / False Ceiling – ₱350–₱600 per sq.m.",
-  "Partition Wall (Drywall / Plyboard) – ₱400–₱700 per sq.m.",
-  "Roof Framing / Trusses – ₱4,000–₱10,000+ per project",
+  "General Carpentry",
+  "Door Repair / Alignment",
+  "Window Repair / Installation",
+  "Furniture Repair",
+  "Wood Polishing / Revarnish",
+  "Custom Shelves / Cabinets",
+  "Modular Kitchen Installation",
+  "Flooring / Decking",
+  "Wall Paneling / False Ceiling",
+  "Partition Wall (Drywall / Plyboard)",
+  "Roof Framing / Trusses",
 ]
 
 const ELECTRICIAN_TASK_OPTIONS = [
-  "Basic Check-up & Minor Repair – ₱400–₱800",
-  "Outlet & Switch Repair – ₱400–₱900",
-  "New Outlet / Switch Installation – ₱500–₱1,000",
-  "Lighting Installation (per light) – ₱300–₱800",
-  "Ceiling Fan Installation – ₱600–₱1,200",
-  "House Wiring (per room) – ₱1,500–₱3,500",
-  "Circuit Breaker / Panel Setup – ₱2,500–₱6,000",
-  "Appliance Wiring / Hook-up – ₱500–₱1,500",
-  "Emergency Power Check (Brownout issues) – ₱500–₱1,200",
-  "Grounding / Earthing Installation – ₱1,500–₱3,000",
+  "Basic Check-up & Minor Repair",
+  "Outlet & Switch Repair",
+  "New Outlet / Switch Installation",
+  "Lighting Installation",
+  "Ceiling Fan Installation",
+  "House Wiring",
+  "Circuit Breaker / Panel Setup",
+  "Appliance Wiring / Hook-up",
+  "Emergency Power Check",
+  "Grounding / Earthing Installation",
 ]
 
 const PLUMBER_TASK_OPTIONS = [
-  "Leak Repair – ₱400–₱900",
-  "Clogged Drain / Toilet – ₱500–₱1,200",
-  "Pipe Installation / Replacement – ₱1,500–₱4,000",
-  "Toilet & Sink Installation – ₱1,500–₱3,000",
-  "Faucet / Shower Replacement – ₱500–₱1,200",
-  "Water Heater Installation – ₱2,000–₱4,000",
-  "Water Line Check-up – ₱400–₱800",
-  "Septic Tank Check / Basic Service – ₱2,000–₱4,000",
-  "Outdoor Faucet / Garden Line Setup – ₱800–₱2,000",
+  "Leak Repair",
+  "Clogged Drain / Toilet",
+  "Pipe Installation / Replacement",
+  "Toilet & Sink Installation",
+  "Faucet / Shower Replacement",
+  "Water Heater Installation",
+  "Water Line Check-up",
+  "Septic Tank Check / Basic Service",
+  "Outdoor Faucet / Garden Line Setup",
 ]
 
 const CARWASHER_TASK_OPTIONS = [
-  "Sedan – Basic Wash – ₱150–₱250",
-  "Sedan – Wash + Vacuum – ₱250–₱400",
-  "SUV / MPV – Basic Wash – ₱200–₱300",
-  "SUV / MPV – Wash + Vacuum – ₱300–₱500",
-  "Engine Wash – ₱300–₱600",
-  "Interior Detailing – ₱800–₱2,000",
-  "Full Detailing Package – ₱1,500–₱3,500",
-  "Motorcycle Wash – ₱80–₱150",
-  "Ceramic Coating / Wax – ₱1,500–₱4,000",
+  "Sedan – Basic Wash",
+  "Sedan – Wash + Vacuum",
+  "SUV / MPV – Basic Wash",
+  "SUV / MPV – Wash + Vacuum",
+  "Engine Wash",
+  "Interior Detailing",
+  "Full Detailing Package",
+  "Motorcycle Wash",
+  "Ceramic Coating / Wax",
 ]
 
 const LAUNDRY_TASK_OPTIONS = [
-  "Wash & Fold – Regular Clothes – ₱40–₱60/kg",
-  "Wash, Dry & Iron – ₱60–₱80/kg",
-  "Bedsheets / Curtains – ₱80–₱120/kg",
-  "Blankets / Comforters – ₱150–₱250 per piece",
-  "Delicate / Special Fabrics – ₱80–₱120/kg",
-  "Uniforms / Office Attire – ₱60–₱90/kg",
-  "Pickup & Delivery Service – add ₱50–₱150",
-  "Express Service (Same Day) – add ₱50–₱100",
+  "Wash & Fold – Regular Clothes",
+  "Wash, Dry & Iron",
+  "Bedsheets / Curtains",
+  "Blankets / Comforters",
+  "Delicate / Special Fabrics",
+  "Uniforms / Office Attire",
+  "Pickup & Delivery Service",
+  "Express Service (Same Day)",
 ]
 
 // Type for what we *expect* from the DB/controller
@@ -99,12 +99,13 @@ interface WorkerWorkInformationExisting {
   has_own_tools?: boolean | null
 }
 
-const SUMMARY_MARKER = "Selected services (with price ranges):"
+// Marker used when appending selected services to description
+const SUMMARY_MARKER = "Selected services:"
 
 /**
  * Remove any previously appended service-summary text from the description.
  * Handles:
- *  - Our new marker line "Selected services (with price ranges):"
+ *  - Our marker line "Selected services:"
  *  - Older data that may already contain "Carpenter:", "Electrician:", etc.
  */
 const cleanDescriptionFromSummary = (raw: string | null | undefined): string => {
@@ -118,7 +119,7 @@ const cleanDescriptionFromSummary = (raw: string | null | undefined): string => 
     text = text.slice(0, idx)
   }
 
-  // Case 2: older data that appended lines like "Carpenter: ..."
+  // Case 2: older data that appended lines like "Carpenter: ...", etc.
   const lines = text.split("\n")
   const filtered: string[] = []
 
@@ -269,7 +270,7 @@ export default function WorkerWorkInformation() {
 
     if (!lines.length) return ""
 
-    return `\n\n${SUMMARY_MARKER}:\n${lines.join("\n")}`
+    return `\n\n${SUMMARY_MARKER}\n${lines.join("\n")}`
   }
 
   const handleNext = async () => {
@@ -501,9 +502,7 @@ export default function WorkerWorkInformation() {
             }}
             numberOfLines={2}
           >
-            {selected.length
-              ? selected.join(", ")
-              : "Select services (with price range)"}
+            {selected.length ? selected.join(", ") : "Select services"}
           </Text>
           <Ionicons name="chevron-down-outline" size={18} color="#6b7280" />
         </Pressable>
@@ -533,7 +532,7 @@ export default function WorkerWorkInformation() {
     )
   }
 
-  // Reusable modal for multi-selecting services (prices highlighted)
+  // Reusable modal for multi-selecting services (no prices)
   const TaskModal = ({
     visible,
     title,
@@ -629,16 +628,6 @@ export default function WorkerWorkInformation() {
               {options.map(option => {
                 const isSelected = selected.includes(option)
 
-                // Split label and price so price is highlighted
-                const pesoIndex = option.indexOf("₱")
-                const hasPrice = pesoIndex !== -1
-                const labelPart = hasPrice
-                  ? option.slice(0, pesoIndex).trim()
-                  : option
-                const pricePart = hasPrice
-                  ? option.slice(pesoIndex).trim()
-                  : ""
-
                 return (
                   <Pressable
                     key={option}
@@ -661,30 +650,7 @@ export default function WorkerWorkInformation() {
                         mr: 8,
                       }}
                     >
-                      {hasPrice ? (
-                        <>
-                          <Text
-                            sx={{
-                              fontSize: 14,
-                              fontFamily: "Poppins-Regular",
-                              color: "#111827",
-                            }}
-                          >
-                            {labelPart}{" "}
-                          </Text>
-                          <Text
-                            sx={{
-                              fontSize: 14,
-                              fontFamily: "Poppins-Bold",
-                              color: "#008CFC",
-                            }}
-                          >
-                            {pricePart}
-                          </Text>
-                        </>
-                      ) : (
-                        option
-                      )}
+                      {option}
                     </Text>
                     <Ionicons
                       name={
@@ -746,7 +712,7 @@ export default function WorkerWorkInformation() {
                   color: "#6b7280",
                 }}
               >
-                2 of 6 | Post a Worker Application
+                2 of 4 | Post a Worker Application
               </Text>
               <Text
                 sx={{
@@ -781,7 +747,7 @@ export default function WorkerWorkInformation() {
               >
                 <View
                   style={{
-                    width: "33.4%",
+                    width: "50%",
                     height: "100%",
                     backgroundColor: "#008CFC",
                   }}
