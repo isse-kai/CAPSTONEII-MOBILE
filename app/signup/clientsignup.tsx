@@ -18,7 +18,6 @@ import NDAModal from './terms/ndamodal'
 import PolicyAgreementModal from './terms/policyagreementmodal'
 import PrivacyPolicyModal from './terms/privacypolicymodal'
 import VerificationModal from './verification/verificationmodal'
-// import AgreementsModal from './terms/agreementsmodal'
 
 export default function ClientSignup() {
   const router = useRouter()
@@ -346,43 +345,72 @@ export default function ClientSignup() {
 
               {/* Privacy Policy */}
               <View sx={{ flexDirection: 'row', alignItems: 'flex-start', mt: 12 }}>
-                <View sx={{ width: 18, height: 18, borderWidth: 1, borderColor: '#000', borderRadius: 4,
-                            bg: acceptedPrivacy ? '#008CFC' : 'transparent', mr: 10, alignItems: 'center', justifyContent: 'center' }}>
+                <View
+                  sx={{
+                    width: 18,
+                    height: 18,
+                    borderWidth: 1,
+                    borderColor: '#000',
+                    borderRadius: 4,
+                    bg: acceptedPrivacy ? '#008CFC' : 'transparent',
+                    mr: 10,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   {acceptedPrivacy && <Text sx={{ color: '#fff', fontSize: 12 }}>✓</Text>}
                 </View>
                 <Pressable onPress={() => setPrivacyModalOpen(true)}>
                   <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Regular', color: '#000' }}>
-                    JDK HOMECARE’s <Text sx={{ fontFamily: 'Poppins-Bold', color: '#008CFC', textDecorationLine: 'underline' }}>Privacy Policy</Text>
+                    JDK HOMECARE’s{' '}
+                    <Text
+                      sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', color: '#008CFC', textDecorationLine: 'underline' }}
+                    >
+                      Privacy Policy
+                    </Text>
                   </Text>
                 </Pressable>
               </View>
 
-              {/* Policy Agreement */}
+              {/* Policy Agreement + NDA Checkbox */}
               <View sx={{ flexDirection: 'row', alignItems: 'flex-start', mt: 12 }}>
-                <View sx={{ width: 18, height: 18, borderWidth: 1, borderColor: '#000', borderRadius: 4,
-                            bg: acceptedPolicy ? '#008CFC' : 'transparent', mr: 10, alignItems: 'center', justifyContent: 'center' }}>
-                  {acceptedPolicy && <Text sx={{ color: '#fff', fontSize: 12 }}>✓</Text>}
+                <View
+                  sx={{
+                    width: 18,
+                    height: 18,
+                    borderWidth: 1,
+                    borderColor: '#000',
+                    borderRadius: 4,
+                    bg: acceptedPolicy && acceptedNDA ? '#008CFC' : 'transparent',
+                    mr: 10,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {acceptedPolicy && acceptedNDA && <Text sx={{ color: '#fff', fontSize: 12 }}>✓</Text>}
                 </View>
-                <Pressable onPress={() => setPolicyModalOpen(true)}>
+                <View style={{ flex: 1 }}>
                   <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Regular', color: '#000' }}>
-                    JDK HOMECARE’s <Text sx={{ fontFamily: 'Poppins-Bold', color: '#008CFC', textDecorationLine: 'underline' }}>Policy Agreement</Text>
+                    JDK HOMECARE’s{' '}
+                    <Text
+                      sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', color: '#008CFC', textDecorationLine: 'underline' }}
+                      onPress={() => setPolicyModalOpen(true)}
+                    >
+                      Policy Agreement
+                    </Text>{' '}
+                    and{' '}
+                    <Text
+                      sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', color: '#008CFC', textDecorationLine: 'underline' }}
+                      onPress={() => setNdaModalOpen(true)}
+                    >
+                      Non‑Disclosure Agreement
+                    </Text>
                   </Text>
-                </Pressable>
-              </View>
-
-              {/* NDA */}
-              <View sx={{ flexDirection: 'row', alignItems: 'flex-start', mt: 12 }}>
-                <View sx={{ width: 18, height: 18, borderWidth: 1, borderColor: '#000', borderRadius: 4,
-                            bg: acceptedNDA ? '#008CFC' : 'transparent', mr: 10, alignItems: 'center', justifyContent: 'center' }}>
-                  {acceptedNDA && <Text sx={{ color: '#fff', fontSize: 12 }}>✓</Text>}
+                  <Text sx={{ fontSize: 12, color: '#555', mt: 2 }}>
+                    You must agree to both documents to enable this checkbox.
+                  </Text>
                 </View>
-                <Pressable onPress={() => setNdaModalOpen(true)}>
-                  <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Regular', color: '#000' }}>
-                    JDK HOMECARE’s <Text sx={{ fontFamily: 'Poppins-Bold', color: '#008CFC', textDecorationLine: 'underline' }}>Non‑Disclosure Agreement</Text>
-                  </Text>
-                </Pressable>
               </View>
-
 
               {/* Error Message */}
               {error_message ? (
