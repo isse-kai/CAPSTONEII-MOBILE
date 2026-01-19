@@ -1,8 +1,8 @@
-import { Pressable, Text, View } from 'dripsy'
-import { useFonts } from 'expo-font'
-import { useRouter } from 'expo-router'
-import { MotiView } from 'moti'
-import React, { useState } from 'react'
+import { Pressable, Text, View } from "dripsy";
+import { useFonts } from "expo-font";
+import { useRouter } from "expo-router";
+import { MotiView } from "moti";
+import React, { useState } from "react";
 import {
   Alert,
   Dimensions,
@@ -14,59 +14,65 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-} from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { loginUser } from '../../supabase/services/loginservice'
+} from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 export default function Login() {
-  const router = useRouter()
-  const insets = useSafeAreaInsets()
-  const screenHeight = Dimensions.get('window').height
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const screenHeight = Dimensions.get("window").height;
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [fontsLoaded] = useFonts({
-    'Poppins-Regular': require('../../assets/fonts/Poppins/Poppins-Regular.ttf'),
-    'Poppins-Bold': require('../../assets/fonts/Poppins/Poppins-Bold.ttf'),
-    'Poppins-ExtraBold': require('../../assets/fonts/Poppins/Poppins-ExtraBold.ttf'),
-  })
+    "Poppins-Regular": require("../../assets/fonts/Poppins/Poppins-Regular.ttf"),
+    "Poppins-Bold": require("../../assets/fonts/Poppins/Poppins-Bold.ttf"),
+    "Poppins-ExtraBold": require("../../assets/fonts/Poppins/Poppins-ExtraBold.ttf"),
+  });
 
-  if (!fontsLoaded) return null
+  if (!fontsLoaded) return null;
 
+  // ✅ Frontend-only login (no backend)
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Missing Fields', 'Please enter both email and password')
-      return
+      Alert.alert("Missing Fields", "Please enter both email and password");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const { token, role, profile } = await loginUser(email, password)
-      console.log('Logged in:', { token, role, profile })
+      // Simulate a quick "login"
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
-      if (role === 'client') {
-        router.push('/clientpage/home')
+      // Simple role decision (edit to whatever you want)
+      const role = email.toLowerCase().includes("client") ? "client" : "worker";
+
+      if (role === "client") {
+        router.push("/clientpage/home");
       } else {
-        router.push('/workerpage/home')
+        router.push("/workerpage/home");
       }
     } catch (err: any) {
-      Alert.alert('Login Failed', err.message)
+      Alert.alert("Login Failed", err?.message || "Something went wrong");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <ImageBackground
-      source={require('../../assets/login.jpg')}
+      source={require("../../assets/login.jpg")}
       style={{ flex: 1 }}
       resizeMode="cover"
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
       >
         <SafeAreaView
@@ -80,7 +86,7 @@ export default function Login() {
               flexGrow: 1,
               minHeight: screenHeight - insets.top - insets.bottom - 24,
               paddingHorizontal: 16,
-              justifyContent: 'center',
+              justifyContent: "center",
             }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -88,26 +94,26 @@ export default function Login() {
             <MotiView
               from={{ opacity: 0, translateY: 20 }}
               animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: 'timing', duration: 500 }}
+              transition={{ type: "timing", duration: 500 }}
               style={{ gap: 20 }}
             >
               {/* Logo */}
-                <View sx={{ alignItems: 'center', mt: -150, mb: -60 }}>
+              <View sx={{ alignItems: "center", mt: -150, mb: -60 }}>
                 <Image
-                    source={require('../../assets/jdklogo.png')}
-                    style={{ width: 250, height: 250, resizeMode: 'contain' }}
+                  source={require("../../assets/jdklogo.png")}
+                  style={{ width: 250, height: 250, resizeMode: "contain" }}
                 />
-                </View>
+              </View>
 
               {/* Login */}
               <View
                 style={{
-                  backgroundColor: '#ffffffcc',
+                  backgroundColor: "#ffffffcc",
                   borderRadius: 12,
                   padding: 16,
                   marginBottom: 20,
-                  alignSelf: 'center',
-                  width: '90%',
+                  alignSelf: "center",
+                  width: "90%",
                   maxWidth: 400,
                 }}
               >
@@ -115,10 +121,10 @@ export default function Login() {
                 <Text
                   sx={{
                     fontSize: 22,
-                    fontFamily: 'Poppins-ExtraBold',
-                    color: '#000000',
+                    fontFamily: "Poppins-ExtraBold",
+                    color: "#000000",
                     mb: 12,
-                    textAlign: 'center',
+                    textAlign: "center",
                   }}
                 >
                   LOGIN
@@ -126,35 +132,39 @@ export default function Login() {
 
                 {/* Email */}
                 <View style={{ marginBottom: 16 }}>
-                  <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Email</Text>
+                  <Text sx={{ fontSize: 16, color: "#000", mb: 6 }}>Email</Text>
                   <TextInput
                     value={email}
                     onChangeText={setEmail}
                     placeholder="Enter your email"
                     placeholderTextColor="#ccc"
+                    autoCapitalize="none"
+                    keyboardType="email-address"
                     style={{
                       borderWidth: 1,
-                      borderColor: '#d1d5db',
+                      borderColor: "#d1d5db",
                       borderRadius: 8,
                       paddingHorizontal: 12,
                       paddingVertical: 12,
                       fontSize: 16,
-                      backgroundColor: '#f9fafb',
+                      backgroundColor: "#f9fafb",
                     }}
                   />
                 </View>
 
                 {/* Password */}
                 <View style={{ marginBottom: 16 }}>
-                  <Text sx={{ fontSize: 16, color: '#000', mb: 6 }}>Password</Text>
+                  <Text sx={{ fontSize: 16, color: "#000", mb: 6 }}>
+                    Password
+                  </Text>
                   <RNView
                     style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
+                      flexDirection: "row",
+                      alignItems: "center",
                       borderWidth: 1,
-                      borderColor: '#d1d5db',
+                      borderColor: "#d1d5db",
                       borderRadius: 8,
-                      backgroundColor: '#f9fafb',
+                      backgroundColor: "#f9fafb",
                       paddingHorizontal: 12,
                     }}
                   >
@@ -170,14 +180,16 @@ export default function Login() {
                         fontSize: 16,
                       }}
                     />
-                    <TouchableOpacity onPress={() => setShowPassword(prev => !prev)}>
+                    <TouchableOpacity
+                      onPress={() => setShowPassword((prev) => !prev)}
+                    >
                       <Image
                         source={
                           showPassword
-                            ? require('../../assets/view.png')
-                            : require('../../assets/hide.png')
+                            ? require("../../assets/view.png")
+                            : require("../../assets/hide.png")
                         }
-                        style={{ width: 24, height: 24, tintColor: '#333' }}
+                        style={{ width: 24, height: 24, tintColor: "#333" }}
                       />
                     </TouchableOpacity>
                   </RNView>
@@ -188,43 +200,49 @@ export default function Login() {
                   onPress={handleLogin}
                   disabled={isLoading}
                   sx={{
-                    bg: '#008CFC',
+                    bg: "#008CFC",
                     borderRadius: 10,
                     py: 14,
-                    alignItems: 'center',
+                    alignItems: "center",
                     mb: 16,
                   }}
                 >
                   <Text
                     sx={{
                       fontSize: 18,
-                      fontFamily: 'Poppins-Bold',
-                      color: '#fff',
+                      fontFamily: "Poppins-Bold",
+                      color: "#fff",
                       lineHeight: 22,
                     }}
                   >
-                    {isLoading ? 'Logging in...' : 'Login'}
+                    {isLoading ? "Logging in..." : "Login"}
                   </Text>
                 </Pressable>
 
                 {/* Sign Up */}
                 <View
                   sx={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  <Text sx={{ fontSize: 14, color: '#000', fontFamily: 'Poppins-Regular' }}>
-                    Don’t have an account?{' '}
+                  <Text
+                    sx={{
+                      fontSize: 14,
+                      color: "#000",
+                      fontFamily: "Poppins-Regular",
+                    }}
+                  >
+                    Don’t have an account?{" "}
                   </Text>
-                  <Pressable onPress={() => router.push('/signup/roles')}>
+                  <Pressable onPress={() => router.push("/signup/roles")}>
                     <Text
                       sx={{
                         fontSize: 14,
-                        fontFamily: 'Poppins-Bold',
-                        color: '#008CFC',
-                        textDecorationLine: 'underline',
+                        fontFamily: "Poppins-Bold",
+                        color: "#008CFC",
+                        textDecorationLine: "underline",
                       }}
                     >
                       Sign up
@@ -232,11 +250,10 @@ export default function Login() {
                   </Pressable>
                 </View>
               </View>
-
             </MotiView>
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
     </ImageBackground>
-  )
+  );
 }

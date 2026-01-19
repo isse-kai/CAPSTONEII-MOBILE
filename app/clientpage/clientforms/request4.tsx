@@ -1,20 +1,17 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { ScrollView, Text, View } from "dripsy"
-import { useRouter } from "expo-router"
-import { MotiView } from "moti"
-import React, { useEffect, useState } from "react"
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ScrollView, Text, View } from "dripsy";
+import { useRouter } from "expo-router";
+import { MotiView } from "moti";
+import React, { useEffect, useState } from "react";
+import { Dimensions, ImageBackground, Pressable } from "react-native";
 import {
-    Dimensions,
-    ImageBackground,
-    Pressable,
-} from "react-native"
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
-import { supabase } from "../../../supabase/db"
-import { ClientTermsAgreement } from "../../../supabase/services/clientrequestservice"
-import Header from "../clientnavbar/header"
-import ClientNavbar from "../clientnavbar/navbar"
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import Header from "../clientnavbar/header";
+import ClientNavbar from "../clientnavbar/navbar";
 
-const { width, height } = Dimensions.get("window")
+const { width, height } = Dimensions.get("window");
 
 const C = {
   bg: "#f7f9fc",
@@ -23,78 +20,51 @@ const C = {
   blue: "#1e86ff",
   border: "#d1d5db",
   track: "#e5e7eb",
-}
+};
 
-const STORAGE_KEY = "request_step4"
+const STORAGE_KEY = "request_step4";
 
 export default function ClientRequestTerms() {
-  const router = useRouter()
-  const insets = useSafeAreaInsets()
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-  const [clientId, setClientId] = useState<string | null>(null)
-  const [email, setEmail] = useState("")
+  const [consentBackground, setConsentBackground] = useState(false);
+  const [consentTerms, setConsentTerms] = useState(false);
+  const [consentDataPrivacy, setConsentDataPrivacy] = useState(false);
 
-  const [consentBackground, setConsentBackground] = useState(false)
-  const [consentTerms, setConsentTerms] = useState(false)
-  const [consentDataPrivacy, setConsentDataPrivacy] = useState(false)
-
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const rawStep1 = await AsyncStorage.getItem("request_step1")
-      if (rawStep1) {
-        const v1 = JSON.parse(rawStep1)
-        setClientId(v1.client_id ? String(v1.client_id) : null)
-        setEmail(v1.email_address ?? "")
+      try {
+        const rawTerms = await AsyncStorage.getItem(STORAGE_KEY);
+        if (rawTerms) {
+          const v = JSON.parse(rawTerms);
+          setConsentBackground(v.consent_background_checks ?? false);
+          setConsentTerms(v.consent_terms_privacy ?? false);
+          setConsentDataPrivacy(v.consent_data_privacy ?? false);
+        }
+      } catch (e) {
+        console.error("Error loading step4:", e);
       }
+    })();
+  }, []);
 
-      const rawTerms = await AsyncStorage.getItem(STORAGE_KEY)
-      if (rawTerms) {
-        const v = JSON.parse(rawTerms)
-        setConsentBackground(v.consent_background_checks ?? false)
-        setConsentTerms(v.consent_terms_privacy ?? false)
-        setConsentDataPrivacy(v.consent_data_privacy ?? false)
-      }
-    })()
-  }, [])
-
-  const canNext = consentBackground && consentTerms && consentDataPrivacy
+  const canNext = consentBackground && consentTerms && consentDataPrivacy;
 
   const onNext = async () => {
-    setSubmitted(true)
-    if (!canNext) return
+    setSubmitted(true);
+    if (!canNext) return;
 
     const payload = {
       consent_background_checks: consentBackground,
       consent_terms_privacy: consentTerms,
       consent_data_privacy: consentDataPrivacy,
-    }
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    };
 
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (error || !user) {
-        console.error("No authenticated user", error)
-        return
-      }
-      const authUid = user.id
-
-      await ClientTermsAgreement({
-        client_id: clientId!,
-        auth_uid: authUid,
-        email_address: email,
-        consent_background_checks: consentBackground,
-        consent_terms_privacy: consentTerms,
-        consent_data_privacy: consentDataPrivacy,
-        created_at: new Date().toISOString(),
-      })
-
-      router.push("./requestpreview")
-    } catch (err) {
-      console.error("Error saving terms:", err)
-    }
-  }
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    router.push("./requestpreview");
+  };
 
   return (
     <ImageBackground
@@ -122,10 +92,18 @@ export default function ClientRequestTerms() {
 
             {/* Step status */}
             <View sx={{ mb: 20 }}>
-              <Text sx={{ fontSize: 18, fontFamily: "Poppins-Bold", color: C.text }}>
+              <Text
+                sx={{ fontSize: 18, fontFamily: "Poppins-Bold", color: C.text }}
+              >
                 Step 4 of 4
               </Text>
-              <Text sx={{ fontSize: 14, fontFamily: "Poppins-Regular", color: C.sub }}>
+              <Text
+                sx={{
+                  fontSize: 14,
+                  fontFamily: "Poppins-Regular",
+                  color: C.sub,
+                }}
+              >
                 Terms and Agreement
               </Text>
               <View sx={{ flexDirection: "row", mt: 10, columnGap: 12 }}>
@@ -168,7 +146,13 @@ export default function ClientRequestTerms() {
                   backgroundColor: "#fff",
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
                   <View
                     style={{
                       width: 20,
@@ -179,11 +163,23 @@ export default function ClientRequestTerms() {
                       backgroundColor: consentBackground ? C.blue : "#fff",
                     }}
                   />
-                  <Text sx={{ fontSize: 16, fontFamily: "Poppins-Bold", color: C.text }}>
+                  <Text
+                    sx={{
+                      fontSize: 16,
+                      fontFamily: "Poppins-Bold",
+                      color: C.text,
+                    }}
+                  >
                     Background Checks
                   </Text>
                 </View>
-                <Text sx={{ fontSize: 14, fontFamily: "Poppins-Regular", color: C.text }}>
+                <Text
+                  sx={{
+                    fontSize: 14,
+                    fontFamily: "Poppins-Regular",
+                    color: C.text,
+                  }}
+                >
                   I consent to background checks and verify my documents.
                 </Text>
               </Pressable>
@@ -200,7 +196,13 @@ export default function ClientRequestTerms() {
                   backgroundColor: "#fff",
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
                   <View
                     style={{
                       width: 20,
@@ -211,12 +213,25 @@ export default function ClientRequestTerms() {
                       backgroundColor: consentTerms ? C.blue : "#fff",
                     }}
                   />
-                  <Text sx={{ fontSize: 16, fontFamily: "Poppins-Bold", color: C.text }}>
+                  <Text
+                    sx={{
+                      fontSize: 16,
+                      fontFamily: "Poppins-Bold",
+                      color: C.text,
+                    }}
+                  >
                     Terms & Privacy
                   </Text>
                 </View>
-                <Text sx={{ fontSize: 14, fontFamily: "Poppins-Regular", color: C.text }}>
-                  I agree to JD HOMECARE&apos;s Terms of Service and Privacy Policy.
+                <Text
+                  sx={{
+                    fontSize: 14,
+                    fontFamily: "Poppins-Regular",
+                    color: C.text,
+                  }}
+                >
+                  I agree to JD HOMECARE&apos;s Terms of Service and Privacy
+                  Policy.
                 </Text>
               </Pressable>
 
@@ -231,7 +246,13 @@ export default function ClientRequestTerms() {
                   backgroundColor: "#fff",
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
                   <View
                     style={{
                       width: 20,
@@ -242,12 +263,25 @@ export default function ClientRequestTerms() {
                       backgroundColor: consentDataPrivacy ? C.blue : "#fff",
                     }}
                   />
-                  <Text sx={{ fontSize: 16, fontFamily: "Poppins-Bold", color: C.text }}>
+                  <Text
+                    sx={{
+                      fontSize: 16,
+                      fontFamily: "Poppins-Bold",
+                      color: C.text,
+                    }}
+                  >
                     Data Privacy
                   </Text>
                 </View>
-                <Text sx={{ fontSize: 14, fontFamily: "Poppins-Regular", color: C.text }}>
-                  I consent to the collection and processing of my personal data in accordance with the Data Privacy Act (RA 10173).
+                <Text
+                  sx={{
+                    fontSize: 14,
+                    fontFamily: "Poppins-Regular",
+                    color: C.text,
+                  }}
+                >
+                  I consent to the collection and processing of my personal data
+                  in accordance with the Data Privacy Act (RA 10173).
                 </Text>
               </Pressable>
 
@@ -323,5 +357,5 @@ export default function ClientRequestTerms() {
         <ClientNavbar />
       </SafeAreaView>
     </ImageBackground>
-  )
+  );
 }
