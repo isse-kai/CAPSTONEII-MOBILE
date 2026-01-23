@@ -1,291 +1,248 @@
-import axios from "axios";
-import { Pressable, Text, View } from "dripsy";
-import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
-import { MotiView } from "moti";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  Alert,
-  Dimensions,
-  Image,
-  ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
-  View as RNView,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
+    Alert,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { supabase } from "../../supabase/supabase"; // ✅ adjust if your path is different
 
-type LoginResponse = {
-  ok: boolean;
-  access_token?: string;
-  refresh_token?: string;
-  user?: any; // supabase user object
-  detail?: string;
-};
+const BLUE = "#1E88E5";
 
-export default function Login() {
+export default function LoginScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const screenHeight = Dimensions.get("window").height;
-
-  const API_URL = process.env.EXPO_PUBLIC_API_URL; // e.g. http://192.168.1.10:8081
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [fontsLoaded] = useFonts({
-    "Poppins-Regular": require("../../assets/fonts/Poppins/Poppins-Regular.ttf"),
-    "Poppins-Bold": require("../../assets/fonts/Poppins/Poppins-Bold.ttf"),
-    "Poppins-ExtraBold": require("../../assets/fonts/Poppins/Poppins-ExtraBold.ttf"),
-  });
-
-  if (!fontsLoaded) return null;
-
-  const normalizeEmail = (e: string) => (e || "").trim().toLowerCase();
+  const canLogin = useMemo(() => {
+    return email.trim().length > 0 && password.trim().length > 0;
+  }, [email, password]);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Missing Fields", "Please enter both email and password");
-      return;
-    }
-
-    if (!API_URL) {
-      Alert.alert(
-        "Missing API URL",
-        "Set EXPO_PUBLIC_API_URL to your backend IP (not localhost).",
-      );
-      return;
-    }
-
-    setIsLoading(true);
+    if (!canLogin || isLoading) return;
 
     try {
-      const res = await axios.post<LoginResponse>(
-        `${API_URL}/auth/login`,
-        {
-          email: normalizeEmail(email),
-          password: String(password),
-        },
-        { timeout: 15000 },
-      );
+      setIsLoading(true);
 
-      if (!res.data?.ok) {
-        Alert.alert("Login Failed", res.data?.detail || "Invalid credentials.");
+      const cleanEmail = email.trim().toLowerCase();
+
+      // 1) Sign in using Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
+
+      if (error) {
+        Alert.alert("Login failed", error.message);
         return;
       }
 
-      const user = res.data.user;
-      // role stored in metadata (based on your /auth/verify createUser)
-      const role =
-        user?.user_metadata?.role || user?.app_metadata?.role || "client";
-
-      // ✅ Navigate to home (use replace so it doesn't stack)
-      if (String(role).toLowerCase() === "worker") {
-        router.replace("/workerpage/home");
-      } else {
-        router.replace("/clientpage/home");
+      const authUid = data.user?.id;
+      if (!authUid) {
+        Alert.alert("Login failed", "No user session found.");
+        return;
       }
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.detail || err?.message || "Something went wrong.";
-      Alert.alert("Login Failed", msg);
+
+      // 2) Check if user exists in user_worker
+      const workerRes = await supabase
+        .from("user_worker")
+        .select("id")
+        .eq("auth_uid", authUid)
+        .maybeSingle();
+
+      if (workerRes.error) {
+        Alert.alert("Error", workerRes.error.message);
+        return;
+      }
+
+      if (workerRes.data) {
+        router.replace("/workerpage/workerpage");
+        return;
+      }
+
+      // 3) Check if user exists in user_client
+      const clientRes = await supabase
+        .from("user_client")
+        .select("id")
+        .eq("auth_uid", authUid)
+        .maybeSingle();
+
+      if (clientRes.error) {
+        Alert.alert("Error", clientRes.error.message);
+        return;
+      }
+
+      if (clientRes.data) {
+        router.replace("/clientpage/clientpage"); //clientpage
+        return;
+      }
+
+      // 4) Not found in either
+      Alert.alert(
+        "Account role not found",
+        "Your account is not registered as Worker or Client.",
+      );
+    } catch (e: any) {
+      Alert.alert("Login error", e?.message ?? "Something went wrong");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/login.jpg")}
-      style={{ flex: 1 }}
-      resizeMode="cover"
-    >
+    <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
+        style={styles.root}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
       >
-        <SafeAreaView style={{ flex: 1, paddingBottom: insets.bottom }}>
-          <ScrollView
-            contentContainerStyle={{
-              flexGrow: 1,
-              minHeight: screenHeight - insets.top - insets.bottom - 24,
-              paddingHorizontal: 16,
-              justifyContent: "center",
-            }}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: "timing", duration: 500 }}
-              style={{ gap: 20 }}
+        <View style={styles.topBar}>
+          <Image
+            source={require("../../image/jdklogo.png")}
+            style={styles.logo}
+          />
+        </View>
+
+        <View style={styles.centerWrap}>
+          <View style={styles.formWrap}>
+            <Text style={styles.title}>
+              Log in to <Text style={styles.titleBlue}>JDK HOMECARE</Text>
+            </Text>
+
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email Address"
+              placeholderTextColor="#9aa4b2"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.input}
+            />
+
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Password"
+              placeholderTextColor="#9aa4b2"
+              secureTextEntry
+              style={styles.input}
+            />
+
+            <TouchableOpacity
+              onPress={handleLogin}
+              activeOpacity={0.85}
+              disabled={!canLogin || isLoading}
+              style={[
+                styles.loginBtn,
+                canLogin && !isLoading
+                  ? styles.loginBtnEnabled
+                  : styles.loginBtnDisabled,
+              ]}
             >
-              {/* Logo */}
-              <View sx={{ alignItems: "center", mt: -150, mb: -60 }}>
-                <Image
-                  source={require("../../assets/jdklogo.png")}
-                  style={{ width: 250, height: 250, resizeMode: "contain" }}
-                />
-              </View>
-
-              {/* Login */}
-              <View
-                style={{
-                  backgroundColor: "#ffffffcc",
-                  borderRadius: 12,
-                  padding: 16,
-                  marginBottom: 20,
-                  alignSelf: "center",
-                  width: "90%",
-                  maxWidth: 400,
-                }}
+              <Text
+                style={[
+                  styles.loginText,
+                  canLogin && !isLoading
+                    ? styles.loginTextEnabled
+                    : styles.loginTextDisabled,
+                ]}
               >
-                {/* Title */}
-                <Text
-                  sx={{
-                    fontSize: 22,
-                    fontFamily: "Poppins-ExtraBold",
-                    color: "#000000",
-                    mb: 12,
-                    textAlign: "center",
-                  }}
-                >
-                  LOGIN
-                </Text>
+                {isLoading ? "Logging in..." : "Log In"}
+              </Text>
+            </TouchableOpacity>
 
-                {/* Email */}
-                <View style={{ marginBottom: 16 }}>
-                  <Text sx={{ fontSize: 16, color: "#000", mb: 6 }}>Email</Text>
-                  <TextInput
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="Enter your email"
-                    placeholderTextColor="#ccc"
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    style={{
-                      borderWidth: 1,
-                      borderColor: "#d1d5db",
-                      borderRadius: 8,
-                      paddingHorizontal: 12,
-                      paddingVertical: 12,
-                      fontSize: 16,
-                      backgroundColor: "#f9fafb",
-                    }}
-                  />
-                </View>
+            <View style={styles.signupRow}>
+              <Text style={styles.signupText}>Don't have an account?</Text>
+              <TouchableOpacity onPress={() => router.push("/role/role")}>
+                <Text style={styles.signupLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
 
-                {/* Password */}
-                <View style={{ marginBottom: 16 }}>
-                  <Text sx={{ fontSize: 16, color: "#000", mb: 6 }}>
-                    Password
-                  </Text>
-                  <RNView
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      borderWidth: 1,
-                      borderColor: "#d1d5db",
-                      borderRadius: 8,
-                      backgroundColor: "#f9fafb",
-                      paddingHorizontal: 12,
-                    }}
-                  >
-                    <TextInput
-                      value={password}
-                      onChangeText={setPassword}
-                      placeholder="Enter your password"
-                      placeholderTextColor="#ccc"
-                      secureTextEntry={!showPassword}
-                      style={{
-                        flex: 1,
-                        paddingVertical: 12,
-                        fontSize: 16,
-                      }}
-                    />
-                    <TouchableOpacity
-                      onPress={() => setShowPassword((prev) => !prev)}
-                    >
-                      <Image
-                        source={
-                          showPassword
-                            ? require("../../assets/view.png")
-                            : require("../../assets/hide.png")
-                        }
-                        style={{ width: 24, height: 24, tintColor: "#333" }}
-                      />
-                    </TouchableOpacity>
-                  </RNView>
-                </View>
-
-                {/* Login Button */}
-                <Pressable
-                  onPress={handleLogin}
-                  disabled={isLoading}
-                  sx={{
-                    bg: isLoading ? "#93c5fd" : "#008CFC",
-                    borderRadius: 10,
-                    py: 14,
-                    alignItems: "center",
-                    mb: 16,
-                  }}
-                >
-                  <Text
-                    sx={{
-                      fontSize: 18,
-                      fontFamily: "Poppins-Bold",
-                      color: "#fff",
-                      lineHeight: 22,
-                    }}
-                  >
-                    {isLoading ? "Logging in..." : "Login"}
-                  </Text>
-                </Pressable>
-
-                {/* Sign Up */}
-                <View
-                  sx={{
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    sx={{
-                      fontSize: 14,
-                      color: "#000",
-                      fontFamily: "Poppins-Regular",
-                    }}
-                  >
-                    Don’t have an account?{" "}
-                  </Text>
-                  <Pressable onPress={() => router.push("/signup/roles")}>
-                    <Text
-                      sx={{
-                        fontSize: 14,
-                        fontFamily: "Poppins-Bold",
-                        color: "#008CFC",
-                        textDecorationLine: "underline",
-                      }}
-                    >
-                      Sign up
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            </MotiView>
-          </ScrollView>
-        </SafeAreaView>
+        <View style={styles.bottomSpace} />
       </KeyboardAvoidingView>
-    </ImageBackground>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: "#ffffff" },
+  root: { flex: 1, backgroundColor: "#ffffff" },
+
+  topBar: {
+    paddingHorizontal: 18,
+    paddingTop: 8,
+    paddingBottom: 8,
+    alignItems: "flex-start",
+  },
+  logo: { width: 150, height: 30, resizeMode: "contain" },
+
+  centerWrap: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
+
+  formWrap: {
+    width: "100%",
+    maxWidth: 420,
+    alignSelf: "center",
+    alignItems: "center",
+  },
+
+  title: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#111827",
+    marginBottom: 18,
+    textAlign: "center",
+  },
+  titleBlue: { color: BLUE },
+
+  input: {
+    width: "100%",
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#d7dee9",
+    borderRadius: 6,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    color: "#111827",
+    backgroundColor: "#ffffff",
+    marginBottom: 14,
+  },
+
+  loginBtn: {
+    width: "100%",
+    height: 46,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 6,
+  },
+  loginBtnDisabled: { backgroundColor: "#d1d5db" },
+  loginBtnEnabled: { backgroundColor: "#cfd6df" },
+
+  loginText: { fontSize: 14, fontWeight: "700" },
+  loginTextDisabled: { color: "#374151", opacity: 0.9 },
+  loginTextEnabled: { color: "#111827" },
+
+  signupRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 14,
+    columnGap: 6,
+  },
+  signupText: { color: "#111827", fontSize: 13 },
+  signupLink: { color: BLUE, fontSize: 13, fontWeight: "700" },
+
+  bottomSpace: { height: 24 },
+});

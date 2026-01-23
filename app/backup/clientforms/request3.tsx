@@ -1,22 +1,18 @@
-// import AsyncStorage from "@react-native-async-storage/async-storage"
-// import { Picker } from "@react-native-picker/picker"
-// import { ScrollView, Text, TextInput, View } from "dripsy"
-// import { useRouter, type Href } from "expo-router"
-// import { MotiView } from "moti"
-// import React, { useEffect, useMemo, useState } from "react"
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { Picker } from "@react-native-picker/picker";
+// import { ScrollView, Text, TextInput, View } from "dripsy";
+// import { useRouter } from "expo-router";
+// import { MotiView } from "moti";
+// import React, { useEffect, useMemo, useState } from "react";
+// import { Dimensions, ImageBackground, Pressable } from "react-native";
 // import {
-//   Dimensions,
-//   ImageBackground,
-//   Pressable,
-// } from "react-native"
-// import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
-// import { supabase } from "../../../supabase/db"
-// import { ClientServiceRate, ClientServiceRateGetByClientId } from "../../../supabase/services/clientrequestservice"
-// import Header from "../clientnavbar/header"
-// import ClientNavbar from "../clientnavbar/navbar"
+//   SafeAreaView,
+//   useSafeAreaInsets,
+// } from "react-native-safe-area-context";
+// import Header from "../clientnavbar/header";
+// import ClientNavbar from "../clientnavbar/navbar";
 
-
-// const { width, height } = Dimensions.get("window")
+// const { width, height } = Dimensions.get("window");
 
 // const C = {
 //   bg: "#f7f9fc",
@@ -26,109 +22,62 @@
 //   border: "#d1d5db",
 //   placeholder: "#93a3b5",
 //   track: "#e5e7eb",
-// }
+// };
 
-// const STORAGE_KEY = "request_step3"
-// const NEXT_ROUTE = "./clientforms/requestpreview" as Href
+// const STORAGE_KEY = "request_step3";
 
-// type RateType = "hour" | "job"
+// type RateType = "hour" | "job";
 
 // export default function ClientRequest3() {
-//   const router = useRouter()
-//   const insets = useSafeAreaInsets()
+//   const router = useRouter();
+//   const insets = useSafeAreaInsets();
 
-//   const [rateType, setRateType] = useState<RateType | null>(null)
-//   const [rateFrom, setRateFrom] = useState("")
-//   const [rateTo, setRateTo] = useState("")
-//   const [jobFixed, setJobFixed] = useState("")
-//   const [submitted, setSubmitted] = useState(false)
+//   const [rateType, setRateType] = useState<RateType | null>(null);
+//   const [rateFrom, setRateFrom] = useState("");
+//   const [rateTo, setRateTo] = useState("");
+//   const [jobFixed, setJobFixed] = useState("");
+//   const [submitted, setSubmitted] = useState(false);
 
-//   const [clientId, setClientId] = useState<string | null>(null)
-//   const [email, setEmail] = useState("")
-
-// useEffect(() => {
-//   (async () => {
-//     // Step 1 data
-//     const rawStep1 = await AsyncStorage.getItem("request_step1")
-//     if (rawStep1) {
-//       const v1 = JSON.parse(rawStep1)
-//       setClientId(v1.client_id ? String(v1.client_id) : null)
-//       setEmail(v1.email_address ?? "")
-//     }
-
-//     // Step 3 local data
-//     const rawStep3 = await AsyncStorage.getItem(STORAGE_KEY)
-//     if (rawStep3) {
-//       const v3 = JSON.parse(rawStep3)
-//       setRateType(v3.rateType ?? null)
-//       setRateFrom(v3.hourFrom ?? "")
-//       setRateTo(v3.hourTo ?? "")
-//       setJobFixed(v3.jobFixed ?? "")
-//     }
-
-//     if (clientId) {
-//           try {
-//             const data = await ClientServiceRateGetByClientId(clientId)
-//             if (data) {
-//               setRateType(data.rate_type ?? null)
-//               setRateFrom(data.hourly_from ?? "")
-//               setRateTo(data.hourly_to ?? "")
-//               setJobFixed(data.job_fixed ?? "")
-//             }
-//           } catch (err) {
-//             console.error("Error fetching ClientServiceRate:", err)
-//           }
+//   useEffect(() => {
+//     (async () => {
+//       try {
+//         // ✅ Load local step 3 saved data only
+//         const rawStep3 = await AsyncStorage.getItem(STORAGE_KEY);
+//         if (rawStep3) {
+//           const v3 = JSON.parse(rawStep3);
+//           setRateType(v3.rateType ?? null);
+//           setRateFrom(v3.rateFrom ?? "");
+//           setRateTo(v3.rateTo ?? "");
+//           setJobFixed(v3.jobFixed ?? "");
 //         }
-//       })()
-//     }, [clientId])
+//       } catch (e) {
+//         console.error("Error loading step3:", e);
+//       }
+//     })();
+//   }, []);
 
 //   const canNext = useMemo(() => {
 //     if (rateType === "hour") {
-//       const f = Number(rateFrom)
-//       const t = Number(rateTo)
-//       return !!rateFrom && !!rateTo && f > 0 && t >= f
+//       const f = Number(rateFrom);
+//       const t = Number(rateTo);
+//       return !!rateFrom && !!rateTo && f > 0 && t >= f;
 //     }
 //     if (rateType === "job") {
-//       const p = Number(jobFixed)
-//       return !!jobFixed && p > 0
+//       const p = Number(jobFixed);
+//       return !!jobFixed && p > 0;
 //     }
-//     return false
-//   }, [rateType, rateFrom, rateTo, jobFixed])
+//     return false;
+//   }, [rateType, rateFrom, rateTo, jobFixed]);
 
-// const onNext = async () => {
-//   setSubmitted(true)
-//   if (!canNext) return
+//   const onNext = async () => {
+//     setSubmitted(true);
+//     if (!canNext) return;
 
-//   const payload = { rateType, rateFrom, rateTo, jobFixed }
-//   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+//     const payload = { rateType, rateFrom, rateTo, jobFixed };
+//     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 
-//   try {
-//     const { data: { user }, error } = await supabase.auth.getUser()
-//     if (error || !user) {
-//       console.error("No authenticated user", error)
-//       return
-//     }
-//     const authUid = user.id
-
-//     await ClientServiceRate({
-//       client_id: clientId!,
-//       auth_uid: authUid,
-//       email_address: email,
-//       rate_type: rateType ?? "hour",
-//       rate_from: rateFrom ? Number(rateFrom) : undefined,
-//       rate_to: rateTo ? Number(rateTo) : undefined,
-//       rate_value:
-//         rateType === "job"
-//           ? (jobFixed ? Number(jobFixed) : 0)
-//           : (rateFrom ? Number(rateFrom) : 0),
-//       created_at: new Date().toISOString(),
-//     })
-
-//     router.push(NEXT_ROUTE)
-//   } catch (err) {
-//     console.error("Error saving request:", err)
-//   }
-// }
+//     router.push("./request4");
+//   };
 
 //   return (
 //     <ImageBackground
@@ -156,10 +105,18 @@
 
 //             {/* Step status */}
 //             <View sx={{ mb: 20 }}>
-//               <Text sx={{ fontSize: 18, fontFamily: "Poppins-Bold", color: C.text }}>
+//               <Text
+//                 sx={{ fontSize: 18, fontFamily: "Poppins-Bold", color: C.text }}
+//               >
 //                 Step 3 of 4
 //               </Text>
-//               <Text sx={{ fontSize: 14, fontFamily: "Poppins-Regular", color: C.sub }}>
+//               <Text
+//                 sx={{
+//                   fontSize: 14,
+//                   fontFamily: "Poppins-Regular",
+//                   color: C.sub,
+//                 }}
+//               >
 //                 Set Your Price Rate
 //               </Text>
 //               <View sx={{ flexDirection: "row", mt: 10, columnGap: 12 }}>
@@ -217,17 +174,27 @@
 //                       value={null}
 //                       color={C.placeholder}
 //                     />
-//                     <Picker.Item label="Hourly Rate" value="hour" color={C.text} />
-//                     <Picker.Item label="By the Job Rate" value="job" color={C.text} />
+//                     <Picker.Item
+//                       label="Hourly Rate"
+//                       value="hour"
+//                       color={C.text}
+//                     />
+//                     <Picker.Item
+//                       label="By the Job Rate"
+//                       value="job"
+//                       color={C.text}
+//                     />
 //                   </Picker>
 //                 </View>
 //               </View>
 
-//               {/* HOURLY RATE FIELDS */}
+//               {/* HOURLY RATE */}
 //               {rateType === "hour" && (
 //                 <>
 //                   <View style={{ marginBottom: 12 }}>
-//                     <Text sx={{ fontSize: 12, fontFamily: "Poppins-Bold", mb: 4 }}>
+//                     <Text
+//                       sx={{ fontSize: 12, fontFamily: "Poppins-Bold", mb: 4 }}
+//                     >
 //                       FROM (₱/hr):
 //                     </Text>
 //                     <TextInput
@@ -249,7 +216,9 @@
 //                   </View>
 
 //                   <View style={{ marginBottom: 12 }}>
-//                     <Text sx={{ fontSize: 12, fontFamily: "Poppins-Bold", mb: 4 }}>
+//                     <Text
+//                       sx={{ fontSize: 12, fontFamily: "Poppins-Bold", mb: 4 }}
+//                     >
 //                       TO (₱/hr):
 //                     </Text>
 //                     <TextInput
@@ -277,16 +246,19 @@
 //                   )}
 //                   {submitted && Number(rateTo) < Number(rateFrom) && (
 //                     <Text sx={{ color: "#ef4444", fontSize: 12, mt: 4 }}>
-//                       &apos;To&apos; rate should be greater than or equal to &apos;From&apos;.
+//                       &#39;To&#39; rate should be greater than or equal to
+//                       &#39;From&#39;.
 //                     </Text>
 //                   )}
 //                 </>
 //               )}
 
-//               {/* JOB RATE FIELD */}
+//               {/* JOB RATE */}
 //               {rateType === "job" && (
 //                 <View style={{ marginBottom: 12 }}>
-//                   <Text sx={{ fontSize: 12, fontFamily: "Poppins-Bold", mb: 4 }}>
+//                   <Text
+//                     sx={{ fontSize: 12, fontFamily: "Poppins-Bold", mb: 4 }}
+//                   >
 //                     FIXED PRICE (₱):
 //                   </Text>
 //                   <TextInput
@@ -305,6 +277,7 @@
 //                       color: C.text,
 //                     }}
 //                   />
+
 //                   {submitted && Number(jobFixed) <= 0 && (
 //                     <Text sx={{ color: "#ef4444", fontSize: 12, mt: 4 }}>
 //                       Enter a valid fixed price.
@@ -380,5 +353,5 @@
 //         <ClientNavbar />
 //       </SafeAreaView>
 //     </ImageBackground>
-//   )
+//   );
 // }

@@ -1,30 +1,26 @@
-// import { Ionicons } from '@expo/vector-icons'
-// import AsyncStorage from "@react-native-async-storage/async-storage"
-// import { Picker } from "@react-native-picker/picker"
-// import { Pressable, ScrollView, Text, TextInput, View } from "dripsy"
-// import { useFonts } from "expo-font"
-// import * as ImagePicker from "expo-image-picker"
-// import { useRouter } from "expo-router"
-// import { MotiView } from "moti"
-// import React, { useEffect, useMemo, useState } from "react"
+// import { Ionicons } from "@expo/vector-icons";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { Picker } from "@react-native-picker/picker";
+// import { Pressable, ScrollView, Text, TextInput, View } from "dripsy";
+// import { useFonts } from "expo-font";
+// import * as ImagePicker from "expo-image-picker";
+// import { useRouter } from "expo-router";
+// import { MotiView } from "moti";
+// import React, { useEffect, useMemo, useState } from "react";
 // import {
-//     Dimensions,
-//     Image,
-//     ImageBackground,
-//     KeyboardTypeOptions,
-// } from "react-native"
-// import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
-// import { supabase } from '../../../supabase/db'
+//   Dimensions,
+//   Image,
+//   ImageBackground,
+//   KeyboardTypeOptions,
+// } from "react-native";
 // import {
-//     getClientInformationByAuthUid,
-//     getUserClientByAuthUid,
-//     saveClientProfile,
-//     updateClientProfile
-// } from "../../../supabase/services/clientprofileservice"
-// import Header from "../clientnavbar/header"
-// import ClientNavbar from "../clientnavbar/navbar"
+//   SafeAreaView,
+//   useSafeAreaInsets,
+// } from "react-native-safe-area-context";
+// import Header from "../clientnavbar/header";
+// import ClientNavbar from "../clientnavbar/navbar";
 
-// const { width, height } = Dimensions.get("window")
+// const { width, height } = Dimensions.get("window");
 // const C = {
 //   bg: "#f7f9fc",
 //   text: "#0f172a",
@@ -33,81 +29,97 @@
 //   border: "#d1d5db",
 //   placeholder: "#93a3b5",
 //   track: "#e5e7eb",
-// }
+// };
 
-// const STORAGE_KEY = "request_step1"
+// const STORAGE_KEY = "request_step1";
 
 // const BARANGAYS: string[] = [
 //   "Select Barangay",
-//   "Barangay 1","Barangay 2","Barangay 3","Barangay 4","Barangay 5",
-//   "Barangay 6","Barangay 7","Barangay 8","Barangay 9","Barangay 10",
-//   "Alangilan","Alijis","Banago","Bata","Cabug","Estefanía","Felisa",
-//   "Granada","Handumanan","Mandalagan","Mansilingan","Montevista",
-//   "Pahanocoy","Punta Taytay","Singcang-Airport","Sum-ag","Taculing",
-//   "Tangub","Villamonte","Vista Alegre",
-// ]
+//   "Barangay 1",
+//   "Barangay 2",
+//   "Barangay 3",
+//   "Barangay 4",
+//   "Barangay 5",
+//   "Barangay 6",
+//   "Barangay 7",
+//   "Barangay 8",
+//   "Barangay 9",
+//   "Barangay 10",
+//   "Alangilan",
+//   "Alijis",
+//   "Banago",
+//   "Bata",
+//   "Cabug",
+//   "Estefanía",
+//   "Felisa",
+//   "Granada",
+//   "Handumanan",
+//   "Mandalagan",
+//   "Mansilingan",
+//   "Montevista",
+//   "Pahanocoy",
+//   "Punta Taytay",
+//   "Singcang-Airport",
+//   "Sum-ag",
+//   "Taculing",
+//   "Tangub",
+//   "Villamonte",
+//   "Vista Alegre",
+// ];
 
 // export default function ClientRequest1() {
-//   const router = useRouter()
-//   const insets = useSafeAreaInsets()
+//   const router = useRouter();
+//   const insets = useSafeAreaInsets();
 
 //   const [fontsLoaded] = useFonts({
 //     "Poppins-Regular": require("../../../assets/fonts/Poppins/Poppins-Regular.ttf"),
 //     "Poppins-Bold": require("../../../assets/fonts/Poppins/Poppins-Bold.ttf"),
-//   })
+//   });
 
-//   const [first, setFirst] = useState("")
-//   const [last, setLast] = useState("")
-//   const [phone, setPhone] = useState("")
-//   const [email, setEmail] = useState("")
-//   const [brgy, setBrgy] = useState<string>(BARANGAYS[0])
-//   const [street, setStreet] = useState("")
-//   const [additionalAddr, setAdditionalAddr] = useState("")
-//   const [photo, setPhoto] = useState<string | null>(null)
+//   const [first, setFirst] = useState("");
+//   const [last, setLast] = useState("");
+//   const [phone, setPhone] = useState("");
+//   const [email, setEmail] = useState("");
+//   const [brgy, setBrgy] = useState<string>(BARANGAYS[0]);
+//   const [street, setStreet] = useState("");
+//   const [additionalAddr, setAdditionalAddr] = useState("");
+//   const [photo, setPhoto] = useState<string | null>(null);
 
-//   // ✅ Prefill from Supabase
+//   // ✅ Prefill from AsyncStorage only (no backend)
 //   useEffect(() => {
 //     (async () => {
 //       try {
-//         const { data: { user }, error } = await supabase.auth.getUser()
-//         if (error || !user) return
+//         const raw = await AsyncStorage.getItem(STORAGE_KEY);
+//         if (!raw) return;
 
-//         // Personal info
-//         const userClient = await getUserClientByAuthUid(user.id)
-//         if (userClient) {
-//           setFirst(userClient.first_name ?? "")
-//           setLast(userClient.last_name ?? "")
-//           setEmail(userClient.email_address ?? "")
-//           setPhone(userClient.contact_number ?? "")
-//         }
-
-//         // Address/photo info
-//         const clientInfo = await getClientInformationByAuthUid(user.id)
-//         if (clientInfo) {
-//           setBrgy(clientInfo.barangay ?? BARANGAYS[0])
-//           setStreet(clientInfo.street ?? "")
-//           setAdditionalAddr(clientInfo.additional_address ?? "")
-//           setPhoto(clientInfo.profile_picture_url ?? null)
-//         }
+//         const v = JSON.parse(raw);
+//         setFirst(v.first ?? "");
+//         setLast(v.last ?? "");
+//         setPhone(v.phone ?? "");
+//         setEmail(v.email ?? "");
+//         setBrgy(v.brgy ?? BARANGAYS[0]);
+//         setStreet(v.street ?? "");
+//         setAdditionalAddr(v.additional_address ?? v.additionalAddr ?? "");
+//         setPhoto(v.photo ?? null);
 //       } catch (err) {
-//         console.error("Error fetching profile:", err)
+//         console.error("Error reading local step1:", err);
 //       }
-//     })()
-//   }, [])
+//     })();
+//   }, []);
 
-//   const emailOk = useMemo(() => /\S+@\S+\.\S+/.test(email), [email])
-//   const phoneOk = useMemo(() => phone.trim().length === 10, [phone])
-//   const brgyOk = useMemo(() => brgy !== BARANGAYS[0], [brgy])
+//   const emailOk = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
+//   const phoneOk = useMemo(() => phone.trim().length === 10, [phone]);
+//   const brgyOk = useMemo(() => brgy !== BARANGAYS[0], [brgy]);
 
 //   const canNext = Boolean(
 //     first.trim() &&
-//     last.trim() &&
-//     emailOk &&
-//     phoneOk &&
-//     brgyOk &&
-//     street.trim() &&
-//     additionalAddr.trim()
-//   )
+//       last.trim() &&
+//       emailOk &&
+//       phoneOk &&
+//       brgyOk &&
+//       street.trim() &&
+//       additionalAddr.trim()
+//   );
 
 //   const choosePhoto = async () => {
 //     const res = await ImagePicker.launchImageLibraryAsync({
@@ -115,258 +127,326 @@
 //       allowsEditing: true,
 //       aspect: [1, 1],
 //       quality: 0.9,
-//     })
-//     if (!res.canceled) setPhoto(res.assets[0]?.uri ?? null)
-//   }
+//     });
+//     if (!res.canceled) setPhoto(res.assets[0]?.uri ?? null);
+//   };
 
-//   // ✅ Save before navigating
+//   // ✅ Save locally + navigate (no backend)
 //   const onNext = async () => {
-//     if (!canNext) return
+//     if (!canNext) return;
 
 //     await AsyncStorage.setItem(
 //       STORAGE_KEY,
-//       JSON.stringify({ first, last, phone, email, brgy, street, additional_address: additionalAddr, photo })
-//     )
-
-//     try {
-//       const { data: { user }, error } = await supabase.auth.getUser()
-//       if (error || !user) {
-//         console.error("No authenticated user", error)
-//         return
-//       }
-//       const authUid = user.id
-
-//       const userClient = await getUserClientByAuthUid(authUid)
-//       // const clientInfo = await getClientInformationByAuthUid(authUid)
-
-//       // ✅ If no user_client row, create it
-//     if (!userClient) {
-//       await updateClientProfile(authUid, {
-//         first_name: first,
-//         last_name: last,
-//         email_address: email,
-//         contact_number: phone,
+//       JSON.stringify({
+//         first,
+//         last,
+//         phone,
+//         email,
+//         brgy,
+//         street,
+//         additional_address: additionalAddr,
+//         photo,
 //       })
-//     } else {
-//       await updateClientProfile(authUid, {
-//         first_name: first,
-//         last_name: last,
-//         email_address: email,
-//         contact_number: phone,
-//       })
-//     }
+//     );
 
-//     // ✅ If no client_information row, upsert it
-//     await saveClientProfile(authUid, {
-//       auth_uid: authUid,
-//       barangay: brgy,
-//       street,
-//       additional_address: additionalAddr,
-//       profile_picture_url: photo ?? null,
-//     })
+//     router.push("./request2");
+//   };
 
-//     router.push("./request2")
-//   } catch (err) {
-//     console.error("Error saving profile:", err)
-//   }
-// }
+//   if (!fontsLoaded) return null;
 
-//   if (!fontsLoaded) return null
-  
-// return (
+//   return (
 //     <ImageBackground
-//         source={require("../../../assets/welcome.jpg")}
-//         resizeMode="cover"
-//         style={{ flex: 1, width, height }}
-//         >
-//         <SafeAreaView
-//             style={{
-//             flex: 1,
-//             backgroundColor: "rgba(249, 250, 251, 0.9)",
-//             paddingBottom: insets.bottom,
-//             }}
-//         >
-//             {/* Main content */}
-//             <View style={{ flex: 1 }}>
-//             <ScrollView
-//                 contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 20 }}
-//                 showsVerticalScrollIndicator={false}
+//       source={require("../../../assets/welcome.jpg")}
+//       resizeMode="cover"
+//       style={{ flex: 1, width, height }}
+//     >
+//       <SafeAreaView
+//         style={{
+//           flex: 1,
+//           backgroundColor: "rgba(249, 250, 251, 0.9)",
+//           paddingBottom: insets.bottom,
+//         }}
+//       >
+//         {/* Main content */}
+//         <View style={{ flex: 1 }}>
+//           <ScrollView
+//             contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 20 }}
+//             showsVerticalScrollIndicator={false}
+//           >
+//             <MotiView
+//               from={{ opacity: 0, translateY: 20 }}
+//               animate={{ opacity: 1, translateY: 0 }}
+//               transition={{ type: "timing", duration: 500 }}
 //             >
-//                 <MotiView
-//                 from={{ opacity: 0, translateY: 20 }}
-//                 animate={{ opacity: 1, translateY: 0 }}
-//                 transition={{ type: "timing", duration: 500 }}
-//                 >
-//                 <Header />
-                
-//             {/* Step status */}
-//             <View sx={{ mb: 20 }}>
-//               <Text sx={{ fontSize: 18, fontFamily: "Poppins-Bold", color: C.text }}>
-//                 Step 1 of 4
-//               </Text>
-//               <Text sx={{ fontSize: 14, fontFamily: "Poppins-Regular", color: C.sub }}>
-//                 Client Information
-//               </Text>
-//               <View sx={{ flexDirection: "row", mt: 10, columnGap: 12 }}>
-//                 {[1, 2, 3, 4].map((i) => (
-//                   <View
-//                     key={i}
-//                     sx={{
-//                       flex: 1,
-//                       height: 10,
-//                       borderRadius: 999,
-//                       bg: i <= 1 ? C.blue : C.track,
-//                     }}
-//                   />
-//                 ))}
-//               </View>
-//             </View>
+//               <Header />
 
-//             {/* Personal Info Card */}
-//             <View style={{ backgroundColor: '#ffffffcc', borderRadius: 12, padding: 16, marginBottom: 20 }}>
-//               <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
-//                 Personal Information
-//               </Text>
-
-//               <Field label="FIRST NAME:" value={first} onChangeText={setFirst} placeholder="Enter first name" editable={!first} />
-//               <Field label="LAST NAME:" value={last} onChangeText={setLast} placeholder="Enter last name" editable={!last}/>
-//               <Field label="EMAIL:" value={email} onChangeText={setEmail} placeholder="Enter email" keyboardType="email-address" editable={!email}/>
-              
-//               <View style={{ marginBottom: 12 }}>
-//                 <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
-//                   CONTACT NUMBER:
-//                 </Text>
-
-//                 <View
-//                   style={{
-//                     flexDirection: "row",
-//                     alignItems: "center",
-//                     borderWidth: 1,
-//                     borderColor: C.border,
-//                     borderRadius: 8,
-//                     backgroundColor: "#fff",
+//               {/* Step status */}
+//               <View sx={{ mb: 20 }}>
+//                 <Text
+//                   sx={{
+//                     fontSize: 18,
+//                     fontFamily: "Poppins-Bold",
+//                     color: C.text,
 //                   }}
 //                 >
-//                   {/* Non-editable prefix */}
+//                   Step 1 of 4
+//                 </Text>
+//                 <Text
+//                   sx={{
+//                     fontSize: 14,
+//                     fontFamily: "Poppins-Regular",
+//                     color: C.sub,
+//                   }}
+//                 >
+//                   Client Information
+//                 </Text>
+//                 <View sx={{ flexDirection: "row", mt: 10, columnGap: 12 }}>
+//                   {[1, 2, 3, 4].map((i) => (
+//                     <View
+//                       key={i}
+//                       sx={{
+//                         flex: 1,
+//                         height: 10,
+//                         borderRadius: 999,
+//                         bg: i <= 1 ? C.blue : C.track,
+//                       }}
+//                     />
+//                   ))}
+//                 </View>
+//               </View>
+
+//               {/* Personal Info Card */}
+//               <View
+//                 style={{
+//                   backgroundColor: "#ffffffcc",
+//                   borderRadius: 12,
+//                   padding: 16,
+//                   marginBottom: 20,
+//                 }}
+//               >
+//                 <Text sx={{ fontSize: 18, fontFamily: "Poppins-Bold", mb: 12 }}>
+//                   Personal Information
+//                 </Text>
+
+//                 <Field
+//                   label="FIRST NAME:"
+//                   value={first}
+//                   onChangeText={setFirst}
+//                   placeholder="Enter first name"
+//                 />
+//                 <Field
+//                   label="LAST NAME:"
+//                   value={last}
+//                   onChangeText={setLast}
+//                   placeholder="Enter last name"
+//                 />
+//                 <Field
+//                   label="EMAIL:"
+//                   value={email}
+//                   onChangeText={setEmail}
+//                   placeholder="Enter email"
+//                   keyboardType="email-address"
+//                 />
+
+//                 <View style={{ marginBottom: 12 }}>
+//                   <Text
+//                     sx={{
+//                       fontSize: 12,
+//                       fontFamily: "Poppins-Bold",
+//                       marginBottom: 4,
+//                     }}
+//                   >
+//                     CONTACT NUMBER:
+//                   </Text>
+
 //                   <View
 //                     style={{
 //                       flexDirection: "row",
 //                       alignItems: "center",
-//                       paddingHorizontal: 10,
-//                       paddingVertical: 12,
-//                       borderRightWidth: 1,
-//                       borderRightColor: C.border,
+//                       borderWidth: 1,
+//                       borderColor: C.border,
+//                       borderRadius: 8,
+//                       backgroundColor: "#fff",
 //                     }}
 //                   >
-//                     <Text style={{ fontSize: 16 }}>🇵🇭</Text>
-//                     <Text style={{ fontSize: 14, marginLeft: 6, color: C.text }}>+63</Text>
+//                     <View
+//                       style={{
+//                         flexDirection: "row",
+//                         alignItems: "center",
+//                         paddingHorizontal: 10,
+//                         paddingVertical: 12,
+//                         borderRightWidth: 1,
+//                         borderRightColor: C.border,
+//                       }}
+//                     >
+//                       <Text style={{ fontSize: 16 }}>🇵🇭</Text>
+//                       <Text
+//                         style={{ fontSize: 14, marginLeft: 6, color: C.text }}
+//                       >
+//                         +63
+//                       </Text>
+//                     </View>
+
+//                     <TextInput
+//                       value={phone}
+//                       onChangeText={setPhone}
+//                       placeholder="Enter contact number"
+//                       placeholderTextColor={C.placeholder}
+//                       keyboardType="number-pad"
+//                       style={{
+//                         flex: 1,
+//                         paddingHorizontal: 10,
+//                         paddingVertical: 12,
+//                         fontSize: 14,
+//                         fontFamily: "Poppins-Regular",
+//                         color: C.text,
+//                       }}
+//                     />
 //                   </View>
 
-//                   {/* Editable input */}
-//                   <TextInput
-//                     value={phone}
-//                     onChangeText={setPhone}
-//                     placeholder="Enter contact number"
-//                     placeholderTextColor={C.placeholder}
-//                     keyboardType="number-pad"
-//                     style={{
-//                       flex: 1,
-//                       paddingHorizontal: 10,
-//                       paddingVertical: 12,
-//                       fontSize: 14,
-//                       fontFamily: 'Poppins-Regular',
-//                       color: C.text,
-//                     }}
-//                   />
+//                   {!phoneOk && phone.length > 0 ? (
+//                     <Text sx={{ color: "#ef4444", fontSize: 12, mt: 6 }}>
+//                       Contact number must be 10 digits (without +63).
+//                     </Text>
+//                   ) : null}
 //                 </View>
-//               </View>
 
-//               {/* Barangay */}
-//               <View style={{ marginBottom: 12 }}>
-//                 <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', mb: 4 }}>BARANGAY:</Text>
-//                 <View style={{ borderWidth: 1, borderColor: C.border, borderRadius: 8, overflow: 'hidden', backgroundColor: '#fff' }}>
-//                   <Picker
-//                     selectedValue={brgy}
-//                     onValueChange={(itemValue) => setBrgy(itemValue)}
-//                     style={{ fontSize: 14, fontFamily: 'Poppins-Regular', color: C.text }}
+//                 {/* Barangay */}
+//                 <View style={{ marginBottom: 12 }}>
+//                   <Text
+//                     sx={{ fontSize: 12, fontFamily: "Poppins-Bold", mb: 4 }}
 //                   >
-//                     {BARANGAYS.map((b) => (
-//                       <Picker.Item
-//                         key={b}
-//                         label={b}
-//                         value={b}
-//                         color={b === "Select Barangay" ? C.placeholder : C.text}
-//                       />
-//                     ))}
-//                   </Picker>
+//                     BARANGAY:
+//                   </Text>
+//                   <View
+//                     style={{
+//                       borderWidth: 1,
+//                       borderColor: C.border,
+//                       borderRadius: 8,
+//                       overflow: "hidden",
+//                       backgroundColor: "#fff",
+//                     }}
+//                   >
+//                     <Picker
+//                       selectedValue={brgy}
+//                       onValueChange={(itemValue) => setBrgy(itemValue)}
+//                       style={{
+//                         fontSize: 14,
+//                         fontFamily: "Poppins-Regular",
+//                         color: C.text,
+//                       }}
+//                     >
+//                       {BARANGAYS.map((b) => (
+//                         <Picker.Item
+//                           key={b}
+//                           label={b}
+//                           value={b}
+//                           color={
+//                             b === "Select Barangay" ? C.placeholder : C.text
+//                           }
+//                         />
+//                       ))}
+//                     </Picker>
+//                   </View>
 //                 </View>
+
+//                 <Field
+//                   label="STREET:"
+//                   value={street}
+//                   onChangeText={setStreet}
+//                   placeholder="House No. and Street"
+//                 />
+//                 <Field
+//                   label="ADDITIONAL ADDRESS:"
+//                   value={additionalAddr}
+//                   onChangeText={setAdditionalAddr}
+//                   placeholder="Landmark etc."
+//                   multiline
+//                 />
 //               </View>
 
-//               <Field label="STREET:" value={street} onChangeText={setStreet} placeholder="House No. and Street" />
-//               <Field label="ADDITIONAL ADDRESS:" value={additionalAddr} onChangeText={setAdditionalAddr} placeholder="Landmark etc." multiline />
-//             </View>
-
-//             {/* Profile Photo Card */}
-//             <View style={{ backgroundColor: '#ffffffcc', borderRadius: 12, padding: 16, marginBottom: 20 }}>
-//               <Text sx={{ fontSize: 18, fontFamily: 'Poppins-Bold', mb: 12 }}>
-//                 Profile Picture
-//               </Text>
-
-//               {/* Preview / No Image */}
+//               {/* Profile Photo Card */}
 //               <View
 //                 style={{
-//                   alignSelf: 'center',
-//                   width: 140,
-//                   height: 140,
-//                   borderRadius: 70,
-//                   borderWidth: 1,
-//                   borderColor: C.border,
-//                   backgroundColor: '#f9fafb',
-//                   alignItems: 'center',
-//                   justifyContent: 'center',
-//                   overflow: 'hidden',
-//                   marginBottom: 16, // spacing before button
+//                   backgroundColor: "#ffffffcc",
+//                   borderRadius: 12,
+//                   padding: 16,
+//                   marginBottom: 20,
 //                 }}
 //               >
-//                 {photo ? (
-//                   <Image
-//                     source={{ uri: photo }}
-//                     style={{ width: '100%', height: '100%' }}
-//                     resizeMode="cover"
-//                   />
-//                 ) : (
-//                   <View style={{ alignItems: 'center' }}>
-//                     <Ionicons name="image-outline" size={32} color="#9aa9bc" />
-//                     <Text sx={{ color: '#9aa9bc', marginTop: 8, fontSize: 14 }}>
-//                       No Image Selected
-//                     </Text>
-//                   </View>
-//                 )}
-//               </View>
-
-//               {/* Choose Photo button */}
-//               <Pressable
-//                 onPress={choosePhoto}
-//                 style={{
-//                   flexDirection: 'row',
-//                   alignItems: 'center',
-//                   justifyContent: 'center',
-//                   borderWidth: 1,
-//                   borderColor: C.border,
-//                   borderRadius: 8,
-//                   paddingHorizontal: 10,
-//                   paddingVertical: 12,
-//                 }}
-//               >
-//                 <Ionicons name="camera-outline" size={22} color={C.text} style={{ marginRight: 8 }} />
-//                 <Text sx={{ fontSize: 14, fontFamily: 'Poppins-Bold', color: C.text }}>
-//                   Choose Photo
+//                 <Text sx={{ fontSize: 18, fontFamily: "Poppins-Bold", mb: 12 }}>
+//                   Profile Picture
 //                 </Text>
-//               </Pressable>
-//             </View>
 
-//           </MotiView>
-//         </ScrollView>
+//                 <View
+//                   style={{
+//                     alignSelf: "center",
+//                     width: 140,
+//                     height: 140,
+//                     borderRadius: 70,
+//                     borderWidth: 1,
+//                     borderColor: C.border,
+//                     backgroundColor: "#f9fafb",
+//                     alignItems: "center",
+//                     justifyContent: "center",
+//                     overflow: "hidden",
+//                     marginBottom: 16,
+//                   }}
+//                 >
+//                   {photo ? (
+//                     <Image
+//                       source={{ uri: photo }}
+//                       style={{ width: "100%", height: "100%" }}
+//                       resizeMode="cover"
+//                     />
+//                   ) : (
+//                     <View style={{ alignItems: "center" }}>
+//                       <Ionicons
+//                         name="image-outline"
+//                         size={32}
+//                         color="#9aa9bc"
+//                       />
+//                       <Text
+//                         sx={{ color: "#9aa9bc", marginTop: 8, fontSize: 14 }}
+//                       >
+//                         No Image Selected
+//                       </Text>
+//                     </View>
+//                   )}
+//                 </View>
+
+//                 <Pressable
+//                   onPress={choosePhoto}
+//                   style={{
+//                     flexDirection: "row",
+//                     alignItems: "center",
+//                     justifyContent: "center",
+//                     borderWidth: 1,
+//                     borderColor: C.border,
+//                     borderRadius: 8,
+//                     paddingHorizontal: 10,
+//                     paddingVertical: 12,
+//                   }}
+//                 >
+//                   <Ionicons
+//                     name="camera-outline"
+//                     size={22}
+//                     color={C.text}
+//                     style={{ marginRight: 8 }}
+//                   />
+//                   <Text
+//                     sx={{
+//                       fontSize: 14,
+//                       fontFamily: "Poppins-Bold",
+//                       color: C.text,
+//                     }}
+//                   >
+//                     Choose Photo
+//                   </Text>
+//                 </Pressable>
+//               </View>
+//             </MotiView>
+//           </ScrollView>
 //         </View>
 
 //         {/* Sticky bottom actions */}
@@ -382,7 +462,7 @@
 //             shadowColor: "#000",
 //             shadowOpacity: 0.1,
 //             shadowRadius: 4,
-//             elevation: 3
+//             elevation: 3,
 //           }}
 //         >
 //           <Pressable
@@ -398,7 +478,9 @@
 //               backgroundColor: "#fff",
 //             }}
 //           >
-//             <Text sx={{ color: C.text, fontWeight: "900", fontSize: 16 }}>Back</Text>
+//             <Text sx={{ color: C.text, fontWeight: "900", fontSize: 16 }}>
+//               Back
+//             </Text>
 //           </Pressable>
 
 //           <Pressable
@@ -415,28 +497,35 @@
 //               marginLeft: 12,
 //             }}
 //           >
-//             <Text sx={{ color: "#fff", fontWeight: "900", fontSize: 16, paddingLeft: 14 }}>
+//             <Text
+//               sx={{
+//                 color: "#fff",
+//                 fontWeight: "900",
+//                 fontSize: 16,
+//                 paddingLeft: 14,
+//               }}
+//             >
 //               Next : Service Request Details
 //             </Text>
 //           </Pressable>
 //         </View>
 
-//       <ClientNavbar />
-//     </SafeAreaView>
-//   </ImageBackground>
-// );
+//         <ClientNavbar />
+//       </SafeAreaView>
+//     </ImageBackground>
+//   );
 // }
 
 // /* Shared Field Component */
 // type FieldProps = {
-//   label: string
-//   value: string
-//   onChangeText: (text: string) => void
-//   placeholder: string
-//   multiline?: boolean
-//   keyboardType?: KeyboardTypeOptions
-//   editable?: boolean
-// }
+//   label: string;
+//   value: string;
+//   onChangeText: (text: string) => void;
+//   placeholder: string;
+//   multiline?: boolean;
+//   keyboardType?: KeyboardTypeOptions;
+//   editable?: boolean;
+// };
 
 // function Field({
 //   label,
@@ -449,7 +538,9 @@
 // }: FieldProps) {
 //   return (
 //     <View style={{ marginBottom: 12 }}>
-//       <Text sx={{ fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>{label}</Text>
+//       <Text sx={{ fontSize: 12, fontFamily: "Poppins-Bold", marginBottom: 4 }}>
+//         {label}
+//       </Text>
 //       <TextInput
 //         value={value}
 //         onChangeText={onChangeText}
@@ -465,8 +556,8 @@
 //           paddingHorizontal: 10,
 //           paddingVertical: 12,
 //           fontSize: 14,
-//           fontFamily: 'Poppins-Regular',
-//           backgroundColor: editable? '#fff' : '#f1f5f9',
+//           fontFamily: "Poppins-Regular",
+//           backgroundColor: editable ? "#fff" : "#f1f5f9",
 //           color: C.text,
 //           minHeight: multiline ? 80 : undefined,
 //         }}
