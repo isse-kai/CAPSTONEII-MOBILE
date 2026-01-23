@@ -1,4 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import { Pressable, Text, View } from "dripsy";
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
@@ -17,9 +19,6 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-
-import axios from "axios";
-import { supabase } from "../../supabase/index"; // ✅ usually correct since your assets path is ../../assets
 
 import NDAModal from "./terms/ndamodal";
 import PolicyAgreementModal from "./terms/policyagreementmodal";
@@ -61,7 +60,6 @@ export default function ClientSignup() {
   const [otpInfo, setOtpInfo] = useState("");
   const [otpError, setOtpError] = useState("");
 
-  // ✅ No useMemo (prevents hook warnings)
   const passwordRequirements = {
     length: (pw: string) => pw.length >= 8,
     uppercase: (pw: string) => /[A-Z]/.test(pw),
@@ -85,6 +83,18 @@ export default function ClientSignup() {
   };
 
   const normalizeEmail = (e: string) => (e || "").trim().toLowerCase();
+
+  async function saveSession(payload: any) {
+    const access_token = payload?.access_token || "";
+    const refresh_token = payload?.refresh_token || "";
+    const user = payload?.user || null;
+
+    if (access_token)
+      await AsyncStorage.setItem("sb_access_token", access_token);
+    if (refresh_token)
+      await AsyncStorage.setItem("sb_refresh_token", refresh_token);
+    if (user) await AsyncStorage.setItem("sb_user", JSON.stringify(user));
+  }
 
   const handleSignup = async () => {
     if (
@@ -188,29 +198,27 @@ export default function ClientSignup() {
       setLoading(true);
       setOtpError("");
 
+      // 1) verify OTP (creates user using saved draft)
       await axios.post(`${API_URL}/auth/verify`, {
         email: normalizeEmail(email_address),
         token: cleanOtp,
       });
 
-      // ✅ Now user exists, login in Expo via Supabase
-      const { error } = await supabase.auth.signInWithPassword({
+      // 2) login via backend (since supabase is backend)
+      const loginRes = await axios.post(`${API_URL}/auth/login`, {
         email: normalizeEmail(email_address),
         password,
       });
 
-      if (error) {
-        setOtpError(error.message);
-        return;
-      }
+      await saveSession(loginRes.data);
 
       setOtpOpen(false);
-      router.push("/clientpage/home");
+      router.replace("/clientpage/home");
     } catch (e: any) {
       const msg =
         e?.response?.data?.detail ||
         e?.response?.data?.error ||
-        "Invalid code.";
+        "Invalid code / login failed.";
       setOtpError(msg);
     } finally {
       setLoading(false);
@@ -522,7 +530,7 @@ export default function ClientSignup() {
                   </Pressable>
                 </View>
 
-                {/* Privacy Policy */}
+                {/* Privacy Policy checkbox + links */}
                 <View
                   sx={{
                     flexDirection: "row",
@@ -530,15 +538,18 @@ export default function ClientSignup() {
                     mt: 12,
                   }}
                 >
-                  <View
-                    sx={{
+                  <Pressable
+                    onPress={() => setAcceptedPrivacy((v) => !v)}
+                    style={{
                       width: 18,
                       height: 18,
                       borderWidth: 1,
                       borderColor: "#000",
                       borderRadius: 4,
-                      bg: acceptedPrivacy ? "#008CFC" : "transparent",
-                      mr: 10,
+                      backgroundColor: acceptedPrivacy
+                        ? "#008CFC"
+                        : "transparent",
+                      marginRight: 10,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
@@ -546,7 +557,8 @@ export default function ClientSignup() {
                     {acceptedPrivacy && (
                       <Text sx={{ color: "#fff", fontSize: 12 }}>✓</Text>
                     )}
-                  </View>
+                  </Pressable>
+
                   <Pressable onPress={() => setPrivacyModalOpen(true)}>
                     <Text
                       sx={{
@@ -570,7 +582,7 @@ export default function ClientSignup() {
                   </Pressable>
                 </View>
 
-                {/* Policy Agreement + NDA */}
+                {/* Policy + NDA checkbox + links */}
                 <View
                   sx={{
                     flexDirection: "row",
@@ -578,18 +590,26 @@ export default function ClientSignup() {
                     mt: 12,
                   }}
                 >
-                  <View
-                    sx={{
+                  <Pressable
+                    onPress={() => {
+                      if (acceptedPolicy && acceptedNDA) {
+                        setAcceptedPolicy(false);
+                        setAcceptedNDA(false);
+                      } else {
+                        setPolicyModalOpen(true);
+                      }
+                    }}
+                    style={{
                       width: 18,
                       height: 18,
                       borderWidth: 1,
                       borderColor: "#000",
                       borderRadius: 4,
-                      bg:
+                      backgroundColor:
                         acceptedPolicy && acceptedNDA
                           ? "#008CFC"
                           : "transparent",
-                      mr: 10,
+                      marginRight: 10,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
@@ -597,7 +617,8 @@ export default function ClientSignup() {
                     {acceptedPolicy && acceptedNDA && (
                       <Text sx={{ color: "#fff", fontSize: 12 }}>✓</Text>
                     )}
-                  </View>
+                  </Pressable>
+
                   <View style={{ flex: 1 }}>
                     <Text
                       sx={{

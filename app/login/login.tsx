@@ -1,3 +1,4 @@
+import axios from "axios";
 import { Pressable, Text, View } from "dripsy";
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
@@ -20,10 +21,20 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+type LoginResponse = {
+  ok: boolean;
+  access_token?: string;
+  refresh_token?: string;
+  user?: any; // supabase user object
+  detail?: string;
+};
+
 export default function Login() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const screenHeight = Dimensions.get("window").height;
+
+  const API_URL = process.env.EXPO_PUBLIC_API_URL; // e.g. http://192.168.1.10:8081
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,28 +49,54 @@ export default function Login() {
 
   if (!fontsLoaded) return null;
 
-  // ✅ Frontend-only login (no backend)
+  const normalizeEmail = (e: string) => (e || "").trim().toLowerCase();
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Missing Fields", "Please enter both email and password");
       return;
     }
 
+    if (!API_URL) {
+      Alert.alert(
+        "Missing API URL",
+        "Set EXPO_PUBLIC_API_URL to your backend IP (not localhost).",
+      );
+      return;
+    }
+
     setIsLoading(true);
+
     try {
-      // Simulate a quick "login"
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      const res = await axios.post<LoginResponse>(
+        `${API_URL}/auth/login`,
+        {
+          email: normalizeEmail(email),
+          password: String(password),
+        },
+        { timeout: 15000 },
+      );
 
-      // Simple role decision (edit to whatever you want)
-      const role = email.toLowerCase().includes("client") ? "client" : "worker";
+      if (!res.data?.ok) {
+        Alert.alert("Login Failed", res.data?.detail || "Invalid credentials.");
+        return;
+      }
 
-      if (role === "client") {
-        router.push("/clientpage/home");
+      const user = res.data.user;
+      // role stored in metadata (based on your /auth/verify createUser)
+      const role =
+        user?.user_metadata?.role || user?.app_metadata?.role || "client";
+
+      // ✅ Navigate to home (use replace so it doesn't stack)
+      if (String(role).toLowerCase() === "worker") {
+        router.replace("/workerpage/home");
       } else {
-        router.push("/workerpage/home");
+        router.replace("/clientpage/home");
       }
     } catch (err: any) {
-      Alert.alert("Login Failed", err?.message || "Something went wrong");
+      const msg =
+        err?.response?.data?.detail || err?.message || "Something went wrong.";
+      Alert.alert("Login Failed", msg);
     } finally {
       setIsLoading(false);
     }
@@ -75,12 +112,7 @@ export default function Login() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
       >
-        <SafeAreaView
-          style={{
-            flex: 1,
-            paddingBottom: insets.bottom,
-          }}
-        >
+        <SafeAreaView style={{ flex: 1, paddingBottom: insets.bottom }}>
           <ScrollView
             contentContainerStyle={{
               flexGrow: 1,
@@ -200,7 +232,7 @@ export default function Login() {
                   onPress={handleLogin}
                   disabled={isLoading}
                   sx={{
-                    bg: "#008CFC",
+                    bg: isLoading ? "#93c5fd" : "#008CFC",
                     borderRadius: 10,
                     py: 14,
                     alignItems: "center",
