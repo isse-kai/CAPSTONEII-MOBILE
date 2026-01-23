@@ -1,3 +1,4 @@
+// app/workerpage/accountsettings/WorkerAccountSettingsScreen.tsx
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import { ChevronLeft, LogOut, Settings } from "lucide-react-native";
@@ -108,7 +109,6 @@ const toPHLocalDigits = (input: string) => {
   const digits = stripToDigits(input);
   if (!digits) return "";
 
-  // cases:
   // +63 9XXXXXXXXX -> digits may start with 63...
   if (digits.startsWith("63") && digits.length >= 12)
     return digits.slice(2, 12);
@@ -155,24 +155,22 @@ export default function WorkerAccountSettingsScreen() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
 
-  // computed from DOB (read-only)
   const [age, setAge] = useState("");
-  const [phone, setPhone] = useState(""); // stored/displayed as "+63 XXXXXXXXXX"
+  const [phone, setPhone] = useState(""); // displayed as "+63 XXXXXXXXXX"
   const [dob, setDob] = useState(""); // UI: MM/DD/YYYY
 
   const [oldPass, setOldPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
 
-  // Edit modals
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [dobModalOpen, setDobModalOpen] = useState(false);
 
-  // Phone modal input: local digits only (10 digits)
   const [tempPhoneDigits, setTempPhoneDigits] = useState("");
-
-  // DOB modal date picker
   const [tempDobDate, setTempDobDate] = useState<Date>(new Date(2000, 0, 1));
+
+  // ✅ Android picker dialog toggle
+  const [showAndroidDobPicker, setShowAndroidDobPicker] = useState(false);
 
   const initials = useMemo(() => {
     const a = (firstName?.trim()?.[0] || "U").toUpperCase();
@@ -212,7 +210,7 @@ export default function WorkerAccountSettingsScreen() {
 
         const authUid = user.id;
 
-        // 1) try worker
+        // 1) worker
         const workerRes = await supabase
           .from("user_worker")
           .select(
@@ -233,18 +231,14 @@ export default function WorkerAccountSettingsScreen() {
           setLastName(safeStr(p.last_name));
           setEmail(safeStr(p.email_address));
 
-          // phone -> show +63
-          const phoneDisplay = displayPHNumber(safeStr(p.contact_number));
-          setPhone(phoneDisplay);
-
+          setPhone(displayPHNumber(safeStr(p.contact_number)));
           setDob(formatDobForUi(safeStr(p.date_of_birth)));
 
-          // age will auto compute from dob; fallback if dob empty:
           if (!safeStr(p.date_of_birth) && p.age != null) setAge(String(p.age));
           return;
         }
 
-        // 2) try client
+        // 2) client
         const clientRes = await supabase
           .from("user_client")
           .select(
@@ -265,9 +259,7 @@ export default function WorkerAccountSettingsScreen() {
           setLastName(safeStr(p.last_name));
           setEmail(safeStr(p.email_address));
 
-          const phoneDisplay = displayPHNumber(safeStr(p.contact_number));
-          setPhone(phoneDisplay);
-
+          setPhone(displayPHNumber(safeStr(p.contact_number)));
           setDob(formatDobForUi(safeStr(p.date_of_birth)));
 
           if (!safeStr(p.date_of_birth) && p.age != null) setAge(String(p.age));
@@ -289,42 +281,43 @@ export default function WorkerAccountSettingsScreen() {
   }, [router]);
 
   const openPhoneModal = () => {
-    const digits = toPHLocalDigits(phone); // convert displayed phone to local digits
-    setTempPhoneDigits(digits);
+    setTempPhoneDigits(toPHLocalDigits(phone));
     setPhoneModalOpen(true);
   };
 
   const openDobModal = () => {
-    // if existing dob, set picker to it
     const parsed = parseUiDobToDate(dob);
     setTempDobDate(parsed ?? new Date(2000, 0, 1));
+    setShowAndroidDobPicker(false);
     setDobModalOpen(true);
+
+    // ✅ optional: auto-open the Android picker as soon as modal opens
+    if (Platform.OS === "android") {
+      setTimeout(() => setShowAndroidDobPicker(true), 150);
+    }
   };
 
   const confirmPhone = () => {
     const normalized = normalizePHNumber(tempPhoneDigits);
-    // display as "+63 XXXXXXXXXX"
     setPhone(normalized ? `+63 ${toPHLocalDigits(normalized)}` : "");
     setPhoneModalOpen(false);
   };
 
   const confirmDob = () => {
-    // set UI dob from selected date -> age auto updates by useEffect
     setDob(formatDateToUiDob(tempDobDate));
     setDobModalOpen(false);
+    setShowAndroidDobPicker(false);
   };
 
   const handleSaveInfo = async () => {
     if (!profile || !role || savingInfo) return;
 
-    // validate dob (must exist if you want; currently optional)
     const dobDb = dob.trim() ? parseDobToDb(dob.trim()) : "";
     if (dob.trim() && !dobDb) {
       Alert.alert("Invalid Birthday", "Birthday must be selected properly.");
       return;
     }
 
-    // ✅ compute age from dob (so DB stays consistent)
     let ageDb: number | null = null;
     if (dobDb) {
       const computed = calcAgeFromDobString(dobDb);
@@ -338,7 +331,6 @@ export default function WorkerAccountSettingsScreen() {
       ageDb = computed;
     }
 
-    // phone -> store in DB as +63XXXXXXXXXX
     const phoneDb = phone.trim() ? normalizePHNumber(phone) : "";
 
     try {
@@ -374,7 +366,6 @@ export default function WorkerAccountSettingsScreen() {
           : p,
       );
 
-      // refresh local display formatting
       setPhone(
         payload.contact_number ? displayPHNumber(payload.contact_number) : "",
       );
@@ -493,7 +484,6 @@ export default function WorkerAccountSettingsScreen() {
           contentContainerStyle={styles.scrollInner}
           showsVerticalScrollIndicator={false}
         >
-          {/* Page header */}
           <View style={styles.pageHeader}>
             <Text style={styles.pageTitle}>Profile</Text>
             <Text style={styles.pageSub}>Manage your personal details</Text>
@@ -506,7 +496,7 @@ export default function WorkerAccountSettingsScreen() {
             <View style={{ paddingTop: 20, alignItems: "center", gap: 10 }}>
               <ActivityIndicator />
               <Text
-                style={{ fontSize: 12.5, color: "#6b7280", fontWeight: "700" }}
+                style={{ fontSize: 12.5, color: "#000", fontWeight: "700" }}
               >
                 Loading...
               </Text>
@@ -527,7 +517,6 @@ export default function WorkerAccountSettingsScreen() {
                 </View>
               </View>
 
-              {/* Names */}
               <View style={styles.row2}>
                 <View style={styles.field}>
                   <Text style={styles.label}>First Name</Text>
@@ -551,7 +540,6 @@ export default function WorkerAccountSettingsScreen() {
                 </View>
               </View>
 
-              {/* Email & Age */}
               <View style={styles.row2}>
                 <View style={styles.field}>
                   <Text style={styles.label}>Email</Text>
@@ -574,7 +562,6 @@ export default function WorkerAccountSettingsScreen() {
                 </View>
               </View>
 
-              {/* Contact number aligned */}
               <View style={styles.infoRow}>
                 <View style={styles.infoLeft}>
                   <Text style={styles.infoLabel}>Mobile Number</Text>
@@ -591,7 +578,6 @@ export default function WorkerAccountSettingsScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Birthday aligned */}
               <View style={styles.infoRow}>
                 <View style={styles.infoLeft}>
                   <Text style={styles.infoLabel}>Birthday</Text>
@@ -672,7 +658,6 @@ export default function WorkerAccountSettingsScreen() {
             </View>
           )}
 
-          {/* Logout */}
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.logoutBtn}
@@ -685,7 +670,7 @@ export default function WorkerAccountSettingsScreen() {
           <View style={{ height: 24 }} />
         </ScrollView>
 
-        {/* PHONE MODAL (with +63 prefix) */}
+        {/* PHONE MODAL */}
         <Modal visible={phoneModalOpen} transparent animationType="fade">
           <View style={styles.modalBackdrop}>
             <View style={styles.modalSheet}>
@@ -733,7 +718,7 @@ export default function WorkerAccountSettingsScreen() {
           </View>
         </Modal>
 
-        {/* DOB MODAL (select date, not type) */}
+        {/* DOB MODAL */}
         <Modal visible={dobModalOpen} transparent animationType="fade">
           <View style={styles.modalBackdrop}>
             <View style={styles.modalSheet}>
@@ -742,27 +727,56 @@ export default function WorkerAccountSettingsScreen() {
               </Text>
               <Text style={styles.modalHint}>Select your date of birth.</Text>
 
-              <View style={{ marginTop: 12 }}>
-                <DateTimePicker
-                  value={tempDobDate}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  onChange={(event, selectedDate) => {
-                    // Android may emit "dismissed"
-                    if (Platform.OS === "android") {
-                      if (event.type === "dismissed") return;
+              {Platform.OS === "ios" ? (
+                <View style={{ marginTop: 12 }}>
+                  <DateTimePicker
+                    value={tempDobDate}
+                    mode="date"
+                    display="spinner"
+                    onChange={(event, selectedDate) => {
                       if (selectedDate) setTempDobDate(selectedDate);
-                    } else {
-                      if (selectedDate) setTempDobDate(selectedDate);
-                    }
-                  }}
-                  maximumDate={new Date()} // can't pick future
-                />
-              </View>
+                    }}
+                    maximumDate={new Date()}
+                    textColor="#000"
+                  />
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    style={[
+                      styles.modalBtn,
+                      styles.modalBtnGhost,
+                      { marginTop: 12, alignSelf: "flex-start" },
+                    ]}
+                    onPress={() => setShowAndroidDobPicker(true)}
+                  >
+                    <Text style={styles.modalBtnGhostText}>Pick date</Text>
+                  </TouchableOpacity>
+
+                  {showAndroidDobPicker && (
+                    <DateTimePicker
+                      value={tempDobDate}
+                      mode="date"
+                      display="default"
+                      maximumDate={new Date()}
+                      textColor="#000"
+                      onChange={(event, selectedDate) => {
+                        if (event.type === "dismissed") {
+                          setShowAndroidDobPicker(false);
+                          return;
+                        }
+                        if (selectedDate) setTempDobDate(selectedDate);
+                        setShowAndroidDobPicker(false);
+                      }}
+                    />
+                  )}
+                </>
+              )}
 
               <Text style={styles.dobPreview}>
                 Selected:{" "}
-                <Text style={{ fontWeight: "900" }}>
+                <Text style={{ fontWeight: "900", color: "#000" }}>
                   {formatDateToUiDob(tempDobDate)}
                 </Text>
                 {(() => {
@@ -770,7 +784,9 @@ export default function WorkerAccountSettingsScreen() {
                   return a != null ? (
                     <Text>
                       {"  "}• Age:{" "}
-                      <Text style={{ fontWeight: "900" }}>{a}</Text>
+                      <Text style={{ fontWeight: "900", color: "#000" }}>
+                        {a}
+                      </Text>
                     </Text>
                   ) : null;
                 })()}
@@ -780,7 +796,10 @@ export default function WorkerAccountSettingsScreen() {
                 <TouchableOpacity
                   activeOpacity={0.85}
                   style={[styles.modalBtn, styles.modalBtnGhost]}
-                  onPress={() => setDobModalOpen(false)}
+                  onPress={() => {
+                    setDobModalOpen(false);
+                    setShowAndroidDobPicker(false);
+                  }}
                 >
                   <Text style={styles.modalBtnGhostText}>Cancel</Text>
                 </TouchableOpacity>
@@ -851,8 +870,8 @@ const styles = StyleSheet.create({
 
   pageHeader: { marginTop: 8, marginBottom: 10 },
   pageTitle: { fontSize: 18, fontWeight: "900", color: "#0f172a" },
-  pageSub: { marginTop: 3, fontSize: 13, color: "#6b7280" },
-  createdText: { marginTop: 4, fontSize: 11.5, color: "#9ca3af" },
+  pageSub: { marginTop: 3, fontSize: 13, color: "#000" },
+  createdText: { marginTop: 4, fontSize: 11.5, color: "#000" },
 
   card: {
     marginTop: 12,
@@ -865,7 +884,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#0f172a",
+    color: "#000",
     marginBottom: 12,
   },
 
@@ -888,7 +907,7 @@ const styles = StyleSheet.create({
   avatarLabel: {
     fontSize: 11.5,
     fontWeight: "700",
-    color: "#9ca3af",
+    color: "#000",
     textTransform: "uppercase",
     letterSpacing: 0.6,
   },
@@ -896,7 +915,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: "#000",
   },
 
   row2: { flexDirection: "row", columnGap: 12, marginBottom: 10 },
@@ -904,7 +923,7 @@ const styles = StyleSheet.create({
   fieldSmall: { width: 90 },
   fieldFull: { marginBottom: 10 },
 
-  label: { fontSize: 12, fontWeight: "800", color: "#6b7280", marginBottom: 4 },
+  label: { fontSize: 12, fontWeight: "800", color: "#000", marginBottom: 4 },
   input: {
     height: 50,
     borderRadius: 12,
@@ -913,7 +932,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     paddingHorizontal: 12,
     fontSize: 14,
-    color: "#111827",
+    color: "#000",
   },
 
   infoRow: {
@@ -929,10 +948,10 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#6b7280",
+    color: "#000",
     marginBottom: 2,
   },
-  infoValue: { fontSize: 14, fontWeight: "700", color: "#111827" },
+  infoValue: { fontSize: 14, fontWeight: "700", color: "#000" },
   infoEditBtn: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -942,7 +961,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9fafb",
     marginLeft: 12,
   },
-  infoEditText: { fontSize: 12, fontWeight: "700", color: "#4b5563" },
+  infoEditText: { fontSize: 12, fontWeight: "700", color: "#000" },
 
   primaryBtn: {
     marginTop: 14,
@@ -981,8 +1000,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e5e7eb",
   },
-  modalTitle: { fontSize: 16, fontWeight: "800", color: "#0f172a" },
-  modalHint: { marginTop: 4, fontSize: 12.5, color: "#6b7280" },
+  modalTitle: { fontSize: 16, fontWeight: "800", color: "#000" },
+  modalHint: { marginTop: 4, fontSize: 12.5, color: "#000" },
 
   modalBtnRow: {
     flexDirection: "row",
@@ -1002,11 +1021,10 @@ const styles = StyleSheet.create({
     borderColor: "#e5e7eb",
     backgroundColor: "#ffffff",
   },
-  modalBtnGhostText: { fontSize: 13, fontWeight: "700", color: "#4b5563" },
+  modalBtnGhostText: { fontSize: 13, fontWeight: "700", color: "#000" },
   modalBtnPrimary: { backgroundColor: BLUE },
   modalBtnPrimaryText: { fontSize: 13, fontWeight: "800", color: "#ffffff" },
 
-  // phone prefix row
   phoneInputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1023,15 +1041,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  phonePrefixText: { fontSize: 14, fontWeight: "900", color: "#111827" },
+  phonePrefixText: { fontSize: 14, fontWeight: "900", color: "#000" },
   phoneDigitsInput: { flex: 1 },
 
   phoneHelper: {
     marginTop: 6,
     fontSize: 11.5,
-    color: "#9ca3af",
+    color: "#000",
     fontWeight: "700",
   },
 
-  dobPreview: { marginTop: 10, fontSize: 12.5, color: "#334155" },
+  dobPreview: { marginTop: 10, fontSize: 12.5, color: "#000" },
 });
