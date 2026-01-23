@@ -12,17 +12,17 @@ export default function ClientNavbar() {
   const navItems = [
     {
       label: "Home",
-      route: "./clientpage/home",
+      route: "/clientpage/home",
       icon: require("../../../assets/home-icon.png"),
     },
     {
       label: "Messages",
-      route: "./clientpage/clientnavbar/chat",
+      route: "/clientpage/clientnavbar/chat",
       icon: require("../../../assets/chat-icon.png"),
     },
     {
       label: "Profile",
-      route: "./clientpage/clientnavbar/profile",
+      route: "/clientpage/clientnavbar/profile",
       icon: require("../../../assets/profile-icon.png"),
     },
   ];
