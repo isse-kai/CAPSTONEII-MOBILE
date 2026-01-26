@@ -98,7 +98,7 @@ export default function TopNav({
   const routeMap: Record<TopNavMenuKey, string> = {
     appPostStatus: "/workerpage/appPostStatus",
     completedWorks: "/workerpage/completedWorks",
-    ongoingService: "/workerpage/ongoingService",
+    ongoingService: "/workerpage/ongoingservice/ongoingservice",
     findClient: "/workerpage/Browse/Browse",
     messages: "/workerpage/Messages/messages",
   };
