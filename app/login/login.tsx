@@ -1,16 +1,16 @@
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { supabase } from "../../supabase/supabase"; // ✅ adjust if your path is different
 
@@ -64,7 +64,7 @@ export default function LoginScreen() {
       }
 
       if (workerRes.data) {
-        router.replace("/workerpage/workerpage");
+        router.replace("./workerpage/workerpage");
         return;
       }
 
@@ -81,7 +81,7 @@ export default function LoginScreen() {
       }
 
       if (clientRes.data) {
-        router.replace("/clientpage/clientpage"); //clientpage
+        router.replace("./clientpage/clientpage"); //clientpage
         return;
       }
 
@@ -159,8 +159,8 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <View style={styles.signupRow}>
-              <Text style={styles.signupText}>Don't have an account?</Text>
-              <TouchableOpacity onPress={() => router.push("/role/role")}>
+              <Text style={styles.signupText}>Don&apos;t have an account?</Text>
+              <TouchableOpacity onPress={() => router.push("./role/role")}>
                 <Text style={styles.signupLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>

@@ -1,6 +1,6 @@
-import { Stack } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { Image, View } from "react-native";
+import { Stack } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Image, View } from 'react-native';
 
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
@@ -18,17 +18,17 @@ export default function RootLayout() {
       <View
         style={{
           flex: 1,
-          backgroundColor: "#ffffff", // white background
-          alignItems: "center",
-          justifyContent: "center",
+          backgroundColor: '#ffffff', // white background
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
         <Image
-          source={require("../image/jdklogo.png")} // make sure this path is correct
+          source={require('../image/jdklogo.png')} // make sure this path is correct
           style={{
             width: 200,
             height: 200,
-            resizeMode: "contain",
+            resizeMode: 'contain',
           }}
         />
       </View>

@@ -3,14 +3,14 @@ import { useRouter } from "expo-router";
 import { CheckCheck, ChevronLeft, Plus, Search } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import {
-    FlatList,
-    Image,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const BLUE = "#1E88E5";

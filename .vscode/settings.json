@@ -3,26 +3,5 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
-  },
-  "workbench.colorCustomizations": {
-    "activityBar.activeBackground": "#922975",
-    "activityBar.background": "#922975",
-    "activityBar.foreground": "#e7e7e7",
-    "activityBar.inactiveForeground": "#e7e7e799",
-    "activityBarBadge.background": "#78952a",
-    "activityBarBadge.foreground": "#15202b",
-    "commandCenter.border": "#e7e7e799",
-    "sash.hoverBorder": "#922975",
-    "statusBar.background": "#6a1e55",
-    "statusBar.foreground": "#e7e7e7",
-    "statusBarItem.hoverBackground": "#922975",
-    "statusBarItem.remoteBackground": "#6a1e55",
-    "statusBarItem.remoteForeground": "#e7e7e7",
-    "titleBar.activeBackground": "#6a1e55",
-    "titleBar.activeForeground": "#e7e7e7",
-    "titleBar.inactiveBackground": "#6a1e5599",
-    "titleBar.inactiveForeground": "#e7e7e799"
-  },
-  "peacock.color": "#6A1E55",
-  "CodeGPT.apiKey": "Gemini CLI"
+  }
 }

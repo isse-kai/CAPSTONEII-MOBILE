@@ -1,21 +1,21 @@
 // app/workerpage/profile/profile.tsx
 import { useRouter } from "expo-router";
 import {
-    ChevronLeft,
-    Image as ImageIcon,
-    LogOut,
-    Settings,
+  ChevronLeft,
+  Image as ImageIcon,
+  LogOut,
+  Settings,
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { supabase } from "../../../supabase/supabase"; // ✅ adjust path if needed
 

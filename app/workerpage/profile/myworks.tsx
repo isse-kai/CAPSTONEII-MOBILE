@@ -4,14 +4,14 @@ import { useRouter } from "expo-router";
 import { ChevronLeft, Trash2, Upload } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { supabase } from "../../../supabase/supabase";
 

@@ -3,14 +3,14 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, KeyRound, LogOut, Settings } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { supabase } from "../../../supabase/supabase";
@@ -99,7 +99,7 @@ export default function ClientAccountSettings() {
 
       const { data: authData, error: authErr } = await supabase.auth.getUser();
       if (authErr || !authData?.user) {
-        router.replace("/login/login");
+        router.replace("./login/login");
         return;
       }
 
@@ -227,7 +227,7 @@ export default function ClientAccountSettings() {
 
   const onLogout = async () => {
     await supabase.auth.signOut();
-    router.replace("/login/login");
+    router.replace("./login/login");
   };
 
   return (

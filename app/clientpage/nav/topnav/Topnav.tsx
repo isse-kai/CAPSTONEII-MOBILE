@@ -1,23 +1,23 @@
 import {
-    Bell,
-    ChevronDown,
-    ChevronUp,
-    Menu,
-    Search,
-    X,
+  Bell,
+  ChevronDown,
+  ChevronUp,
+  Menu,
+  Search,
+  X,
 } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Animated,
-    Dimensions,
-    Image,
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const BLUE = "#1E88E5";

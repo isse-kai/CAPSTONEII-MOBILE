@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
     Activity,
     BadgeCheck,
@@ -6,8 +6,8 @@ import {
     IdCard,
     MapPin,
     ShieldCheck,
-} from "lucide-react-native";
-import React, { useMemo } from "react";
+} from 'lucide-react-native';
+import React, { useMemo } from 'react';
 import {
     Image,
     SafeAreaView,
@@ -16,32 +16,32 @@ import {
     Text,
     TouchableOpacity,
     View,
-} from "react-native";
+} from 'react-native';
 
-const BLUE = "#1E88E5";
+const BLUE = '#1E88E5';
 
 // Map a primary service type to TESDA certificate text
 function getTesdaCertificateLabel(service: string | undefined): string {
-  if (!service) return "TESDA Certificate (if applicable)";
+  if (!service) return 'TESDA Certificate (if applicable)';
 
   switch (service.toLowerCase()) {
-    case "carpenter":
-    case "carpentry":
-      return "TESDA Carpentry NC II Certificate";
-    case "plumber":
-      return "TESDA Plumbing NC II Certificate";
-    case "laundry":
-      return "TESDA Laundry Services NC II Certificate";
-    case "electrician":
-      return "TESDA Electrical Installation & Maintenance NC II Certificate";
-    case "carwasher":
-    case "car washer":
-      return "TESDA Automotive Servicing / Detailing Certificate";
-    case "appliance":
-    case "appliances":
-      return "TESDA Consumer Electronics Servicing NC II Certificate";
+    case 'carpenter':
+    case 'carpentry':
+      return 'TESDA Carpentry NC II Certificate';
+    case 'plumber':
+      return 'TESDA Plumbing NC II Certificate';
+    case 'laundry':
+      return 'TESDA Laundry Services NC II Certificate';
+    case 'electrician':
+      return 'TESDA Electrical Installation & Maintenance NC II Certificate';
+    case 'carwasher':
+    case 'car washer':
+      return 'TESDA Automotive Servicing / Detailing Certificate';
+    case 'appliance':
+    case 'appliances':
+      return 'TESDA Consumer Electronics Servicing NC II Certificate';
     default:
-      return "TESDA Certificate (based on your selected service type)";
+      return 'TESDA Certificate (based on your selected service type)';
   }
 }
 
@@ -58,7 +58,7 @@ export default function WorkerRequiredDocsStep3() {
     () =>
       services
         ? decodeURIComponent(services)
-            .split(",")
+            .split(',')
             .map((s) => s.trim())
             .filter(Boolean)
         : [],
@@ -72,20 +72,20 @@ export default function WorkerRequiredDocsStep3() {
   };
 
   const handleNext = () => {
-    console.log("Proceed to Step 4 – Review & Submit");
+    console.log('Proceed to Step 4 – Review & Submit');
 
     router.push({
-      pathname: "/workerforms/WorkerReviewStep4",
+      pathname: '/workerforms/WorkerReviewStep4',
       params: {
-        personal: personal ?? "",
-        work: work ?? "",
-        services: services ?? "",
+        personal: personal ?? '',
+        work: work ?? '',
+        services: services ?? '',
       },
     });
   };
 
   const mockUpload = (name: string) => {
-    console.log("Upload tapped:", name);
+    console.log('Upload tapped:', name);
   };
 
   return (
@@ -93,7 +93,7 @@ export default function WorkerRequiredDocsStep3() {
       {/* Logo header (centered, same as Step 1 & 2) */}
       <View style={styles.header}>
         <Image
-          source={require("../../image/jdklogo.png")}
+          source={require('../../image/jdklogo.png')}
           style={styles.logo}
         />
       </View>
@@ -104,9 +104,7 @@ export default function WorkerRequiredDocsStep3() {
         showsVerticalScrollIndicator={false}
       >
         {/* Progress text */}
-        <Text style={styles.progressText}>
-          3 of 4 • Post a Worker Application
-        </Text>
+        <Text style={styles.progressText}>3 of 4 • Post a Worker Application</Text>
 
         {/* Titles */}
         <Text style={styles.stepTitle}>Step 3: Required Documents</Text>
@@ -125,7 +123,7 @@ export default function WorkerRequiredDocsStep3() {
             required
             icon={<IdCard size={20} color={BLUE} />}
             hint="Valid ID such as UMID, Passport, Driver’s License, etc."
-            onPress={() => mockUpload("Primary ID Front")}
+            onPress={() => mockUpload('Primary ID Front')}
           />
 
           {/* Primary ID back */}
@@ -134,7 +132,7 @@ export default function WorkerRequiredDocsStep3() {
             required
             icon={<IdCard size={20} color={BLUE} />}
             hint="Back side of the same valid ID."
-            onPress={() => mockUpload("Primary ID Back")}
+            onPress={() => mockUpload('Primary ID Back')}
           />
 
           {/* Secondary ID */}
@@ -143,7 +141,7 @@ export default function WorkerRequiredDocsStep3() {
             required
             icon={<IdCard size={20} color={BLUE} />}
             hint="Any supporting ID if available."
-            onPress={() => mockUpload("Secondary ID")}
+            onPress={() => mockUpload('Secondary ID')}
           />
 
           {/* NBI / Police clearance */}
@@ -152,7 +150,7 @@ export default function WorkerRequiredDocsStep3() {
             required
             icon={<ShieldCheck size={20} color={BLUE} />}
             hint="Recent clearance document."
-            onPress={() => mockUpload("NBI / Police Clearance")}
+            onPress={() => mockUpload('NBI / Police Clearance')}
           />
 
           {/* Proof of Address */}
@@ -161,7 +159,7 @@ export default function WorkerRequiredDocsStep3() {
             required
             icon={<MapPin size={20} color={BLUE} />}
             hint="Barangay certificate, utility bill, or similar."
-            onPress={() => mockUpload("Proof of Address")}
+            onPress={() => mockUpload('Proof of Address')}
           />
 
           {/* Medical Certificate */}
@@ -170,14 +168,12 @@ export default function WorkerRequiredDocsStep3() {
             required
             icon={<Activity size={20} color={BLUE} />}
             hint="Latest medical fit-to-work certificate."
-            onPress={() => mockUpload("Medical Certificate")}
+            onPress={() => mockUpload('Medical Certificate')}
           />
 
           {/* TESDA requirements card */}
           <View style={styles.subCard}>
-            <Text style={styles.subCardTitle}>
-              TESDA Certificate Requirement
-            </Text>
+            <Text style={styles.subCardTitle}>TESDA Certificate Requirement</Text>
             {selectedServices.length > 0 ? (
               <>
                 <Text style={styles.subCardText}>
@@ -217,7 +213,7 @@ export default function WorkerRequiredDocsStep3() {
               label="TESDA Certificate (if applicable)"
               icon={<FileUp size={20} color={BLUE} />}
               hint="Upload your TESDA certificate (PDF, JPG, or PNG)."
-              onPress={() => mockUpload("TESDA Certificate")}
+              onPress={() => mockUpload('TESDA Certificate')}
             />
           )}
         </View>
@@ -298,19 +294,19 @@ function UploadSection({
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#f5f6fa",
+    backgroundColor: '#f5f6fa',
   },
   header: {
     paddingHorizontal: 18,
     paddingTop: 10,
     paddingBottom: 6,
-    alignItems: "center",
-    backgroundColor: "#f5f6fa",
+    alignItems: 'center',
+    backgroundColor: '#f5f6fa',
   },
   logo: {
     width: 190,
     height: 42,
-    resizeMode: "contain",
+    resizeMode: 'contain',
   },
   root: {
     flex: 1,
@@ -323,29 +319,29 @@ const styles = StyleSheet.create({
 
   progressText: {
     fontSize: 13,
-    color: "#6b7280",
+    color: '#6b7280',
     marginBottom: 6,
   },
   stepTitle: {
     fontSize: 22,
-    fontWeight: "900",
-    color: "#0f172a",
+    fontWeight: '900',
+    color: '#0f172a',
   },
   stepSubtitle: {
     marginTop: 4,
     fontSize: 14,
-    color: "#6b7280",
+    color: '#6b7280',
     marginBottom: 12,
   },
 
   card: {
     marginTop: 14,
     borderRadius: 18,
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
     padding: 18,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    shadowColor: "#000",
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
@@ -353,13 +349,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 15,
-    fontWeight: "900",
-    color: "#0f172a",
+    fontWeight: '900',
+    color: '#0f172a',
   },
   cardHint: {
     marginTop: 6,
     fontSize: 13,
-    color: "#6b7280",
+    color: '#6b7280',
     marginBottom: 10,
   },
 
@@ -367,23 +363,23 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   docHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 6,
   },
   docLabel: {
     fontSize: 13.5,
-    fontWeight: "900",
-    color: "#0f172a",
+    fontWeight: '900',
+    color: '#0f172a',
   },
   tagRequired: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: "#eef2ff",
+    backgroundColor: '#eef2ff',
   },
   tagDot: {
     fontSize: 12,
@@ -392,18 +388,18 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: '800',
     color: BLUE,
   },
 
   uploadBox: {
     borderRadius: 14,
     borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "#93c5fd",
-    backgroundColor: "#f9fafb",
-    alignItems: "center",
-    justifyContent: "center",
+    borderStyle: 'dashed',
+    borderColor: '#93c5fd',
+    backgroundColor: '#f9fafb',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 24,
     paddingHorizontal: 16,
   },
@@ -412,36 +408,36 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#bfdbfe",
-    backgroundColor: "#eff6ff",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: '#bfdbfe',
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 10,
   },
   uploadText: {
     fontSize: 13,
-    fontWeight: "800",
-    color: "#1e293b",
+    fontWeight: '800',
+    color: '#1e293b',
   },
   uploadSub: {
     marginTop: 4,
     fontSize: 11.5,
-    color: "#6b7280",
+    color: '#6b7280',
   },
 
   docFooter: {
     marginTop: 6,
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   docFooterLeft: {
     fontSize: 11,
-    color: "#9ca3af",
+    color: '#9ca3af',
   },
   docFooterRight: {
     fontSize: 11,
-    color: "#9ca3af",
-    textAlign: "right",
+    color: '#9ca3af',
+    textAlign: 'right',
     flex: 1,
     marginLeft: 8,
   },
@@ -450,45 +446,45 @@ const styles = StyleSheet.create({
     marginTop: 18,
     padding: 12,
     borderRadius: 14,
-    backgroundColor: "#f9fafb",
+    backgroundColor: '#f9fafb',
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: '#e5e7eb',
   },
   subCardTitle: {
     fontSize: 13.5,
-    fontWeight: "900",
-    color: "#0f172a",
+    fontWeight: '900',
+    color: '#0f172a',
   },
   subCardText: {
     marginTop: 4,
     fontSize: 12,
-    color: "#6b7280",
+    color: '#6b7280',
   },
   servicePillWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
     marginTop: 8,
   },
   servicePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: "#e0f2fe",
+    backgroundColor: '#e0f2fe',
   },
   servicePillText: {
     marginLeft: 6,
     fontSize: 12,
-    fontWeight: "800",
+    fontWeight: '800',
     color: BLUE,
   },
 
   bottomRow: {
     marginTop: 20,
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   backBtn: {
@@ -496,27 +492,27 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: '#d1d5db',
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   backBtnText: {
     fontSize: 14,
-    fontWeight: "800",
-    color: "#374151",
+    fontWeight: '800',
+    color: '#374151',
   },
   nextBtn: {
     flex: 1,
     height: 52,
     borderRadius: 999,
     backgroundColor: BLUE,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   nextBtnText: {
     fontSize: 14,
-    fontWeight: "900",
-    color: "#ffffff",
+    fontWeight: '900',
+    color: '#ffffff',
   },
 });

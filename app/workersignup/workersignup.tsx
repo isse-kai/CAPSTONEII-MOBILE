@@ -2,28 +2,28 @@ import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Alert,
-    Dimensions,
-    Image,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import AgreementModal from "../legal/AgreementModal";
 import type { LegalKey } from "../legal/legalContent";
 
 // ✅ Supabase auth logic
 import {
-    resendSignupOtp,
-    signUpWorker,
-    verifyEmailOtp,
+  resendSignupOtp,
+  signUpWorker,
+  verifyEmailOtp,
 } from "../../supabase/services/authService"; // <-- adjust path if needed
 
 const BLUE = "#1E88E5";

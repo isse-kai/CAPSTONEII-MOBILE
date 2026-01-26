@@ -144,7 +144,7 @@ export default function ClientPage() {
     if (key === "ongoingRequest") router.push("/_sitemap");
     if (key === "bookWorker") router.push("/_sitemap");
     if (key === "messages") router.push("/_sitemap");
-    if (key === "profile") router.push("./clientpage/profile/clientprofile");
+    if (key === "profile") router.push("/clientpage/profile/clientprofile");
   };
 
   return (
@@ -238,10 +238,10 @@ export default function ClientPage() {
             setTab(t);
 
             // ✅ change routes to your real pages
-            if (t === "home") router.push("./clientpage/clientpage");
+            if (t === "home") router.push("/clientpage/clientpage");
             if (t === "browse") router.push("/_sitemap");
             if (t === "profile")
-              router.push("./clientpage/profile/clientprofile");
+              router.push("/clientpage/profile/clientprofile");
           }}
         />
 

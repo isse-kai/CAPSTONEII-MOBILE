@@ -1,25 +1,25 @@
 // app/workerpage/nav/TopNav.tsx
 import { useRouter } from "expo-router";
 import {
-    Bell,
-    ChevronDown,
-    ChevronUp,
-    Menu,
-    Search,
-    X,
+  Bell,
+  ChevronDown,
+  ChevronUp,
+  Menu,
+  Search,
+  X,
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Dimensions,
-    Image,
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const BLUE = "#1E88E5";

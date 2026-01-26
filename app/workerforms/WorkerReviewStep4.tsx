@@ -1,6 +1,6 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { CheckCircle2, FileText, Hammer, MapPin } from "lucide-react-native";
-import React, { useMemo } from "react";
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { CheckCircle2, FileText, Hammer, MapPin } from 'lucide-react-native';
+import React, { useMemo } from 'react';
 import {
     Image,
     SafeAreaView,
@@ -9,9 +9,9 @@ import {
     Text,
     TouchableOpacity,
     View,
-} from "react-native";
+} from 'react-native';
 
-const BLUE = "#1E88E5";
+const BLUE = '#1E88E5';
 
 type PersonalInfo = {
   firstName: string;
@@ -27,21 +27,21 @@ type PersonalInfo = {
 type WorkInfo = {
   description: string;
   yearsExperience: string;
-  hasTools: "yes" | "no" | "";
+  hasTools: 'yes' | 'no' | '';
   selectedServices: string[];
   selectedTasks: Record<string, string[]>;
 };
 
 function parsePersonalInfo(raw?: string): PersonalInfo {
   const fallback: PersonalInfo = {
-    firstName: "",
-    lastName: "",
-    birthdate: "",
-    age: "",
-    phone: "",
-    email: "",
-    barangay: "",
-    street: "",
+    firstName: '',
+    lastName: '',
+    birthdate: '',
+    age: '',
+    phone: '',
+    email: '',
+    barangay: '',
+    street: '',
   };
 
   if (!raw) return fallback;
@@ -54,9 +54,9 @@ function parsePersonalInfo(raw?: string): PersonalInfo {
 
 function parseWorkInfo(raw?: string): WorkInfo {
   const fallback: WorkInfo = {
-    description: "",
-    yearsExperience: "",
-    hasTools: "",
+    description: '',
+    yearsExperience: '',
+    hasTools: '',
     selectedServices: [],
     selectedTasks: {},
   };
@@ -87,7 +87,7 @@ export default function WorkerReviewStep4() {
     if (!services) return [];
     try {
       return decodeURIComponent(services)
-        .split(",")
+        .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
     } catch {
@@ -96,25 +96,25 @@ export default function WorkerReviewStep4() {
   }, [workInfo.selectedServices, services]);
 
   const hasToolsLabel =
-    workInfo.hasTools === "yes"
-      ? "Yes, I have my own tools or equipment"
-      : workInfo.hasTools === "no"
-        ? "No, I don’t have my own tools"
-        : "Not specified";
+    workInfo.hasTools === 'yes'
+      ? 'Yes, I have my own tools or equipment'
+      : workInfo.hasTools === 'no'
+      ? 'No, I don’t have my own tools'
+      : 'Not specified';
 
   const handleBack = () => {
     router.back();
   };
 
   const handleSubmit = () => {
-    console.log("Submit worker application", {
+    console.log('Submit worker application', {
       personalInfo,
       selectedServices,
       workInfo,
     });
 
     // ✅ Go to success screen instead of going back to WorkerPage
-    router.replace("/workerpage/workerpage");
+    router.replace('/workerpage/workerpage');
   };
 
   return (
@@ -122,7 +122,7 @@ export default function WorkerReviewStep4() {
       {/* Logo header */}
       <View style={styles.header}>
         <Image
-          source={require("../../image/jdklogo.png")}
+          source={require('../../image/jdklogo.png')}
           style={styles.logo}
         />
       </View>
@@ -133,9 +133,7 @@ export default function WorkerReviewStep4() {
         showsVerticalScrollIndicator={false}
       >
         {/* Progress text */}
-        <Text style={styles.progressText}>
-          4 of 4 • Post a Worker Application
-        </Text>
+        <Text style={styles.progressText}>4 of 4 • Post a Worker Application</Text>
 
         {/* Titles */}
         <Text style={styles.stepTitle}>Step 4: Review & Submit</Text>
@@ -149,9 +147,7 @@ export default function WorkerReviewStep4() {
             <Text style={styles.cardTitle}>Personal Information</Text>
             <View style={styles.statusPill}>
               <CheckCircle2 size={16} color={BLUE} />
-              <Text style={styles.statusPillText}>
-                From your account details
-              </Text>
+              <Text style={styles.statusPillText}>From your account details</Text>
             </View>
           </View>
 
@@ -159,11 +155,11 @@ export default function WorkerReviewStep4() {
           <View style={styles.row}>
             <View style={styles.infoItem}>
               <Text style={styles.label}>First Name</Text>
-              <Text style={styles.value}>{personalInfo.firstName || "—"}</Text>
+              <Text style={styles.value}>{personalInfo.firstName || '—'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.label}>Last Name</Text>
-              <Text style={styles.value}>{personalInfo.lastName || "—"}</Text>
+              <Text style={styles.value}>{personalInfo.lastName || '—'}</Text>
             </View>
           </View>
 
@@ -171,11 +167,11 @@ export default function WorkerReviewStep4() {
           <View style={styles.row}>
             <View style={styles.infoItem}>
               <Text style={styles.label}>Birthdate</Text>
-              <Text style={styles.value}>{personalInfo.birthdate || "—"}</Text>
+              <Text style={styles.value}>{personalInfo.birthdate || '—'}</Text>
             </View>
             <View style={styles.infoItemSmall}>
               <Text style={styles.label}>Age</Text>
-              <Text style={styles.value}>{personalInfo.age || "—"}</Text>
+              <Text style={styles.value}>{personalInfo.age || '—'}</Text>
             </View>
           </View>
 
@@ -183,11 +179,11 @@ export default function WorkerReviewStep4() {
           <View style={styles.row}>
             <View style={styles.infoItem}>
               <Text style={styles.label}>Contact Number</Text>
-              <Text style={styles.value}>{personalInfo.phone || "—"}</Text>
+              <Text style={styles.value}>{personalInfo.phone || '—'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.label}>Email Address</Text>
-              <Text style={styles.value}>{personalInfo.email || "—"}</Text>
+              <Text style={styles.value}>{personalInfo.email || '—'}</Text>
             </View>
           </View>
         </View>
@@ -202,11 +198,11 @@ export default function WorkerReviewStep4() {
           <View style={styles.row}>
             <View style={styles.infoItem}>
               <Text style={styles.label}>Barangay</Text>
-              <Text style={styles.value}>{personalInfo.barangay || "—"}</Text>
+              <Text style={styles.value}>{personalInfo.barangay || '—'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.label}>Street</Text>
-              <Text style={styles.value}>{personalInfo.street || "—"}</Text>
+              <Text style={styles.value}>{personalInfo.street || '—'}</Text>
             </View>
           </View>
         </View>
@@ -263,10 +259,8 @@ export default function WorkerReviewStep4() {
             Service Description
           </Text>
           <View style={styles.readonlyBox}>
-            <Text
-              style={workInfo.description ? styles.value : styles.valueMuted}
-            >
-              {workInfo.description || "No description provided."}
+            <Text style={workInfo.description ? styles.value : styles.valueMuted}>
+              {workInfo.description || 'No description provided.'}
             </Text>
           </View>
 
@@ -277,7 +271,7 @@ export default function WorkerReviewStep4() {
           <Text style={styles.value}>
             {workInfo.yearsExperience
               ? `${workInfo.yearsExperience} year(s)`
-              : "Not specified"}
+              : 'Not specified'}
           </Text>
 
           {/* Tools */}
@@ -295,7 +289,7 @@ export default function WorkerReviewStep4() {
           </View>
 
           <Text style={styles.documentsText}>
-            Your uploaded documents from <Text style={styles.bold}>Step 3</Text>{" "}
+            Your uploaded documents from <Text style={styles.bold}>Step 3</Text>{' '}
             (IDs, clearances, proof of address, TESDA certificates) are attached
             to this application. For security and privacy, file previews are not
             shown here.
@@ -330,19 +324,19 @@ export default function WorkerReviewStep4() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#f5f6fa",
+    backgroundColor: '#f5f6fa',
   },
   header: {
     paddingHorizontal: 18,
     paddingTop: 10,
     paddingBottom: 6,
-    alignItems: "center",
-    backgroundColor: "#f5f6fa",
+    alignItems: 'center',
+    backgroundColor: '#f5f6fa',
   },
   logo: {
     width: 190,
     height: 42,
-    resizeMode: "contain",
+    resizeMode: 'contain',
   },
   root: {
     flex: 1,
@@ -355,63 +349,63 @@ const styles = StyleSheet.create({
 
   progressText: {
     fontSize: 13,
-    color: "#6b7280",
+    color: '#6b7280',
     marginBottom: 6,
   },
   stepTitle: {
     fontSize: 22,
-    fontWeight: "900",
-    color: "#0f172a",
+    fontWeight: '900',
+    color: '#0f172a',
   },
   stepSubtitle: {
     marginTop: 4,
     fontSize: 14,
-    color: "#6b7280",
+    color: '#6b7280',
     marginBottom: 12,
   },
 
   card: {
     marginTop: 14,
     borderRadius: 18,
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
     padding: 18,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    shadowColor: "#000",
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
   cardHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   cardTitle: {
     fontSize: 15,
-    fontWeight: "900",
-    color: "#0f172a",
+    fontWeight: '900',
+    color: '#0f172a',
   },
 
   statusPill: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: "#e0f2fe",
+    backgroundColor: '#e0f2fe',
   },
   statusPillText: {
     marginLeft: 6,
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: '800',
     color: BLUE,
   },
 
   row: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
     marginTop: 8,
   },
@@ -424,30 +418,30 @@ const styles = StyleSheet.create({
 
   label: {
     fontSize: 12,
-    fontWeight: "800",
-    color: "#6b7280",
+    fontWeight: '800',
+    color: '#6b7280',
     marginBottom: 2,
   },
   value: {
     fontSize: 14,
-    fontWeight: "800",
-    color: "#111827",
+    fontWeight: '800',
+    color: '#111827',
   },
   valueMuted: {
     fontSize: 13,
-    color: "#9ca3af",
+    color: '#9ca3af',
   },
 
   sectionLabel: {
     marginTop: 4,
     fontSize: 13,
-    fontWeight: "900",
-    color: "#0f172a",
+    fontWeight: '900',
+    color: '#0f172a',
   },
 
   serviceChipWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     marginTop: 6,
   },
@@ -455,11 +449,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: "#e0f2fe",
+    backgroundColor: '#e0f2fe',
   },
   serviceChipText: {
     fontSize: 12,
-    fontWeight: "800",
+    fontWeight: '800',
     color: BLUE,
   },
 
@@ -468,33 +462,33 @@ const styles = StyleSheet.create({
   },
   tasksGroupTitle: {
     fontSize: 12.5,
-    fontWeight: "800",
-    color: "#1f2933",
+    fontWeight: '800',
+    color: '#1f2933',
     marginBottom: 4,
   },
   tasksPillWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
   },
   taskPill: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: "#e5f0ff",
+    backgroundColor: '#e5f0ff',
   },
   taskPillText: {
     fontSize: 11.5,
-    color: "#1e293b",
-    fontWeight: "600",
+    color: '#1e293b',
+    fontWeight: '600',
   },
 
   readonlyBox: {
     marginTop: 4,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#f9fafb",
+    borderColor: '#e5e7eb',
+    backgroundColor: '#f9fafb',
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
@@ -502,17 +496,17 @@ const styles = StyleSheet.create({
   documentsText: {
     marginTop: 4,
     fontSize: 13,
-    color: "#6b7280",
+    color: '#6b7280',
     lineHeight: 19,
   },
   bold: {
-    fontWeight: "800",
-    color: "#374151",
+    fontWeight: '800',
+    color: '#374151',
   },
 
   bottomRow: {
     marginTop: 20,
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   backBtn: {
@@ -520,27 +514,27 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: '#d1d5db',
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   backBtnText: {
     fontSize: 14,
-    fontWeight: "800",
-    color: "#374151",
+    fontWeight: '800',
+    color: '#374151',
   },
   submitBtn: {
     flex: 1,
     height: 52,
     borderRadius: 999,
     backgroundColor: BLUE,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   submitBtnText: {
     fontSize: 14,
-    fontWeight: "900",
-    color: "#ffffff",
+    fontWeight: '900',
+    color: '#ffffff',
   },
 });
