@@ -99,7 +99,7 @@ export default function TopNav({
     appPostStatus: "/workerpage/appPostStatus",
     completedWorks: "/workerpage/completedWorks",
     ongoingService: "/workerpage/ongoingService",
-    findClient: "/workerpage/findClient",
+    findClient: "/workerpage/Browse/Browse",
     messages: "/workerpage/Messages/messages",
   };
 

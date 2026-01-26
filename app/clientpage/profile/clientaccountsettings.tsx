@@ -3,14 +3,14 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, KeyRound, LogOut, Settings } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { supabase } from "../../../supabase/supabase";
@@ -146,9 +146,8 @@ export default function ClientAccountSettings() {
 
     const uid = authData.user.id;
 
+    // ✅ Names removed from payload so they can't be updated
     const payload = {
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
       contact_number: phone.trim(),
       date_of_birth: dob.trim(),
     };
@@ -315,19 +314,21 @@ export default function ClientAccountSettings() {
               <View style={styles.formGrid}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.label}>First Name</Text>
+                  {/* ✅ UNEDITABLE */}
                   <TextInput
                     value={firstName}
-                    onChangeText={setFirstName}
-                    style={styles.input}
+                    editable={false}
+                    style={[styles.input, styles.inputDisabled]}
                   />
                 </View>
 
                 <View style={{ flex: 1 }}>
                   <Text style={styles.label}>Last Name</Text>
+                  {/* ✅ UNEDITABLE */}
                   <TextInput
                     value={lastName}
-                    onChangeText={setLastName}
-                    style={styles.input}
+                    editable={false}
+                    style={[styles.input, styles.inputDisabled]}
                   />
                 </View>
               </View>

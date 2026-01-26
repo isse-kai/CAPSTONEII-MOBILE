@@ -337,9 +337,8 @@ export default function WorkerAccountSettingsScreen() {
       setSavingInfo(true);
       const table = role === "worker" ? "user_worker" : "user_client";
 
+      // ✅ Names removed from payload so they can’t be updated
       const payload: any = {
-        first_name: firstName.trim() || null,
-        last_name: lastName.trim() || null,
         contact_number: phoneDb || null,
         date_of_birth: dobDb || null,
         age: ageDb,
@@ -357,8 +356,6 @@ export default function WorkerAccountSettingsScreen() {
         p
           ? {
               ...p,
-              first_name: payload.first_name,
-              last_name: payload.last_name,
               contact_number: payload.contact_number,
               date_of_birth: payload.date_of_birth,
               age: payload.age,
@@ -520,20 +517,23 @@ export default function WorkerAccountSettingsScreen() {
               <View style={styles.row2}>
                 <View style={styles.field}>
                   <Text style={styles.label}>First Name</Text>
+                  {/* ✅ UNEDITABLE */}
                   <TextInput
                     value={firstName}
-                    onChangeText={setFirstName}
-                    style={styles.input}
+                    editable={false}
+                    style={[styles.input, { backgroundColor: "#f9fafb" }]}
                     placeholder="First name"
                     placeholderTextColor="#9ca3af"
                   />
                 </View>
+
                 <View style={styles.field}>
                   <Text style={styles.label}>Last Name</Text>
+                  {/* ✅ UNEDITABLE */}
                   <TextInput
                     value={lastName}
-                    onChangeText={setLastName}
-                    style={styles.input}
+                    editable={false}
+                    style={[styles.input, { backgroundColor: "#f9fafb" }]}
                     placeholder="Last name"
                     placeholderTextColor="#9ca3af"
                   />
