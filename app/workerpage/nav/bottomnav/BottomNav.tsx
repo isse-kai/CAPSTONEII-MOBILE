@@ -16,17 +16,17 @@ export default function BottomNav({ active }: { active: WorkerTabKey }) {
 
     if (tab === "home") {
       // ✅ adjust if your worker home route filename is different
-      router.push("/workerpage/workerpage");
+      router.push("./workerpage/workerpage");
       return;
     }
 
     if (tab === "browse") {
-      router.push("/workerpage/Browse/Browse");
+      router.push("./workerpage/Browse/Browse");
       return;
     }
 
     // profile
-    router.push("/workerpage/profile/profile");
+    router.push("./workerpage/profile/profile");
   };
 
   return (

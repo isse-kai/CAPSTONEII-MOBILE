@@ -1,7 +1,14 @@
 // app/workerpage/workerpage.tsx
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { ClipboardPenLine, UserCog } from "lucide-react-native";
+import {
+  Briefcase,
+  ClipboardPenLine,
+  Eye,
+  MapPin,
+  Star,
+  UserCog,
+} from "lucide-react-native";
 import React, {
   useCallback,
   useEffect,
@@ -10,6 +17,7 @@ import React, {
   useState,
 } from "react";
 import {
+  Alert,
   Animated,
   Modal,
   SafeAreaView,
@@ -86,6 +94,79 @@ function getPHLocal10(phone: string) {
 
 type EligibilityState = "missing" | "underage" | null;
 
+/* =========================
+   PLACEHOLDER REQUESTS (same idea as your Browse)
+========================= */
+type RequestItem = {
+  id: string;
+  title: string;
+  service: "Carwash" | "Plumbing" | "Carpentry" | "Laundry" | "Electrician";
+  location: string;
+  budget: string;
+  posted: string;
+  description: string;
+  rating: number;
+};
+
+const PLACEHOLDER_REQUESTS: RequestItem[] = [
+  {
+    id: "REQ-001",
+    title: "Car Wash (Sedan) - Home Service",
+    service: "Carwash",
+    location: "Bacolod City",
+    budget: "₱250 - ₱400",
+    posted: "Posted today",
+    description:
+      "Need basic exterior wash and vacuum. Prefer morning schedule.",
+    rating: 4.6,
+  },
+  {
+    id: "REQ-002",
+    title: "Fix Leaking Faucet",
+    service: "Plumbing",
+    location: "Barangay Villamonte",
+    budget: "₱600 - ₱1,200",
+    posted: "Posted 1 day ago",
+    description:
+      "Kitchen faucet leaking. Bring basic tools if possible. Prefer afternoon schedule.",
+    rating: 4.2,
+  },
+  {
+    id: "REQ-003",
+    title: "Door Hinge & Cabinet Repair",
+    service: "Carpentry",
+    location: "Barangay Tangub",
+    budget: "₱700 - ₱1,400",
+    posted: "Posted 2 days ago",
+    description:
+      "Cabinet door sagging and hinge needs replacement. Quick repair requested.",
+    rating: 4.8,
+  },
+];
+
+function Stars({ rating }: { rating: number }) {
+  const full = Math.floor(rating);
+  const total = 5;
+
+  return (
+    <View style={styles.starsRow}>
+      {Array.from({ length: total }).map((_, i) => {
+        const idx = i + 1;
+        const filled = idx <= full;
+        return (
+          <Star
+            key={i}
+            size={14}
+            color={filled ? "#f59e0b" : "#cbd5e1"}
+            fill={filled ? "#f59e0b" : "none"}
+          />
+        );
+      })}
+      <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+    </View>
+  );
+}
+
 export default function WorkerPage() {
   const router = useRouter();
 
@@ -116,7 +197,7 @@ export default function WorkerPage() {
   const loadProfile = useCallback(async () => {
     const { data: authData, error: authErr } = await supabase.auth.getUser();
     if (authErr || !authData?.user) {
-      router.replace("/login/login");
+      router.replace("./login/login");
       return;
     }
 
@@ -197,12 +278,12 @@ export default function WorkerPage() {
       return;
     }
 
-    router.push("/workerforms/WorkerInfoStep1");
+    router.push("./workerforms/WorkerInfoStep1");
   };
 
   const goToAccountSettings = () => {
     setEligibilityVisible(false);
-    router.push("/workerpage/profile/workeraccountsettings");
+    router.push("./workerpage/profile/workeraccountsettings");
   };
 
   const renderModalContent = () => {
@@ -351,26 +432,91 @@ export default function WorkerPage() {
             <Text style={styles.sectionTitle}>Available Service Requests</Text>
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => router.push("/workerpage/Browse/Browse")}
+              onPress={() => router.push("./workerpage/Browse/Browse")}
             >
               <Text style={styles.link}>Browse available requests →</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.card}>
-            <View style={styles.cardCenter}>
-              <View style={styles.iconCircle}>
-                <UserCog size={30} color={BLUE} />
-              </View>
+          {/* ✅ Placeholder request cards */}
+          {PLACEHOLDER_REQUESTS.length === 0 ? (
+            <View style={styles.card}>
+              <View style={styles.cardCenter}>
+                <View style={styles.iconCircle}>
+                  <UserCog size={30} color={BLUE} />
+                </View>
 
-              <Text style={styles.emptyTitle}>
-                No Available Service Requests
-              </Text>
-              <Text style={styles.emptySub}>
-                Start by checking back later for new service requests.
-              </Text>
+                <Text style={styles.emptyTitle}>
+                  No Available Service Requests
+                </Text>
+                <Text style={styles.emptySub}>
+                  Start by checking back later for new service requests.
+                </Text>
+              </View>
             </View>
-          </View>
+          ) : (
+            <View style={styles.cardListWrap}>
+              {PLACEHOLDER_REQUESTS.map((req) => (
+                <View key={req.id} style={styles.reqCard}>
+                  <View style={styles.reqTopRow}>
+                    <View style={styles.reqBadge}>
+                      <Briefcase size={14} color={BLUE} />
+                      <Text style={styles.reqBadgeText}>{req.service}</Text>
+                    </View>
+
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={styles.reqPosted}>{req.posted}</Text>
+                      <Stars rating={req.rating} />
+                    </View>
+                  </View>
+
+                  <Text style={styles.reqTitle}>{req.title}</Text>
+
+                  <View style={styles.reqMetaRow}>
+                    <MapPin size={16} color="#64748b" />
+                    <Text style={styles.reqMetaText}>{req.location}</Text>
+                    <Text style={styles.reqMetaDot}>•</Text>
+                    <View style={styles.reqPriceChip}>
+                      <Text style={styles.reqPriceChipText}>{req.budget}</Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.reqDesc} numberOfLines={2}>
+                    {req.description}
+                  </Text>
+
+                  <View style={styles.reqBtnRow}>
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      style={styles.reqViewBtn}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/workerpage/Browse/ViewDetails",
+                          params: { requestId: req.id },
+                        })
+                      }
+                    >
+                      <Eye size={16} color={BLUE} />
+                      <Text style={styles.reqViewBtnText}>View</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      style={styles.reqApplyBtn}
+                      onPress={() =>
+                        Alert.alert(
+                          "Apply Now (Placeholder)",
+                          `You tapped Apply for:\n${req.title}`,
+                        )
+                      }
+                    >
+                      <Text style={styles.reqApplyBtnText}>Apply Now</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
 
           <View style={{ height: 20 }} />
         </ScrollView>
@@ -493,6 +639,114 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
 
+  /* ===== Placeholder request cards ===== */
+  cardListWrap: { marginTop: 12, gap: 12 },
+
+  reqCard: {
+    borderRadius: 16,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e5e9f2",
+    padding: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+
+  reqTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 10,
+  },
+
+  reqBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    height: 30,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#dbeafe",
+    backgroundColor: "#eff6ff",
+  },
+  reqBadgeText: { fontSize: 12.5, fontWeight: "900", color: BLUE },
+
+  reqPosted: { fontSize: 12, fontWeight: "800", color: "#94a3b8" },
+
+  starsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  ratingText: {
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#0f172a",
+  },
+
+  reqTitle: { fontSize: 15.5, fontWeight: "900", color: "#0f172a" },
+
+  reqMetaRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  reqMetaText: { fontSize: 12.5, fontWeight: "800", color: "#475569" },
+  reqMetaDot: { color: "#cbd5e1", fontWeight: "900" },
+
+  reqPriceChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "#ecfdf5",
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+  },
+  reqPriceChipText: { fontSize: 12.5, fontWeight: "900", color: "#065f46" },
+
+  reqDesc: {
+    marginTop: 8,
+    fontSize: 12.8,
+    color: "#64748b",
+    fontWeight: "700",
+    lineHeight: 18,
+  },
+
+  reqBtnRow: { marginTop: 12, flexDirection: "row", gap: 10 },
+
+  reqViewBtn: {
+    flex: 1,
+    height: 46,
+    borderRadius: 999,
+    borderWidth: 1.6,
+    borderColor: BLUE,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  reqViewBtnText: { fontSize: 13.5, fontWeight: "900", color: BLUE },
+
+  reqApplyBtn: {
+    flex: 1,
+    height: 46,
+    borderRadius: 999,
+    backgroundColor: BLUE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reqApplyBtnText: { fontSize: 13.5, fontWeight: "900", color: "#ffffff" },
+
+  /* ===== Modal ===== */
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(15,23,42,0.35)",
@@ -536,4 +790,3 @@ const styles = StyleSheet.create({
   modalBtnPrimary: { backgroundColor: BLUE },
   modalBtnPrimaryText: { fontSize: 13, fontWeight: "800", color: "#ffffff" },
 });
-// testing

@@ -1,29 +1,29 @@
-import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import { useRouter } from "expo-router";
+import React, { useMemo, useState } from "react";
 import {
-    Dimensions,
-    Image,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import AgreementModal from '../legal/AgreementModal';
-import type { LegalKey } from '../legal/legalContent';
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import AgreementModal from "../legal/AgreementModal";
+import type { LegalKey } from "../legal/legalContent";
 
-const BLUE = '#1E88E5';
-const { width } = Dimensions.get('window');
+const BLUE = "#1E88E5";
+const { width } = Dimensions.get("window");
 
 function RuleLine({ ok, text }: { ok: boolean; text: string }) {
   return (
     <Text style={[styles.ruleText, ok && styles.ruleOk]}>
-      {ok ? '✓ ' : '• '}
+      {ok ? "✓ " : "• "}
       {text}
     </Text>
   );
@@ -32,21 +32,21 @@ function RuleLine({ ok, text }: { ok: boolean; text: string }) {
 export default function ClientSignupScreen() {
   const router = useRouter();
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [sex, setSex] = useState<'Male' | 'Female' | 'Other' | ''>('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [sex, setSex] = useState<"Male" | "Female" | "Other" | "">("");
   const [sexOpen, setSexOpen] = useState(false);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreePolicy, setAgreePolicy] = useState(false);
   const [agreeNda, setAgreeNda] = useState(false);
 
   const [legalOpen, setLegalOpen] = useState(false);
-  const [legalKey, setLegalKey] = useState<LegalKey>('privacy');
+  const [legalKey, setLegalKey] = useState<LegalKey>("privacy");
 
   const openLegal = (key: LegalKey) => {
     setLegalKey(key);
@@ -54,9 +54,9 @@ export default function ClientSignupScreen() {
   };
 
   const onAgree = () => {
-    if (legalKey === 'privacy') setAgreePrivacy(true);
-    if (legalKey === 'policy') setAgreePolicy(true);
-    if (legalKey === 'nda') setAgreeNda(true);
+    if (legalKey === "privacy") setAgreePrivacy(true);
+    if (legalKey === "policy") setAgreePolicy(true);
+    if (legalKey === "nda") setAgreeNda(true);
     setLegalOpen(false);
   };
 
@@ -100,8 +100,8 @@ export default function ClientSignupScreen() {
   const handleCreate = () => {
     if (!canCreate) return;
 
-    console.log('CLIENT SIGNUP', {
-      role: 'client',
+    console.log("CLIENT SIGNUP", {
+      role: "client",
       firstName,
       lastName,
       sex,
@@ -119,7 +119,7 @@ export default function ClientSignupScreen() {
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
         style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <AgreementModal
           visible={legalOpen}
@@ -130,12 +130,15 @@ export default function ClientSignupScreen() {
 
         {/* top row */}
         <View style={styles.topRow}>
-          <Image source={require('../../image/jdklogo.png')} style={styles.logo} />
+          <Image
+            source={require("../../image/jdklogo.png")}
+            style={styles.logo}
+          />
 
           <View style={styles.topRight}>
             <Text style={styles.topRightText}>Want to work as a worker?</Text>
             <TouchableOpacity
-              onPress={() => router.push('/workersignup/workersignup')}
+              onPress={() => router.push("./workersignup/workersignup")}
               activeOpacity={0.85}
             >
               <Text style={styles.topRightLink}>Apply as Worker</Text>
@@ -143,7 +146,10 @@ export default function ClientSignupScreen() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text style={styles.pageTitle}>
             Sign up to be a <Text style={styles.blue}>Client</Text>
           </Text>
@@ -151,8 +157,10 @@ export default function ClientSignupScreen() {
           {/* FORM */}
           <View style={styles.form}>
             {/* First/Last */}
-            <View style={[styles.row, STACK_NAMES && { flexDirection: 'column' }]}>
-              <View style={[styles.field, STACK_NAMES && { width: '100%' }]}>
+            <View
+              style={[styles.row, STACK_NAMES && { flexDirection: "column" }]}
+            >
+              <View style={[styles.field, STACK_NAMES && { width: "100%" }]}>
                 <Text style={styles.label}>First Name</Text>
                 <TextInput
                   value={firstName}
@@ -163,7 +171,7 @@ export default function ClientSignupScreen() {
                 />
               </View>
 
-              <View style={[styles.field, STACK_NAMES && { width: '100%' }]}>
+              <View style={[styles.field, STACK_NAMES && { width: "100%" }]}>
                 <Text style={styles.label}>Last Name</Text>
                 <TextInput
                   value={lastName}
@@ -184,7 +192,7 @@ export default function ClientSignupScreen() {
                 activeOpacity={0.85}
               >
                 <Text style={[styles.selectText, !sex && styles.placeholder]}>
-                  {sex ? sex : 'Select sex'}
+                  {sex ? sex : "Select sex"}
                 </Text>
                 <Text style={styles.chev}>▾</Text>
               </TouchableOpacity>
@@ -200,7 +208,7 @@ export default function ClientSignupScreen() {
                 <View style={styles.pickSheet}>
                   <Text style={styles.pickTitle}>Select sex</Text>
 
-                  {(['Male', 'Female', 'Other'] as const).map((opt) => (
+                  {(["Male", "Female", "Other"] as const).map((opt) => (
                     <TouchableOpacity
                       key={opt}
                       style={styles.pickItem}
@@ -211,7 +219,9 @@ export default function ClientSignupScreen() {
                       }}
                     >
                       <Text style={styles.pickItemText}>{opt}</Text>
-                      {sex === opt ? <Text style={styles.pickCheck}>✓</Text> : null}
+                      {sex === opt ? (
+                        <Text style={styles.pickCheck}>✓</Text>
+                      ) : null}
                     </TouchableOpacity>
                   ))}
 
@@ -287,15 +297,20 @@ export default function ClientSignupScreen() {
                   {agreePrivacy ? <Text style={styles.boxTick}>✓</Text> : null}
                 </View>
                 <Text style={styles.agreeText}>
-                  JDK HOMECARE’s{' '}
-                  <Text style={styles.link} onPress={() => openLegal('privacy')}>
+                  JDK HOMECARE’s{" "}
+                  <Text
+                    style={styles.link}
+                    onPress={() => openLegal("privacy")}
+                  >
                     Privacy Policy
                   </Text>
                   .
                 </Text>
               </View>
               {!agreePrivacy ? (
-                <Text style={styles.hint}>Please read the Privacy Policy to enable this checkbox.</Text>
+                <Text style={styles.hint}>
+                  Please read the Privacy Policy to enable this checkbox.
+                </Text>
               ) : null}
 
               <View style={[styles.agreeRow, { marginTop: 12 }]}>
@@ -303,19 +318,21 @@ export default function ClientSignupScreen() {
                   {agreePolicy ? <Text style={styles.boxTick}>✓</Text> : null}
                 </View>
                 <Text style={styles.agreeText}>
-                  JDK HOMECARE’s{' '}
-                  <Text style={styles.link} onPress={() => openLegal('policy')}>
+                  JDK HOMECARE’s{" "}
+                  <Text style={styles.link} onPress={() => openLegal("policy")}>
                     Policy Agreement
-                  </Text>{' '}
-                  and{' '}
-                  <Text style={styles.link} onPress={() => openLegal('nda')}>
+                  </Text>{" "}
+                  and{" "}
+                  <Text style={styles.link} onPress={() => openLegal("nda")}>
                     Non-Disclosure Agreement
                   </Text>
                   .
                 </Text>
               </View>
               {!agreePolicy || !agreeNda ? (
-                <Text style={styles.hint}>Please read and agree to both links to enable this checkbox.</Text>
+                <Text style={styles.hint}>
+                  Please read and agree to both links to enable this checkbox.
+                </Text>
               ) : null}
             </View>
 
@@ -332,7 +349,7 @@ export default function ClientSignupScreen() {
             {/* Bottom */}
             <View style={styles.bottomRow}>
               <Text style={styles.bottomText}>Already have an account?</Text>
-              <TouchableOpacity onPress={() => router.push('/login/login')}>
+              <TouchableOpacity onPress={() => router.push("./login/login")}>
                 <Text style={styles.bottomLink}>Log In</Text>
               </TouchableOpacity>
             </View>
@@ -344,158 +361,163 @@ export default function ClientSignupScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
-  root: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: "#fff" },
+  root: { flex: 1, backgroundColor: "#fff" },
 
   topRow: {
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 6,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     gap: 10,
   },
-  logo: { width: 150, height: 28, resizeMode: 'contain' },
-  topRight: { alignItems: 'flex-end' },
-  topRightText: { fontSize: 12, color: '#111827' },
-  topRightLink: { fontSize: 12, color: BLUE, fontWeight: '800', marginTop: 2 },
+  logo: { width: 150, height: 28, resizeMode: "contain" },
+  topRight: { alignItems: "flex-end" },
+  topRightText: { fontSize: 12, color: "#111827" },
+  topRightLink: { fontSize: 12, color: BLUE, fontWeight: "800", marginTop: 2 },
 
   scroll: { paddingHorizontal: 16, paddingBottom: 26 },
   pageTitle: {
     marginTop: 10,
     fontSize: 22,
-    fontWeight: '900',
-    color: '#111827',
-    textAlign: 'center',
+    fontWeight: "900",
+    color: "#111827",
+    textAlign: "center",
     marginBottom: 14,
   },
   blue: { color: BLUE },
 
   form: {
-    width: '100%',
+    width: "100%",
     maxWidth: 520,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
 
-  row: { flexDirection: 'row', gap: 12 },
+  row: { flexDirection: "row", gap: 12 },
   field: { marginBottom: 12, flex: 1 },
 
   label: {
     fontSize: 12,
-    fontWeight: '800',
-    color: '#111827',
+    fontWeight: "800",
+    color: "#111827",
     marginBottom: 6,
   },
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: "#d1d5db",
     borderRadius: 10,
     paddingHorizontal: 12,
     fontSize: 14,
-    color: '#111827',
-    backgroundColor: '#fff',
+    color: "#111827",
+    backgroundColor: "#fff",
   },
 
   select: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: "#d1d5db",
     borderRadius: 10,
     paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  selectText: { fontSize: 14, fontWeight: '700', color: '#111827' },
-  placeholder: { color: '#94a3b8' },
-  chev: { fontSize: 16, fontWeight: '900', color: '#64748b' },
+  selectText: { fontSize: 14, fontWeight: "700", color: "#111827" },
+  placeholder: { color: "#94a3b8" },
+  chev: { fontSize: 16, fontWeight: "900", color: "#64748b" },
 
   rulesRow: {
     marginTop: 10,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
-  ruleText: { fontSize: 11.5, color: '#6b7280', marginBottom: 6 },
-  ruleOk: { color: BLUE, fontWeight: '800' },
+  ruleText: { fontSize: 11.5, color: "#6b7280", marginBottom: 6 },
+  ruleOk: { color: BLUE, fontWeight: "800" },
 
-  error: { marginTop: 6, fontSize: 12, color: '#b91c1c', fontWeight: '800' },
+  error: { marginTop: 6, fontSize: 12, color: "#b91c1c", fontWeight: "800" },
 
   agreeBlock: { marginTop: 4, marginBottom: 10 },
-  agreeRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  agreeRow: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
   box: {
     width: 16,
     height: 16,
     borderRadius: 3,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: "#d1d5db",
     marginTop: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   boxOn: { borderColor: BLUE },
-  boxTick: { fontSize: 12, fontWeight: '900', color: BLUE, marginTop: -1 },
-  agreeText: { flex: 1, fontSize: 12.5, color: '#111827', lineHeight: 18 },
-  link: { color: BLUE, fontWeight: '800' },
-  hint: { marginTop: 4, marginLeft: 26, fontSize: 11, color: '#6b7280' },
+  boxTick: { fontSize: 12, fontWeight: "900", color: BLUE, marginTop: -1 },
+  agreeText: { flex: 1, fontSize: 12.5, color: "#111827", lineHeight: 18 },
+  link: { color: BLUE, fontWeight: "800" },
+  hint: { marginTop: 4, marginLeft: 26, fontSize: 11, color: "#6b7280" },
 
   btn: {
     height: 48,
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 6,
   },
-  btnOff: { backgroundColor: '#d1d5db' },
-  btnOn: { backgroundColor: '#cfd6df' },
-  btnText: { fontSize: 14, fontWeight: '800', color: '#111827' },
+  btnOff: { backgroundColor: "#d1d5db" },
+  btnOn: { backgroundColor: "#cfd6df" },
+  btnText: { fontSize: 14, fontWeight: "800", color: "#111827" },
 
   bottomRow: {
     marginTop: 14,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 6,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
-  bottomText: { fontSize: 13, color: '#111827' },
-  bottomLink: { fontSize: 13, color: BLUE, fontWeight: '800' },
+  bottomText: { fontSize: 13, color: "#111827" },
+  bottomLink: { fontSize: 13, color: BLUE, fontWeight: "800" },
 
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "center",
     padding: 18,
   },
   pickSheet: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#eef2f7',
+    borderColor: "#eef2f7",
   },
-  pickTitle: { fontSize: 14, fontWeight: '900', color: '#0f172a', marginBottom: 10 },
+  pickTitle: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#0f172a",
+    marginBottom: 10,
+  },
   pickItem: {
     height: 46,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#eef2f7',
-    backgroundColor: '#fbfcfe',
+    borderColor: "#eef2f7",
+    backgroundColor: "#fbfcfe",
     paddingHorizontal: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
-  pickItemText: { fontSize: 13.5, fontWeight: '800', color: '#0f172a' },
-  pickCheck: { fontSize: 16, fontWeight: '900', color: BLUE },
+  pickItemText: { fontSize: 13.5, fontWeight: "800", color: "#0f172a" },
+  pickCheck: { fontSize: 16, fontWeight: "900", color: BLUE },
   pickCancel: {
     height: 44,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#d7dee9',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: "#d7dee9",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  pickCancelText: { fontSize: 13.5, fontWeight: '900', color: '#334155' },
+  pickCancelText: { fontSize: 13.5, fontWeight: "900", color: "#334155" },
 });

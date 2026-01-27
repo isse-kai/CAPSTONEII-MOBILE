@@ -78,7 +78,7 @@ export default function WorkerMessagesScreen() {
 
   const handleOpenConversation = (convo: WorkerChatItem) => {
     // 🔵 For now just go to a static chat screen (no params)
-    router.push("/workerpage/Messages/chat");
+    router.push("./workerpage/Messages/chat");
   };
 
   return (

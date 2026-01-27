@@ -3,15 +3,15 @@ import { useRouter } from "expo-router";
 import { Briefcase, Eye, Filter, MapPin, Star } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import {
-    Alert,
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import BottomNav from "../nav/bottomnav/BottomNav";
@@ -306,7 +306,7 @@ export default function BrowseRequestsScreen() {
                     activeOpacity={0.9}
                     style={styles.viewBtn}
                     onPress={() =>
-                      router.push(`/workerpage/Browse/ViewDetails`)
+                      router.push(`./workerpage/Browse/ViewDetails`)
                     }
                   >
                     <Eye size={16} color={BLUE} />

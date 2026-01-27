@@ -241,7 +241,7 @@ export default function WorkerInfoStep1() {
         if (userErr) throw userErr;
         if (!user) {
           Alert.alert("Not signed in", "Please log in again.");
-          router.replace("/login/login");
+          router.replace("./login/login");
           return;
         }
 

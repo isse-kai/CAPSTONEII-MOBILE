@@ -83,7 +83,7 @@ export default function ProfileScreen() {
         if (userErr) throw userErr;
         if (!user) {
           Alert.alert("Not signed in", "Please log in again.");
-          router.replace("/login/login");
+          router.replace("./login/login");
           return;
         }
 
@@ -193,7 +193,7 @@ export default function ProfileScreen() {
     try {
       await supabase.auth.signOut();
     } catch {}
-    router.replace("/login/login");
+    router.replace("./login/login");
   };
 
   return (
@@ -300,7 +300,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.9}
                 style={styles.actionRow}
                 onPress={() =>
-                  router.push("/workerpage/profile/myworks" as const)
+                  router.push("./workerpage/profile/myworks" as const)
                 }
               >
                 <View style={styles.actionLeft}>
@@ -326,7 +326,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.9}
                 style={styles.actionRow}
                 onPress={() =>
-                  router.push("/workerpage/profile/workeraccountsettings")
+                  router.push("./workerpage/profile/workeraccountsettings")
                 }
               >
                 <View style={styles.actionLeft}>

@@ -52,14 +52,14 @@ export default function AuthLanding() {
             <View style={styles.buttonsContainer}>
               <TouchableOpacity
                 style={styles.primaryButton}
-                onPress={() => router.push("/role/role")} // ✅ change to your signup route
+                onPress={() => router.push("./role/role")} // ✅ change to your signup route
               >
                 <Text style={styles.primaryButtonText}>SIGN UP</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.secondaryButton}
-                onPress={() => router.push("/login/login")} // ✅ goes to app/login/login.tsx
+                onPress={() => router.push("./login/login")} // ✅ goes to app/login/login.tsx
               >
                 <Text style={styles.secondaryButtonText}>LOGIN</Text>
               </TouchableOpacity>

@@ -247,7 +247,7 @@ export default function WorkerSignupScreen() {
 
       // If email confirmations are OFF, session may exist immediately:
       if (data.session) {
-        router.replace("/workerpage/workerpage");
+        router.replace("./workerpage/workerpage");
         return;
       }
 
@@ -279,7 +279,7 @@ export default function WorkerSignupScreen() {
         setOtpInfo("Verified! Logging you in...");
         setTimeout(() => {
           setOtpOpen(false);
-          router.replace("/workerpage/workerpage");
+          router.replace("./workerpage/workerpage");
         }, 200);
         return;
       }
@@ -288,7 +288,7 @@ export default function WorkerSignupScreen() {
       setOtpInfo("Verified. Please log in.");
       setTimeout(() => {
         setOtpOpen(false);
-        router.replace("/login/login");
+        router.replace("./login/login");
       }, 400);
     } catch (e: any) {
       setOtpInfo("");
@@ -473,7 +473,7 @@ export default function WorkerSignupScreen() {
           <View style={styles.topRight}>
             <Text style={styles.topRightText}>Want to hire a worker?</Text>
             <TouchableOpacity
-              onPress={() => router.push("/clientsignup/clientsignup")}
+              onPress={() => router.push("./clientsignup/clientsignup")}
               activeOpacity={0.85}
             >
               <Text style={styles.topRightLink}>Apply as Client</Text>
@@ -747,7 +747,7 @@ export default function WorkerSignupScreen() {
             {/* Bottom */}
             <View style={styles.bottomRow}>
               <Text style={styles.bottomText}>Already have an account?</Text>
-              <TouchableOpacity onPress={() => router.push("/login/login")}>
+              <TouchableOpacity onPress={() => router.push("./login/login")}>
                 <Text style={styles.bottomLink}>Log In</Text>
               </TouchableOpacity>
             </View>

@@ -3,13 +3,13 @@ import { useRouter } from "expo-router";
 import { ClipboardPenLine, UserCog } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    Modal,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { supabase } from "../../supabase/supabase";
@@ -50,7 +50,7 @@ export default function ClientPage() {
     const load = async () => {
       const { data: authData, error: authErr } = await supabase.auth.getUser();
       if (authErr || !authData?.user) {
-        router.replace("/login/login");
+        router.replace("./login/login");
         return;
       }
 
@@ -94,13 +94,13 @@ export default function ClientPage() {
     }
 
     // ✅ change this to your service request screen
-    router.push("/_sitemap");
+    router.push("./_sitemap");
   };
 
   const goToAccountSettings = () => {
     setEligibilityVisible(false);
     // ✅ change this to your client settings screen
-    router.push("/_sitemap");
+    router.push("./_sitemap");
   };
 
   const renderModalContent = () => {
@@ -140,11 +140,11 @@ export default function ClientPage() {
 
   const handleMenu = (key: ClientMenuKey) => {
     // ✅ replace with real routes
-    if (key === "manageRequest") router.push("/_sitemap");
-    if (key === "ongoingRequest") router.push("/_sitemap");
-    if (key === "bookWorker") router.push("/_sitemap");
-    if (key === "messages") router.push("/_sitemap");
-    if (key === "profile") router.push("/clientpage/profile/clientprofile");
+    if (key === "manageRequest") router.push("./_sitemap");
+    if (key === "ongoingRequest") router.push("./_sitemap");
+    if (key === "bookWorker") router.push("./_sitemap");
+    if (key === "messages") router.push("./_sitemap");
+    if (key === "profile") router.push("./clientpage/profile/clientprofile");
   };
 
   return (
@@ -209,7 +209,7 @@ export default function ClientPage() {
             <Text style={styles.sectionTitle}>Available Workers</Text>
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => router.push("/_sitemap")}
+              onPress={() => router.push("./_sitemap")}
             >
               <Text style={styles.link}>Browse available workers →</Text>
             </TouchableOpacity>
@@ -238,10 +238,10 @@ export default function ClientPage() {
             setTab(t);
 
             // ✅ change routes to your real pages
-            if (t === "home") router.push("/clientpage/clientpage");
-            if (t === "browse") router.push("/_sitemap");
+            if (t === "home") router.push("./clientpage/clientpage");
+            if (t === "browse") router.push("./_sitemap");
             if (t === "profile")
-              router.push("/clientpage/profile/clientprofile");
+              router.push("./clientpage/profile/clientprofile");
           }}
         />
 
