@@ -99,7 +99,7 @@ export default function ClientAccountSettings() {
 
       const { data: authData, error: authErr } = await supabase.auth.getUser();
       if (authErr || !authData?.user) {
-        router.replace("./login/login");
+        router.replace("/login/login");
         return;
       }
 

@@ -55,7 +55,7 @@ export default function ClientProfile() {
 
       const { data: authData, error: authErr } = await supabase.auth.getUser();
       if (authErr || !authData?.user) {
-        router.replace("./login/login");
+        router.replace("/login/login");
         return;
       }
 
@@ -122,7 +122,7 @@ export default function ClientProfile() {
 
   const onLogout = async () => {
     await supabase.auth.signOut();
-    router.replace("./login/login");
+    router.replace("/login/login");
   };
 
   return (
@@ -207,7 +207,7 @@ export default function ClientProfile() {
               activeOpacity={0.9}
               style={styles.actionRow}
               onPress={() =>
-                router.push("./clientpage/profile/clientaccountsettings")
+                router.push("/clientpage/profile/clientaccountsettings")
               }
             >
               <View

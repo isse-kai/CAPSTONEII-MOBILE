@@ -1,24 +1,28 @@
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-  Dimensions,
   Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import AgreementModal from "../legal/AgreementModal";
 import type { LegalKey } from "../legal/legalContent";
 
 const BLUE = "#1E88E5";
-const { width } = Dimensions.get("window");
+const clamp = (v: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, v));
 
 function RuleLine({ ok, text }: { ok: boolean; text: string }) {
   return (
@@ -31,6 +35,27 @@ function RuleLine({ ok, text }: { ok: boolean; text: string }) {
 
 export default function ClientSignupScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+
+  const s = width / 375;
+  const isShort = height < 720;
+  const STACK_NAMES = width < 360;
+
+  // ✅ same logo sizing as your Login/Role screens
+  const LOGO_W = clamp(180 * s, 160, 260);
+  const LOGO_H = clamp(40 * s, 34, 60);
+
+  // responsive sizing
+  const H_PAD = clamp(16 * s, 14, 24);
+  const PAGE_TITLE = clamp(22 * s, 18, 28);
+  const LABEL_SIZE = clamp(12 * s, 11, 14);
+  const INPUT_H = clamp(48 * s, 46, 56);
+  const BTN_H = clamp(48 * s, 46, 58);
+
+  const RADIUS = clamp(10 * s, 8, 14);
+  const CARD_RADIUS = clamp(18 * s, 14, 22);
+  const CARD_PAD = clamp(18 * s, 14, 22);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -113,8 +138,6 @@ export default function ClientSignupScreen() {
     });
   };
 
-  const STACK_NAMES = width < 360;
-
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
@@ -129,231 +152,452 @@ export default function ClientSignupScreen() {
         />
 
         {/* top row */}
-        <View style={styles.topRow}>
+        <View style={[styles.topRow, { paddingHorizontal: H_PAD }]}>
           <Image
             source={require("../../image/jdklogo.png")}
-            style={styles.logo}
+            style={{ width: LOGO_W, height: LOGO_H, resizeMode: "contain" }}
           />
 
           <View style={styles.topRight}>
-            <Text style={styles.topRightText}>Want to work as a worker?</Text>
+            <Text
+              style={[styles.topRightText, { fontSize: clamp(12 * s, 11, 14) }]}
+            >
+              Want to work as a worker?
+            </Text>
             <TouchableOpacity
-              onPress={() => router.push("./workersignup/workersignup")}
+              onPress={() => router.push("/workersignup/workersignup")}
               activeOpacity={0.85}
             >
-              <Text style={styles.topRightLink}>Apply as Worker</Text>
+              <Text
+                style={[
+                  styles.topRightLink,
+                  { fontSize: clamp(12 * s, 11, 14) },
+                ]}
+              >
+                Apply as Worker
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={{
+            paddingHorizontal: H_PAD,
+            paddingBottom: Math.max(insets.bottom, 22),
+          }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.pageTitle}>
-            Sign up to be a <Text style={styles.blue}>Client</Text>
-          </Text>
-
-          {/* FORM */}
-          <View style={styles.form}>
-            {/* First/Last */}
+          {/* ✅ CARD */}
+          <View
+            style={[styles.cardWrap, { maxWidth: clamp(560 * s, 360, 680) }]}
+          >
             <View
-              style={[styles.row, STACK_NAMES && { flexDirection: "column" }]}
+              style={[
+                styles.card,
+                { borderRadius: CARD_RADIUS, padding: CARD_PAD },
+              ]}
             >
-              <View style={[styles.field, STACK_NAMES && { width: "100%" }]}>
-                <Text style={styles.label}>First Name</Text>
-                <TextInput
-                  value={firstName}
-                  onChangeText={setFirstName}
-                  placeholder="First name"
-                  placeholderTextColor="#94a3b8"
-                  style={styles.input}
-                />
-              </View>
+              <Text style={[styles.pageTitle, { fontSize: PAGE_TITLE }]}>
+                Sign up to be a <Text style={styles.blue}>Client</Text>
+              </Text>
 
-              <View style={[styles.field, STACK_NAMES && { width: "100%" }]}>
-                <Text style={styles.label}>Last Name</Text>
-                <TextInput
-                  value={lastName}
-                  onChangeText={setLastName}
-                  placeholder="Last name"
-                  placeholderTextColor="#94a3b8"
-                  style={styles.input}
-                />
-              </View>
-            </View>
-
-            {/* Sex dropdown */}
-            <View style={styles.field}>
-              <Text style={styles.label}>Sex</Text>
-              <TouchableOpacity
-                style={styles.select}
-                onPress={() => setSexOpen(true)}
-                activeOpacity={0.85}
-              >
-                <Text style={[styles.selectText, !sex && styles.placeholder]}>
-                  {sex ? sex : "Select sex"}
-                </Text>
-                <Text style={styles.chev}>▾</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Sex modal */}
-            <Modal visible={sexOpen} transparent animationType="fade">
-              <TouchableOpacity
-                style={styles.backdrop}
-                activeOpacity={1}
-                onPress={() => setSexOpen(false)}
-              >
-                <View style={styles.pickSheet}>
-                  <Text style={styles.pickTitle}>Select sex</Text>
-
-                  {(["Male", "Female", "Other"] as const).map((opt) => (
-                    <TouchableOpacity
-                      key={opt}
-                      style={styles.pickItem}
-                      activeOpacity={0.85}
-                      onPress={() => {
-                        setSex(opt);
-                        setSexOpen(false);
-                      }}
-                    >
-                      <Text style={styles.pickItemText}>{opt}</Text>
-                      {sex === opt ? (
-                        <Text style={styles.pickCheck}>✓</Text>
-                      ) : null}
-                    </TouchableOpacity>
-                  ))}
-
-                  <TouchableOpacity
-                    style={styles.pickCancel}
-                    onPress={() => setSexOpen(false)}
-                    activeOpacity={0.9}
+              {/* FORM */}
+              <View style={styles.form}>
+                {/* First/Last */}
+                <View
+                  style={[
+                    styles.row,
+                    STACK_NAMES && { flexDirection: "column" },
+                  ]}
+                >
+                  <View
+                    style={[styles.field, STACK_NAMES && { width: "100%" }]}
                   >
-                    <Text style={styles.pickCancelText}>Cancel</Text>
+                    <Text style={[styles.label, { fontSize: LABEL_SIZE }]}>
+                      First Name
+                    </Text>
+                    <TextInput
+                      value={firstName}
+                      onChangeText={setFirstName}
+                      placeholder="First name"
+                      placeholderTextColor="#94a3b8"
+                      style={[
+                        styles.input,
+                        {
+                          height: INPUT_H,
+                          borderRadius: RADIUS,
+                          paddingHorizontal: clamp(12 * s, 12, 18),
+                          fontSize: clamp(14 * s, 13, 16),
+                        },
+                      ]}
+                    />
+                  </View>
+
+                  <View
+                    style={[styles.field, STACK_NAMES && { width: "100%" }]}
+                  >
+                    <Text style={[styles.label, { fontSize: LABEL_SIZE }]}>
+                      Last Name
+                    </Text>
+                    <TextInput
+                      value={lastName}
+                      onChangeText={setLastName}
+                      placeholder="Last name"
+                      placeholderTextColor="#94a3b8"
+                      style={[
+                        styles.input,
+                        {
+                          height: INPUT_H,
+                          borderRadius: RADIUS,
+                          paddingHorizontal: clamp(12 * s, 12, 18),
+                          fontSize: clamp(14 * s, 13, 16),
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+
+                {/* Sex dropdown */}
+                <View style={styles.field}>
+                  <Text style={[styles.label, { fontSize: LABEL_SIZE }]}>
+                    Sex
+                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.select,
+                      {
+                        height: INPUT_H,
+                        borderRadius: RADIUS,
+                        paddingHorizontal: clamp(12 * s, 12, 18),
+                      },
+                    ]}
+                    onPress={() => setSexOpen(true)}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[
+                        styles.selectText,
+                        { fontSize: clamp(14 * s, 13, 16) },
+                        !sex && styles.placeholder,
+                      ]}
+                    >
+                      {sex ? sex : "Select sex"}
+                    </Text>
+                    <Text
+                      style={[styles.chev, { fontSize: clamp(16 * s, 14, 18) }]}
+                    >
+                      ▾
+                    </Text>
                   </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-            </Modal>
 
-            {/* Email */}
-            <View style={styles.field}>
-              <Text style={styles.label}>Email Address</Text>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="@gmail.com"
-                placeholderTextColor="#94a3b8"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={styles.input}
-              />
-            </View>
-
-            {/* Password */}
-            <View style={styles.field}>
-              <Text style={styles.label}>Password (8 or more characters)</Text>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Password"
-                placeholderTextColor="#94a3b8"
-                secureTextEntry
-                style={styles.input}
-              />
-
-              <View style={styles.rulesRow}>
-                <View style={{ flex: 1 }}>
-                  <RuleLine ok={hasMin8} text="At least 8 characters" />
-                  <RuleLine ok={hasNumber} text="One number" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <RuleLine ok={hasUpper} text="One uppercase letter" />
-                  <RuleLine ok={hasSpecial} text="One special character" />
-                </View>
-              </View>
-            </View>
-
-            {/* Confirm */}
-            <View style={styles.field}>
-              <Text style={styles.label}>Confirm Password</Text>
-              <TextInput
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirm password"
-                placeholderTextColor="#94a3b8"
-                secureTextEntry
-                style={styles.input}
-              />
-              {confirmPassword.length > 0 && !passwordsMatch ? (
-                <Text style={styles.error}>Passwords do not match.</Text>
-              ) : null}
-            </View>
-
-            {/* Agreements */}
-            <View style={styles.agreeBlock}>
-              <View style={styles.agreeRow}>
-                <View style={[styles.box, agreePrivacy && styles.boxOn]}>
-                  {agreePrivacy ? <Text style={styles.boxTick}>✓</Text> : null}
-                </View>
-                <Text style={styles.agreeText}>
-                  JDK HOMECARE’s{" "}
-                  <Text
-                    style={styles.link}
-                    onPress={() => openLegal("privacy")}
+                {/* Sex modal */}
+                <Modal visible={sexOpen} transparent animationType="fade">
+                  <TouchableOpacity
+                    style={styles.backdrop}
+                    activeOpacity={1}
+                    onPress={() => setSexOpen(false)}
                   >
-                    Privacy Policy
-                  </Text>
-                  .
-                </Text>
-              </View>
-              {!agreePrivacy ? (
-                <Text style={styles.hint}>
-                  Please read the Privacy Policy to enable this checkbox.
-                </Text>
-              ) : null}
+                    <View
+                      style={[
+                        styles.pickSheet,
+                        { borderRadius: clamp(14 * s, 12, 18) },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.pickTitle,
+                          { fontSize: clamp(14 * s, 13, 16) },
+                        ]}
+                      >
+                        Select sex
+                      </Text>
 
-              <View style={[styles.agreeRow, { marginTop: 12 }]}>
-                <View style={[styles.box, agreePolicy && styles.boxOn]}>
-                  {agreePolicy ? <Text style={styles.boxTick}>✓</Text> : null}
+                      {(["Male", "Female", "Other"] as const).map((opt) => (
+                        <TouchableOpacity
+                          key={opt}
+                          style={[
+                            styles.pickItem,
+                            {
+                              height: clamp(46 * s, 44, 54),
+                              borderRadius: clamp(10 * s, 8, 14),
+                            },
+                          ]}
+                          activeOpacity={0.85}
+                          onPress={() => {
+                            setSex(opt);
+                            setSexOpen(false);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.pickItemText,
+                              { fontSize: clamp(13.5 * s, 13, 16) },
+                            ]}
+                          >
+                            {opt}
+                          </Text>
+                          {sex === opt ? (
+                            <Text style={styles.pickCheck}>✓</Text>
+                          ) : null}
+                        </TouchableOpacity>
+                      ))}
+
+                      <TouchableOpacity
+                        style={[
+                          styles.pickCancel,
+                          {
+                            height: clamp(44 * s, 42, 52),
+                            borderRadius: clamp(10 * s, 8, 14),
+                          },
+                        ]}
+                        onPress={() => setSexOpen(false)}
+                        activeOpacity={0.9}
+                      >
+                        <Text
+                          style={[
+                            styles.pickCancelText,
+                            { fontSize: clamp(13.5 * s, 13, 16) },
+                          ]}
+                        >
+                          Cancel
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                </Modal>
+
+                {/* Email */}
+                <View style={styles.field}>
+                  <Text style={[styles.label, { fontSize: LABEL_SIZE }]}>
+                    Email Address
+                  </Text>
+                  <TextInput
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="@gmail.com"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    style={[
+                      styles.input,
+                      {
+                        height: INPUT_H,
+                        borderRadius: RADIUS,
+                        paddingHorizontal: clamp(12 * s, 12, 18),
+                        fontSize: clamp(14 * s, 13, 16),
+                      },
+                    ]}
+                  />
                 </View>
-                <Text style={styles.agreeText}>
-                  JDK HOMECARE’s{" "}
-                  <Text style={styles.link} onPress={() => openLegal("policy")}>
-                    Policy Agreement
-                  </Text>{" "}
-                  and{" "}
-                  <Text style={styles.link} onPress={() => openLegal("nda")}>
-                    Non-Disclosure Agreement
+
+                {/* Password */}
+                <View style={styles.field}>
+                  <Text style={[styles.label, { fontSize: LABEL_SIZE }]}>
+                    Password (8 or more characters)
                   </Text>
-                  .
-                </Text>
+                  <TextInput
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Password"
+                    placeholderTextColor="#94a3b8"
+                    secureTextEntry
+                    style={[
+                      styles.input,
+                      {
+                        height: INPUT_H,
+                        borderRadius: RADIUS,
+                        paddingHorizontal: clamp(12 * s, 12, 18),
+                        fontSize: clamp(14 * s, 13, 16),
+                      },
+                    ]}
+                  />
+
+                  <View
+                    style={[styles.rulesRow, { gap: clamp(12 * s, 10, 16) }]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <RuleLine ok={hasMin8} text="At least 8 characters" />
+                      <RuleLine ok={hasNumber} text="One number" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <RuleLine ok={hasUpper} text="One uppercase letter" />
+                      <RuleLine ok={hasSpecial} text="One special character" />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Confirm */}
+                <View style={styles.field}>
+                  <Text style={[styles.label, { fontSize: LABEL_SIZE }]}>
+                    Confirm Password
+                  </Text>
+                  <TextInput
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholder="Confirm password"
+                    placeholderTextColor="#94a3b8"
+                    secureTextEntry
+                    style={[
+                      styles.input,
+                      {
+                        height: INPUT_H,
+                        borderRadius: RADIUS,
+                        paddingHorizontal: clamp(12 * s, 12, 18),
+                        fontSize: clamp(14 * s, 13, 16),
+                      },
+                    ]}
+                  />
+                  {confirmPassword.length > 0 && !passwordsMatch ? (
+                    <Text
+                      style={[
+                        styles.error,
+                        { fontSize: clamp(12 * s, 11, 14) },
+                      ]}
+                    >
+                      Passwords do not match.
+                    </Text>
+                  ) : null}
+                </View>
+
+                {/* Agreements */}
+                <View style={styles.agreeBlock}>
+                  <View style={styles.agreeRow}>
+                    <View style={[styles.box, agreePrivacy && styles.boxOn]}>
+                      {agreePrivacy ? (
+                        <Text style={styles.boxTick}>✓</Text>
+                      ) : null}
+                    </View>
+                    <Text
+                      style={[
+                        styles.agreeText,
+                        { fontSize: clamp(12.5 * s, 12, 15) },
+                      ]}
+                    >
+                      JDK HOMECARE’s{" "}
+                      <Text
+                        style={styles.link}
+                        onPress={() => openLegal("privacy")}
+                      >
+                        Privacy Policy
+                      </Text>
+                      .
+                    </Text>
+                  </View>
+                  {!agreePrivacy ? (
+                    <Text
+                      style={[styles.hint, { fontSize: clamp(11 * s, 10, 13) }]}
+                    >
+                      Please read the Privacy Policy to enable this checkbox.
+                    </Text>
+                  ) : null}
+
+                  <View
+                    style={[
+                      styles.agreeRow,
+                      { marginTop: clamp(12 * s, 10, 16) },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.box,
+                        agreePolicy && agreeNda && styles.boxOn,
+                      ]}
+                    >
+                      {agreePolicy && agreeNda ? (
+                        <Text style={styles.boxTick}>✓</Text>
+                      ) : null}
+                    </View>
+                    <Text
+                      style={[
+                        styles.agreeText,
+                        { fontSize: clamp(12.5 * s, 12, 15) },
+                      ]}
+                    >
+                      JDK HOMECARE’s{" "}
+                      <Text
+                        style={styles.link}
+                        onPress={() => openLegal("policy")}
+                      >
+                        Policy Agreement
+                      </Text>{" "}
+                      and{" "}
+                      <Text
+                        style={styles.link}
+                        onPress={() => openLegal("nda")}
+                      >
+                        Non-Disclosure Agreement
+                      </Text>
+                      .
+                    </Text>
+                  </View>
+                  {!agreePolicy || !agreeNda ? (
+                    <Text
+                      style={[styles.hint, { fontSize: clamp(11 * s, 10, 13) }]}
+                    >
+                      Please read and agree to both links to enable this
+                      checkbox.
+                    </Text>
+                  ) : null}
+                </View>
+
+                {/* Button */}
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  disabled={!canCreate}
+                  onPress={handleCreate}
+                  style={[
+                    styles.btn,
+                    {
+                      height: BTN_H,
+                      borderRadius: RADIUS,
+                      marginTop: clamp(6 * s, 4, 10),
+                    },
+                    canCreate ? styles.btnOn : styles.btnOff,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.btnText,
+                      { fontSize: clamp(14 * s, 13, 16) },
+                    ]}
+                  >
+                    Create my account
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Bottom */}
+                <View
+                  style={[
+                    styles.bottomRow,
+                    { marginTop: clamp(14 * s, 12, 18) },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.bottomText,
+                      { fontSize: clamp(13 * s, 12, 15) },
+                    ]}
+                  >
+                    Already have an account?
+                  </Text>
+                  <TouchableOpacity onPress={() => router.push("/login/login")}>
+                    <Text
+                      style={[
+                        styles.bottomLink,
+                        { fontSize: clamp(13 * s, 12, 15) },
+                      ]}
+                    >
+                      Log In
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-              {!agreePolicy || !agreeNda ? (
-                <Text style={styles.hint}>
-                  Please read and agree to both links to enable this checkbox.
-                </Text>
-              ) : null}
-            </View>
-
-            {/* Button */}
-            <TouchableOpacity
-              activeOpacity={0.9}
-              disabled={!canCreate}
-              onPress={handleCreate}
-              style={[styles.btn, canCreate ? styles.btnOn : styles.btnOff]}
-            >
-              <Text style={styles.btnText}>Create my account</Text>
-            </TouchableOpacity>
-
-            {/* Bottom */}
-            <View style={styles.bottomRow}>
-              <Text style={styles.bottomText}>Already have an account?</Text>
-              <TouchableOpacity onPress={() => router.push("./login/login")}>
-                <Text style={styles.bottomLink}>Log In</Text>
-              </TouchableOpacity>
             </View>
           </View>
+
+          <View style={{ height: isShort ? 18 : 26 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -365,23 +609,39 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#fff" },
 
   topRow: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 6,
+    paddingTop: 14, // ✅ more breathing space like login
+    paddingBottom: 10,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     gap: 10,
   },
-  logo: { width: 150, height: 28, resizeMode: "contain" },
-  topRight: { alignItems: "flex-end" },
-  topRightText: { fontSize: 12, color: "#111827" },
-  topRightLink: { fontSize: 12, color: BLUE, fontWeight: "800", marginTop: 2 },
 
-  scroll: { paddingHorizontal: 16, paddingBottom: 26 },
-  pageTitle: {
+  topRight: { alignItems: "flex-end" },
+  topRightText: { color: "#111827" },
+  topRightLink: { color: BLUE, fontWeight: "800", marginTop: 2 },
+
+  // ✅ center card container
+  cardWrap: {
+    width: "100%",
+    alignSelf: "center",
     marginTop: 10,
-    fontSize: 22,
+  },
+
+  // ✅ CARD STYLE (same family as login/role)
+  card: {
+    width: "100%",
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#eef2f7",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+
+  pageTitle: {
     fontWeight: "900",
     color: "#111827",
     textAlign: "center",
@@ -391,7 +651,6 @@ const styles = StyleSheet.create({
 
   form: {
     width: "100%",
-    maxWidth: 520,
     alignSelf: "center",
   },
 
@@ -399,45 +658,38 @@ const styles = StyleSheet.create({
   field: { marginBottom: 12, flex: 1 },
 
   label: {
-    fontSize: 12,
     fontWeight: "800",
     color: "#111827",
     marginBottom: 6,
   },
+
   input: {
-    height: 48,
     borderWidth: 1,
     borderColor: "#d1d5db",
-    borderRadius: 10,
     paddingHorizontal: 12,
-    fontSize: 14,
     color: "#111827",
     backgroundColor: "#fff",
   },
 
   select: {
-    height: 48,
     borderWidth: 1,
     borderColor: "#d1d5db",
-    borderRadius: 10,
-    paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  selectText: { fontSize: 14, fontWeight: "700", color: "#111827" },
+  selectText: { fontWeight: "700", color: "#111827" },
   placeholder: { color: "#94a3b8" },
-  chev: { fontSize: 16, fontWeight: "900", color: "#64748b" },
+  chev: { fontWeight: "900", color: "#64748b" },
 
   rulesRow: {
     marginTop: 10,
     flexDirection: "row",
-    gap: 12,
   },
   ruleText: { fontSize: 11.5, color: "#6b7280", marginBottom: 6 },
   ruleOk: { color: BLUE, fontWeight: "800" },
 
-  error: { marginTop: 6, fontSize: 12, color: "#b91c1c", fontWeight: "800" },
+  error: { marginTop: 6, color: "#b91c1c", fontWeight: "800" },
 
   agreeBlock: { marginTop: 4, marginBottom: 10 },
   agreeRow: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
@@ -453,30 +705,26 @@ const styles = StyleSheet.create({
   },
   boxOn: { borderColor: BLUE },
   boxTick: { fontSize: 12, fontWeight: "900", color: BLUE, marginTop: -1 },
-  agreeText: { flex: 1, fontSize: 12.5, color: "#111827", lineHeight: 18 },
+  agreeText: { flex: 1, color: "#111827", lineHeight: 18 },
   link: { color: BLUE, fontWeight: "800" },
-  hint: { marginTop: 4, marginLeft: 26, fontSize: 11, color: "#6b7280" },
+  hint: { marginTop: 4, marginLeft: 26, color: "#6b7280" },
 
   btn: {
-    height: 48,
-    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 6,
   },
   btnOff: { backgroundColor: "#d1d5db" },
   btnOn: { backgroundColor: "#cfd6df" },
-  btnText: { fontSize: 14, fontWeight: "800", color: "#111827" },
+  btnText: { fontWeight: "800", color: "#111827" },
 
   bottomRow: {
-    marginTop: 14,
     flexDirection: "row",
     justifyContent: "center",
     gap: 6,
     flexWrap: "wrap",
   },
-  bottomText: { fontSize: 13, color: "#111827" },
-  bottomLink: { fontSize: 13, color: BLUE, fontWeight: "800" },
+  bottomText: { color: "#111827" },
+  bottomLink: { color: BLUE, fontWeight: "800" },
 
   backdrop: {
     flex: 1,
@@ -486,20 +734,16 @@ const styles = StyleSheet.create({
   },
   pickSheet: {
     backgroundColor: "#fff",
-    borderRadius: 14,
     padding: 14,
     borderWidth: 1,
     borderColor: "#eef2f7",
   },
   pickTitle: {
-    fontSize: 14,
     fontWeight: "900",
     color: "#0f172a",
     marginBottom: 10,
   },
   pickItem: {
-    height: 46,
-    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#eef2f7",
     backgroundColor: "#fbfcfe",
@@ -509,15 +753,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  pickItemText: { fontSize: 13.5, fontWeight: "800", color: "#0f172a" },
+  pickItemText: { fontWeight: "800", color: "#0f172a" },
   pickCheck: { fontSize: 16, fontWeight: "900", color: BLUE },
   pickCancel: {
-    height: 44,
-    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#d7dee9",
     alignItems: "center",
     justifyContent: "center",
   },
-  pickCancelText: { fontSize: 13.5, fontWeight: "900", color: "#334155" },
+  pickCancelText: { fontWeight: "900", color: "#334155" },
 });

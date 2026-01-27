@@ -1,90 +1,214 @@
-import { useRouter } from "expo-router"; // ✅ add this
+import { useRouter } from "expo-router";
 import React from "react";
 import {
-  Dimensions,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
-const { width, height } = Dimensions.get("window");
 const BLUE = "#1E88E5";
 
-const HEADER_HEIGHT = Math.min(height * 0.26, 240);
-const CARD_RADIUS = 32;
-const BUTTON_HEIGHT = Math.max(52, height * 0.065);
-const CONTENT_BUTTON_GAP = 120;
+// Small helper: clamp a value between min/max
+const clamp = (v: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, v));
 
 export default function AuthLanding() {
-  const router = useRouter(); // ✅ add this
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+
+  // “Base scale” relative to common phone width (375)
+  const s = width / 375;
+
+  const CARD_RADIUS = clamp(32 * s, 22, 36);
+  const HEADER_HEIGHT = clamp(height * 0.26, 180, 260);
+
+  // Responsive spacing/padding
+  const H_PADDING = clamp(24 * s, 16, 28);
+  const V_PADDING = clamp(24 * s, 16, 28);
+
+  // Responsive typography
+  const titleSize = clamp(18 * s, 16, 22);
+  const descSize = clamp(13 * s, 12, 15);
+
+  // Responsive logo size
+  const logoSize = clamp(width * 0.5, 150, 240);
+
+  // Responsive button height
+  const BUTTON_HEIGHT = clamp(56 * s, 48, 62);
+
+  // If device is short, allow scroll to avoid cut-off
+  const isShort = height < 700;
 
   return (
-    <View style={styles.root}>
-      <View style={styles.header}>
-        <View style={styles.logoShadow}>
-          <Image
-            source={require("../image/jdklogoalterwhite.png")}
-            style={styles.logo}
-          />
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+      <View
+        style={[styles.root, { paddingBottom: Math.max(insets.bottom, 12) }]}
+      >
+        {/* HEADER */}
+        <View
+          style={[
+            styles.header,
+            { height: HEADER_HEIGHT, paddingHorizontal: H_PADDING },
+          ]}
+        >
+          <View style={styles.logoShadow}>
+            <Image
+              source={require("../image/jdklogoalterwhite.png")}
+              style={{
+                width: logoSize,
+                height: logoSize,
+                resizeMode: "contain",
+              }}
+            />
+          </View>
         </View>
-      </View>
 
-      <View style={styles.cardWrapper}>
-        <View style={styles.card}>
-          <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>
-              All your home services in one place
-            </Text>
-
-            <Text style={styles.cardDescription}>
-              Organize, book, and enjoy trusted local helpers for car wash,
-              repairs, cleaning, and more — all in just a few taps.
-            </Text>
-
-            <View style={styles.dotsContainer}>
-              <View style={[styles.dot, styles.dotActive]} />
-              <View style={styles.dot} />
-              <View style={styles.dot} />
-            </View>
-
-            <View style={styles.buttonsContainer}>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() => router.push("./role/role")} // ✅ change to your signup route
+        {/* CARD AREA */}
+        <View style={[styles.cardWrapper, { marginTop: -CARD_RADIUS }]}>
+          <View style={[styles.card, { borderRadius: CARD_RADIUS }]}>
+            {isShort ? (
+              <ScrollView
+                contentContainerStyle={[
+                  styles.cardContent,
+                  {
+                    paddingHorizontal: H_PADDING,
+                    paddingVertical: V_PADDING,
+                  },
+                ]}
+                showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.primaryButtonText}>SIGN UP</Text>
-              </TouchableOpacity>
+                <TopContent titleSize={titleSize} descSize={descSize} />
 
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => router.push("./login/login")} // ✅ goes to app/login/login.tsx
+                <Dots />
+
+                <Buttons
+                  buttonHeight={BUTTON_HEIGHT}
+                  onSignUp={() => router.push("./role/role")}
+                  onLogin={() => router.push("./login/login")}
+                />
+              </ScrollView>
+            ) : (
+              <View
+                style={[
+                  styles.cardContent,
+                  {
+                    paddingHorizontal: H_PADDING,
+                    paddingVertical: V_PADDING,
+                  },
+                ]}
               >
-                <Text style={styles.secondaryButtonText}>LOGIN</Text>
-              </TouchableOpacity>
-            </View>
+                {/* Use space-between so buttons naturally sit lower without hard-coded gaps */}
+                <View style={{ width: "100%", alignItems: "center", gap: 16 }}>
+                  <TopContent titleSize={titleSize} descSize={descSize} />
+                  <Dots />
+                </View>
+
+                <Buttons
+                  buttonHeight={BUTTON_HEIGHT}
+                  onSignUp={() => router.push("./role/role")}
+                  onLogin={() => router.push("./login/login")}
+                />
+              </View>
+            )}
           </View>
         </View>
       </View>
+    </SafeAreaView>
+  );
+}
+
+function TopContent({
+  titleSize,
+  descSize,
+}: {
+  titleSize: number;
+  descSize: number;
+}) {
+  return (
+    <>
+      <Text style={[styles.cardTitle, { fontSize: titleSize }]}>
+        All your home services in one place
+      </Text>
+
+      <Text
+        style={[
+          styles.cardDescription,
+          { fontSize: descSize, lineHeight: descSize * 1.55 },
+        ]}
+      >
+        Organize, book, and enjoy trusted local helpers for car wash, repairs,
+        cleaning, and more — all in just a few taps.
+      </Text>
+    </>
+  );
+}
+
+function Dots() {
+  return (
+    <View style={styles.dotsContainer}>
+      <View style={[styles.dot, styles.dotActive]} />
+      <View style={styles.dot} />
+      <View style={styles.dot} />
+    </View>
+  );
+}
+
+function Buttons({
+  buttonHeight,
+  onSignUp,
+  onLogin,
+}: {
+  buttonHeight: number;
+  onSignUp: () => void;
+  onLogin: () => void;
+}) {
+  return (
+    <View style={styles.buttonsContainer}>
+      <TouchableOpacity
+        style={[
+          styles.primaryButton,
+          { height: buttonHeight, borderRadius: buttonHeight / 2 },
+        ]}
+        onPress={onSignUp}
+        activeOpacity={0.9}
+      >
+        <Text style={styles.primaryButtonText}>SIGN UP</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.secondaryButton,
+          { height: buttonHeight, borderRadius: buttonHeight / 2 },
+        ]}
+        onPress={onLogin}
+        activeOpacity={0.9}
+      >
+        <Text style={styles.secondaryButtonText}>LOGIN</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // Light grey so card radius is visible where possible
+  safe: { flex: 1, backgroundColor: "#f3f5f9" },
   root: {
     flex: 1,
     backgroundColor: "#f3f5f9",
   },
 
-  /* HEADER: blue box with logo only */
   header: {
-    height: HEADER_HEIGHT,
     backgroundColor: BLUE,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
   },
 
   logoShadow: {
@@ -95,23 +219,13 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
 
-  logo: {
-    width: width * 0.5,
-    height: width * 0.5,
-    resizeMode: "contain",
-  },
-
-  /* WHITE CARD */
   cardWrapper: {
     flex: 1,
-    marginTop: -CARD_RADIUS, // slight overlap into the blue area
-    paddingHorizontal: 0, // 👈 full width (touch edges of phone)
-    paddingBottom: 16,
+    paddingHorizontal: 0, // full width
   },
   card: {
     flex: 1,
     backgroundColor: "#ffffff",
-    borderRadius: CARD_RADIUS, // radius on all corners
     shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowRadius: 10,
@@ -119,24 +233,21 @@ const styles = StyleSheet.create({
     elevation: 6,
     overflow: "hidden",
   },
+
+  // When not scrolling, we space content so buttons sit lower naturally
   cardContent: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 24,
+    flexGrow: 1,
     alignItems: "center",
-    justifyContent: "center",
-    rowGap: 16,
+    justifyContent: "space-between",
+    gap: 16,
   },
 
   cardTitle: {
-    fontSize: 18,
     fontWeight: "600",
     color: "#222",
     textAlign: "center",
   },
   cardDescription: {
-    fontSize: 13,
-    lineHeight: 20,
     color: "#666",
     textAlign: "center",
   },
@@ -161,12 +272,11 @@ const styles = StyleSheet.create({
 
   buttonsContainer: {
     width: "100%",
-    marginTop: CONTENT_BUTTON_GAP,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   primaryButton: {
-    backgroundColor: "#1E88E5",
-    borderRadius: BUTTON_HEIGHT / 2,
-    height: BUTTON_HEIGHT,
+    backgroundColor: BLUE,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
@@ -178,15 +288,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   secondaryButton: {
-    borderColor: "#1E88E5",
+    borderColor: BLUE,
     borderWidth: 2,
-    borderRadius: BUTTON_HEIGHT / 2,
-    height: BUTTON_HEIGHT,
     alignItems: "center",
     justifyContent: "center",
   },
   secondaryButtonText: {
-    color: "#1E88E5",
+    color: BLUE,
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.6,
