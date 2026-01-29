@@ -2,20 +2,20 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import {
-    applyToWorkRequest,
-    getWorkRequestById,
-    type WorkRequest,
+  applyToWorkRequest,
+  getWorkRequestById,
+  type WorkRequest,
 } from "../../../api/worksService";
 
 const BLUE = "#1E88E5";
@@ -64,6 +64,29 @@ export default function Apply() {
     return job?.service_task || job?.service || "Work Request";
   }, [job]);
 
+  // ✅ Client name fallback:
+  // 1) new fields (client_name/client_first_name...)
+  // 2) existing posted_* fields (your ViewDetails)
+  const clientName = useMemo(() => {
+    const v1 =
+      (job as any)?.client_name ||
+      `${(job as any)?.client_first_name ?? ""} ${(job as any)?.client_last_name ?? ""}`.trim();
+
+    const v2 =
+      job?.posted_name ||
+      `${job?.posted_first_name ?? ""} ${job?.posted_last_name ?? ""}`.trim();
+
+    return (v1 || v2 || "Unknown").trim() || "Unknown";
+  }, [job]);
+
+  const clientPhone =
+    (job as any)?.client_phone_number || job?.posted_phone_number || "—";
+  const clientBarangay =
+    (job as any)?.client_barangay || job?.posted_barangay || "—";
+  const clientStreet =
+    (job as any)?.client_street || job?.posted_street || "—";
+  const clientEmail = (job as any)?.client_email || job?.posted_email || "—";
+
   const submit = useCallback(async () => {
     try {
       if (!requestId) {
@@ -79,7 +102,6 @@ export default function Apply() {
 
       setSubmitting(true);
 
-      // ✅ Backend should accept: { application_letter: "..." }
       await applyToWorkRequest(requestId, {
         application_letter: text,
       });
@@ -118,15 +140,82 @@ export default function Apply() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.wrap} keyboardShouldPersistTaps="handled">
         <Text style={styles.h1}>Apply</Text>
+        <Text style={styles.subTitle}>{title}</Text>
 
-        {/* ✅ ONLY display work_request + user_id */}
+        {/* ✅ Card 1: Job Details (GRID) */}
         <View style={styles.card}>
-          <Row label="Work Request" value={title} />
-          <Row label="Posted User ID" value={String(job.user_id ?? "—")} />
-          <Row label="Request ID" value={String(job.id ?? "—")} />
+          <Text style={styles.cardTitle}>Job Details</Text>
+
+          <Grid>
+            <GridItem label="Service" value={job.service ?? "—"} />
+            <GridItem label="Urgency" value={job.urgency ?? "—"} />
+
+            <GridItem
+              label="Workers Needed"
+              value={String(job.workers_needed ?? "—")}
+            />
+            <GridItem
+              label="Status"
+              value={job.status ?? "—"}
+            />
+
+            <GridItem
+              label="Preferred Date"
+              value={String(job.preferred_date ?? "—")}
+            />
+            <GridItem
+              label="Preferred Time"
+              value={String(job.preferred_time ?? "—")}
+            />
+
+            <GridItem
+              label="Payment Method"
+              value={job.payment_method ?? "—"}
+            />
+            <GridItem
+              label="Client User ID"
+              value={String(job.user_id ?? "—")}
+            />
+          </Grid>
         </View>
 
-        {/* ✅ Form */}
+        {/* ✅ Card 2: Client Details (GRID) */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Client Details</Text>
+
+          <Grid>
+            <GridItem label="Client Name" value={clientName} />
+            <GridItem label="Email" value={clientEmail} />
+
+            <GridItem label="Phone" value={clientPhone} />
+            <GridItem label="Barangay" value={clientBarangay} />
+
+            <GridItem label="Street" value={clientStreet} />
+          </Grid>
+        </View>
+
+        {/* ✅ Card 3: Pricing (GRID) */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Pricing</Text>
+
+          <Grid>
+            <GridItem label="Price (each)" value={job.price_display ?? "—"} />
+            <GridItem label="Units" value={String(job.units ?? "—")} />
+
+            <GridItem label="Total Price" value={job.total_price_display ?? "—"} full />
+          </Grid>
+        </View>
+
+        {/* ✅ Card 4: Description + Equipments (keeps your existing style) */}
+        <View style={styles.card}>
+          <Text style={styles.label}>Description</Text>
+          <Text style={styles.value}>{job.service_description ?? "—"}</Text>
+
+          <Text style={[styles.label, { marginTop: 12 }]}>Equipments</Text>
+          <Text style={styles.value}>{job.service_equipments ?? "—"}</Text>
+        </View>
+
+        {/* ✅ Card 5: Form (keep Apply.tsx style) */}
         <View style={styles.card}>
           <Text style={styles.label}>Application Letter</Text>
           <Text style={styles.helper}>
@@ -166,16 +255,31 @@ export default function Apply() {
             <Text style={styles.btnGhostText}>Cancel</Text>
           </TouchableOpacity>
         </View>
+
+        <View style={{ height: 10 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+/** ✅ Grid helpers (minimal changes, keeps your structure) */
+function Grid({ children }: { children: React.ReactNode }) {
+  return <View style={styles.grid}>{children}</View>;
+}
+
+function GridItem({
+  label,
+  value,
+  full,
+}: {
+  label: string;
+  value: string;
+  full?: boolean;
+}) {
   return (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue}>{value}</Text>
+    <View style={[styles.gridItem, full && styles.gridItemFull]}>
+      <Text style={styles.gridLabel}>{label}</Text>
+      <Text style={styles.gridValue}>{value}</Text>
     </View>
   );
 }
@@ -185,6 +289,12 @@ const styles = StyleSheet.create({
   wrap: { padding: 18, paddingBottom: 30 },
 
   h1: { fontSize: 20, fontWeight: "900", color: "#0f172a", marginTop: 10 },
+  subTitle: {
+    marginTop: 6,
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#334155",
+  },
 
   card: {
     marginTop: 14,
@@ -195,11 +305,47 @@ const styles = StyleSheet.create({
     borderColor: "#e5e9f2",
   },
 
-  row: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#eef2f7" },
-  rowLabel: { fontSize: 12, fontWeight: "900", color: "#64748b" },
-  rowValue: { marginTop: 4, fontSize: 14, fontWeight: "800", color: "#0f172a" },
+  cardTitle: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#0f172a",
+    marginBottom: 10,
+  },
 
+  /** ✅ GRID (2 columns) */
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10, // RN supports gap on newer versions; if not, tell me and I'll switch to margins
+  },
+  gridItem: {
+    width: "48%",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#eef2f7",
+    backgroundColor: "#ffffff",
+  },
+  gridItemFull: {
+    width: "100%",
+  },
+  gridLabel: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#64748b",
+  },
+  gridValue: {
+    marginTop: 4,
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+
+  /** Keep your ViewDetails label/value styles too */
   label: { fontSize: 12, fontWeight: "900", color: "#64748b" },
+  value: { marginTop: 4, fontSize: 14, fontWeight: "700", color: "#0f172a" },
+
   helper: { marginTop: 6, fontSize: 12.5, fontWeight: "700", color: "#64748b" },
 
   input: {

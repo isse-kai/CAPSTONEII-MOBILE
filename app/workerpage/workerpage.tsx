@@ -1,12 +1,19 @@
 // app/workerpage/workerpage.tsx
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { Briefcase, ClipboardPenLine, Eye, MapPin, UserCog } from "lucide-react-native";
+import {
+  Briefcase,
+  ClipboardPenLine,
+  Eye,
+  MapPin,
+  UserCog,
+} from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
   Modal,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -91,12 +98,16 @@ export default function WorkerPage() {
   const [userDob, setUserDob] = useState<string>("");
 
   const [eligibilityVisible, setEligibilityVisible] = useState(false);
-  const [eligibilityState, setEligibilityState] = useState<EligibilityState>(null);
+  const [eligibilityState, setEligibilityState] =
+    useState<EligibilityState>(null);
 
   const [loadingHome, setLoadingHome] = useState(true);
   const [loadingRequests, setLoadingRequests] = useState(true);
 
   const [requests, setRequests] = useState<WorkRequest[]>([]);
+
+  // ✅ ADD refresh state
+  const [refreshing, setRefreshing] = useState(false);
 
   const displayName = useMemo(() => {
     const fn = (me?.first_name || "").trim();
@@ -145,6 +156,18 @@ export default function WorkerPage() {
     }
   }, [search]);
 
+  // ✅ ADD pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      await Promise.all([loadHome(), loadRequests()]);
+    } catch (e: any) {
+      Alert.alert("Error", e?.message ?? "Failed to refresh.");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadHome, loadRequests]);
+
   useEffect(() => {
     loadHome();
     loadRequests();
@@ -154,7 +177,7 @@ export default function WorkerPage() {
     useCallback(() => {
       loadHome();
       loadRequests();
-    }, [loadHome, loadRequests])
+    }, [loadHome, loadRequests]),
   );
 
   const handleBecomeWorker = () => {
@@ -215,7 +238,9 @@ export default function WorkerPage() {
               style={[styles.modalBtn, styles.modalBtnPrimary]}
               onPress={goToAccountSettings}
             >
-              <Text style={styles.modalBtnPrimaryText}>Go to Account Settings</Text>
+              <Text style={styles.modalBtnPrimaryText}>
+                Go to Account Settings
+              </Text>
             </TouchableOpacity>
           </View>
         </>
@@ -226,8 +251,8 @@ export default function WorkerPage() {
       <>
         <Text style={styles.modalTitle}>You must be 18 or older</Text>
         <Text style={styles.modalBody}>
-          Based on your birthday, you are currently under 18. You need to be at least 18 years old to apply
-          as a worker on JDK HOMECARE.
+          Based on your birthday, you are currently under 18. You need to be at
+          least 18 years old to apply as a worker on JDK HOMECARE.
         </Text>
 
         <View style={styles.modalButtonRow}>
@@ -236,7 +261,9 @@ export default function WorkerPage() {
             style={[styles.modalBtn, styles.modalBtnPrimary]}
             onPress={goToAccountSettings}
           >
-            <Text style={styles.modalBtnPrimaryText}>Review Account Details</Text>
+            <Text style={styles.modalBtnPrimaryText}>
+              Review Account Details
+            </Text>
           </TouchableOpacity>
         </View>
       </>
@@ -280,7 +307,9 @@ export default function WorkerPage() {
         </View>
 
         <Text style={styles.emptyTitle}>No Available Service Requests</Text>
-        <Text style={styles.emptySub}>Start by checking back later for new service requests.</Text>
+        <Text style={styles.emptySub}>
+          Start by checking back later for new service requests.
+        </Text>
       </View>
     </View>
   );
@@ -295,7 +324,14 @@ export default function WorkerPage() {
           onSelectMenu={(key) => console.log("Menu:", key)}
         />
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          // ✅ ADD refreshControl (pull down at top)
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <View style={styles.hero}>
             <Animated.Image
               source={BANNERS[bannerIndex]}
@@ -318,12 +354,21 @@ export default function WorkerPage() {
 
               <Text style={styles.centerText}>
                 Signed in as{" "}
-                <Text style={{ fontWeight: "900", color: "#0f172a" }}>{displayName}</Text>
+                <Text style={{ fontWeight: "900", color: "#0f172a" }}>
+                  {displayName}
+                </Text>
                 {"\n"}
-                Role: <Text style={{ fontWeight: "900", color: "#0f172a" }}>{me?.role || "—"}</Text>
+                Role:{" "}
+                <Text style={{ fontWeight: "900", color: "#0f172a" }}>
+                  {me?.role || "—"}
+                </Text>
               </Text>
 
-              <TouchableOpacity style={styles.outlineBtn} activeOpacity={0.85} onPress={handleBecomeWorker}>
+              <TouchableOpacity
+                style={styles.outlineBtn}
+                activeOpacity={0.85}
+                onPress={handleBecomeWorker}
+              >
                 <Text style={styles.outlineBtnText}>+ Become a worker</Text>
               </TouchableOpacity>
             </View>
@@ -331,7 +376,10 @@ export default function WorkerPage() {
 
           <View style={styles.headerRow}>
             <Text style={styles.sectionTitle}>Available Service Requests</Text>
-            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("./workerpage/Browse/Browse")}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push("./workerpage/Browse/Browse")}
+            >
               <Text style={styles.link}>Browse available requests →</Text>
             </TouchableOpacity>
           </View>
@@ -360,10 +408,9 @@ export default function WorkerPage() {
 
                 const location = fmtLocationFromPoster(req);
 
-                // ✅ IMPORTANT: fallback so it always displays
                 const totalPrice = req.total_price_display ?? "—";
 
-                const description = req.description || "";
+                const description = (req as any).description || ""; // keep your existing usage
 
                 return (
                   <View key={id} style={styles.reqCard}>
@@ -446,13 +493,29 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 18, paddingBottom: 16 },
   blue: { color: BLUE },
 
-  hero: { marginTop: 12, height: 170, borderRadius: 14, overflow: "hidden", backgroundColor: "#d1d5db" },
+  hero: {
+    marginTop: 12,
+    height: 170,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#d1d5db",
+  },
 
   welcome: { marginTop: 16, fontSize: 22, fontWeight: "900", color: "#0f172a" },
 
-  sectionTitle: { marginTop: 18, fontSize: 14, fontWeight: "900", color: "#0f172a" },
+  sectionTitle: {
+    marginTop: 18,
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#0f172a",
+  },
 
-  headerRow: { marginTop: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
+  headerRow: {
+    marginTop: 18,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
 
   link: { fontSize: 13, fontWeight: "800", color: BLUE },
 
@@ -506,7 +569,13 @@ const styles = StyleSheet.create({
   },
   outlineBtnText: { color: BLUE, fontSize: 13.5, fontWeight: "900" },
 
-  emptyTitle: { marginTop: 4, fontSize: 14, fontWeight: "900", color: "#0f172a", textAlign: "center" },
+  emptyTitle: {
+    marginTop: 4,
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#0f172a",
+    textAlign: "center",
+  },
   emptySub: {
     marginTop: 6,
     fontSize: 13,
@@ -532,7 +601,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  reqTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 },
+  reqTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 10,
+  },
 
   reqBadge: {
     flexDirection: "row",
@@ -551,10 +625,22 @@ const styles = StyleSheet.create({
 
   reqTitle: { fontSize: 15.5, fontWeight: "900", color: "#0f172a" },
 
-  reqMetaRow: { marginTop: 8, flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
+  reqMetaRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap",
+  },
   reqMetaText: { fontSize: 12.5, fontWeight: "800", color: "#475569" },
 
-  reqDesc: { marginTop: 8, fontSize: 12.8, color: "#64748b", fontWeight: "700", lineHeight: 18 },
+  reqDesc: {
+    marginTop: 8,
+    fontSize: 12.8,
+    color: "#64748b",
+    fontWeight: "700",
+    lineHeight: 18,
+  },
 
   reqBtnRow: { marginTop: 12, flexDirection: "row", gap: 10 },
 
@@ -572,17 +658,55 @@ const styles = StyleSheet.create({
   },
   reqViewBtnText: { fontSize: 13.5, fontWeight: "900", color: BLUE },
 
-  reqApplyBtn: { flex: 1, height: 46, borderRadius: 999, backgroundColor: BLUE, alignItems: "center", justifyContent: "center" },
+  reqApplyBtn: {
+    flex: 1,
+    height: 46,
+    borderRadius: 999,
+    backgroundColor: BLUE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   reqApplyBtnText: { fontSize: 13.5, fontWeight: "900", color: "#ffffff" },
 
-  modalBackdrop: { flex: 1, backgroundColor: "rgba(15,23,42,0.35)", justifyContent: "center", paddingHorizontal: 24 },
-  modalCard: { borderRadius: 14, backgroundColor: "#ffffff", padding: 18, borderWidth: 1, borderColor: "#e5e7eb" },
-  modalTitle: { fontSize: 16, fontWeight: "800", color: "#0f172a", marginBottom: 6 },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(15,23,42,0.35)",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    borderRadius: 14,
+    backgroundColor: "#ffffff",
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#0f172a",
+    marginBottom: 6,
+  },
   modalBody: { fontSize: 13, color: "#4b5563", lineHeight: 19 },
   bold: { fontWeight: "800" },
-  modalButtonRow: { flexDirection: "row", justifyContent: "flex-end", columnGap: 10, marginTop: 16 },
-  modalBtn: { height: 40, borderRadius: 999, paddingHorizontal: 14, alignItems: "center", justifyContent: "center" },
-  modalBtnGhost: { borderWidth: 1, borderColor: "#e5e7eb", backgroundColor: "#ffffff" },
+  modalButtonRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    columnGap: 10,
+    marginTop: 16,
+  },
+  modalBtn: {
+    height: 40,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalBtnGhost: {
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#ffffff",
+  },
   modalBtnGhostText: { fontSize: 13, fontWeight: "700", color: "#4b5563" },
   modalBtnPrimary: { backgroundColor: BLUE },
   modalBtnPrimaryText: { fontSize: 13, fontWeight: "800", color: "#ffffff" },

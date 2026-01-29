@@ -155,3 +155,20 @@ export async function getWorkRequestById(workRequestId: number | string) {
   // controller returns { job: {...} }
   return (payload ?? { job: null }) as { job: WorkRequest | null };
 }
+
+export async function applyToWorkRequest(
+  workRequestId: number | string,
+  payload: { application_letter: string }
+) {
+  const res = await fetch(`${BASE_URL}/api/work-requests/${workRequestId}/apply`, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify(payload),
+  });
+
+  const data = await parseJsonSafe(res);
+  if (!res.ok) throw new Error(toErrorMessage(data));
+
+  return data as { message?: string };
+}
+
