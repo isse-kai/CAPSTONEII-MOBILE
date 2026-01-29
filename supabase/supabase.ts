@@ -1,15 +1,20 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { createClient } from '@supabase/supabase-js'
-import 'react-native-url-polyfill/auto'
+// Supabase shim: lightweight placeholders so existing imports don't break.
+// These stubs intentionally return `{ data: null, error: null }` results
+// and should be replaced with real calls to your Laravel API endpoints.
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase: any = {
   auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
+    getUser: async () => ({ data: null, error: null }),
+    signUp: async (_: any) => ({ data: null, error: null }),
+    verifyOtp: async (_: any) => ({ data: null, error: null }),
+    resend: async (_: any) => ({ data: null, error: null }),
   },
-})
+  from: (_table: string) => ({
+    select: () => ({
+      eq: () => ({ single: async () => ({ data: null, error: null }) }),
+    }),
+    insert: async () => ({ data: null, error: null }),
+    update: async () => ({ data: null, error: null }),
+    delete: async () => ({ data: null, error: null }),
+  }),
+}

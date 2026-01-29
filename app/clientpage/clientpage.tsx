@@ -12,7 +12,8 @@ import {
   View,
 } from "react-native";
 
-import { supabase } from "../../supabase/supabase";
+import { getUser as apiGetUser } from '../../api/authService';
+import { getClientProfileByAuthUid } from '../../api/clientService';
 
 // ✅ Correct based on your directory screenshot:
 import Bottomnav, { ClientTabKey } from "./nav/bottomnav/Bottomnav";
@@ -48,23 +49,21 @@ export default function ClientPage() {
     let mounted = true;
 
     const load = async () => {
-      const { data: authData, error: authErr } = await supabase.auth.getUser();
-      if (authErr || !authData?.user) {
+      const userRes = await apiGetUser();
+      const u = userRes?.user || userRes?.data?.user || null;
+      if (!u) {
         router.replace("/login/login");
         return;
       }
 
-      const uid = authData.user.id;
+      const uid = u.id;
 
-      const { data: clientRow, error: clientErr } = await supabase
-        .from("user_client")
-        .select("first_name,last_name,contact_number,date_of_birth")
-        .eq("auth_uid", uid)
-        .maybeSingle();
+      const clientRes = await getClientProfileByAuthUid(uid);
+      const clientRow = clientRes?.data || clientRes || null;
 
       if (!mounted) return;
 
-      if (!clientErr && clientRow) {
+      if (clientRow) {
         setFirstName(clientRow.first_name ?? "");
         setLastName(clientRow.last_name ?? "");
         setUserPhone(clientRow.contact_number ?? "");
@@ -72,7 +71,7 @@ export default function ClientPage() {
         return;
       }
 
-      const meta: any = authData.user.user_metadata || {};
+      const meta: any = u.user_metadata || {};
       setFirstName(meta.first_name ?? "");
       setLastName(meta.last_name ?? "");
     };

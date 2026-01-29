@@ -25,7 +25,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { supabase } from "../../supabase/supabase"; // ✅ adjust if needed
+import { getUser as apiGetUser } from '../../api/authService';
+import { getWorkerProfileByUserId } from '../../api/workerService';
 
 const BLUE = "#1E88E5";
 
@@ -233,12 +234,8 @@ export default function WorkerInfoStep1() {
       try {
         setLoadingProfile(true);
 
-        const {
-          data: { user },
-          error: userErr,
-        } = await supabase.auth.getUser();
-
-        if (userErr) throw userErr;
+        const userRes = await apiGetUser();
+        const user = userRes?.user || userRes?.data?.user || null;
         if (!user) {
           Alert.alert("Not signed in", "Please log in again.");
           router.replace("./login/login");
@@ -247,26 +244,16 @@ export default function WorkerInfoStep1() {
 
         const authUid = user.id;
 
-        const res = await supabase
-          .from("user_worker")
-          .select(
-            "auth_uid, first_name, last_name, email_address, contact_number, date_of_birth, age",
-          )
-          .eq("auth_uid", authUid)
-          .maybeSingle();
-
-        if (res.error) throw res.error;
+        const res = await getWorkerProfileByUserId(authUid);
+        const profile = res?.data || res || null;
 
         if (!mounted) return;
 
-        // If worker profile found, autofill & lock
-        if (res.data) {
-          const p = res.data as WorkerProfileRow;
-
+        if (profile) {
+          const p = profile as WorkerProfileRow;
           const f = safeStr(p.first_name).trim();
           const l = safeStr(p.last_name).trim();
-          const e =
-            safeStr(p.email_address).trim() || safeStr(user.email).trim();
+          const e = safeStr(p.email_address).trim() || safeStr(user.email).trim();
           const dobUi = formatDobForUi(safeStr(p.date_of_birth));
           const localDigits = toPHLocalDigits(safeStr(p.contact_number));
 
@@ -276,7 +263,6 @@ export default function WorkerInfoStep1() {
           setBirthdate(dobUi);
           setPhone(localDigits);
 
-          // optional: align temp picker if dob exists
           if (dobUi) {
             const iso = dobUiToISO(dobUi);
             if (iso) {
@@ -293,10 +279,7 @@ export default function WorkerInfoStep1() {
 
           setLockNameEmailPhoneDob(true);
         } else {
-          // If no profile row, keep editable (so user isn't stuck)
           setLockNameEmailPhoneDob(false);
-
-          // fallback email from auth user (optional)
           if (user.email) setEmail(user.email);
         }
       } catch (e: any) {

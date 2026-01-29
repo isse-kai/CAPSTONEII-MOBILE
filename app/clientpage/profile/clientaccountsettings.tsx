@@ -13,7 +13,8 @@ import {
   View,
 } from "react-native";
 
-import { supabase } from "../../../supabase/supabase";
+import { getUser as apiGetUser, updateUser as apiUpdateUser, logout as apiLogout, login as apiLogin } from '../../../api/authService';
+import { getClientProfileByAuthUid, updateClientProfileByAuthUid } from '../../../api/clientService';
 
 const BLUE = "#1E88E5";
 
@@ -97,13 +98,12 @@ export default function ClientAccountSettings() {
     const load = async () => {
       setLoading(true);
 
-      const { data: authData, error: authErr } = await supabase.auth.getUser();
-      if (authErr || !authData?.user) {
+      const userRes = await apiGetUser();
+      const u = userRes?.user || userRes?.data?.user || null;
+      if (!u) {
         router.replace("/login/login");
         return;
       }
-
-      const u = authData.user;
       const uid = u.id;
 
       if (!mounted) return;
@@ -111,15 +111,12 @@ export default function ClientAccountSettings() {
       setAuthEmail(u.email ?? "");
       setCreatedAt(u.created_at ?? "");
 
-      const { data: row, error } = await supabase
-        .from("user_client")
-        .select("first_name,last_name,contact_number,date_of_birth")
-        .eq("auth_uid", uid)
-        .maybeSingle();
+      const clientRes = await getClientProfileByAuthUid(uid);
+      const row = clientRes?.data || clientRes || null;
 
       if (!mounted) return;
 
-      if (!error && row) {
+      if (row) {
         setFirstName(row.first_name ?? "");
         setLastName(row.last_name ?? "");
         setPhone(row.contact_number ?? "");
@@ -141,24 +138,19 @@ export default function ClientAccountSettings() {
   }, [router]);
 
   const onConfirmInfo = async () => {
-    const { data: authData, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !authData?.user) return;
+    const userRes = await apiGetUser();
+    const u = userRes?.user || userRes?.data?.user || null;
+    if (!u) return;
+    const uid = u.id;
 
-    const uid = authData.user.id;
-
-    // ✅ Names removed from payload so they can't be updated
     const payload = {
       contact_number: phone.trim(),
       date_of_birth: dob.trim(),
     };
 
-    const { error } = await supabase
-      .from("user_client")
-      .update(payload)
-      .eq("auth_uid", uid);
-
-    if (error) {
-      Alert.alert("Update failed", error.message);
+    const res = await updateClientProfileByAuthUid(uid, payload);
+    if (res?.error) {
+      Alert.alert("Update failed", res.error.message || '');
       return;
     }
 
@@ -199,22 +191,16 @@ export default function ClientAccountSettings() {
       return;
     }
 
-    const { error: signInErr } = await supabase.auth.signInWithPassword({
-      email,
-      password: currentPassword.trim(),
-    });
 
-    if (signInErr) {
-      Alert.alert("Incorrect current password", signInErr.message);
+    const signInRes = await apiLogin({ email, password: currentPassword.trim() });
+    if (signInRes?.error) {
+      Alert.alert("Incorrect current password", signInRes.error.message || '');
       return;
     }
 
-    const { error: updErr } = await supabase.auth.updateUser({
-      password: newPassword.trim(),
-    });
-
-    if (updErr) {
-      Alert.alert("Update failed", updErr.message);
+    const up = await apiUpdateUser({ password: newPassword.trim() });
+    if (up?.error) {
+      Alert.alert("Update failed", up.error.message || '');
       return;
     }
 
@@ -225,7 +211,7 @@ export default function ClientAccountSettings() {
   };
 
   const onLogout = async () => {
-    await supabase.auth.signOut();
+    await apiLogout();
     router.replace("./login/login");
   };
 

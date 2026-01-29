@@ -1,3 +1,4 @@
+// app/login/login.tsx
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
@@ -17,7 +18,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { supabase } from "../../supabase/supabase";
+import { login as apiLogin } from "../../api/authService";
 
 const BLUE = "#1E88E5";
 const clamp = (v: number, min: number, max: number) =>
@@ -34,8 +35,8 @@ export default function LoginScreen() {
   const INPUT_H = clamp(52 * s, 48, 58);
   const BTN_H = clamp(46 * s, 44, 56);
 
-  const LOGO_W = clamp(180 * s, 160, 260); // ⬆️ wider
-  const LOGO_H = clamp(40 * s, 34, 60); // ⬆️ taller
+  const LOGO_W = clamp(180 * s, 160, 260);
+  const LOGO_H = clamp(40 * s, 34, 60);
 
   const CARD_RADIUS = clamp(18 * s, 14, 22);
   const CARD_PAD = clamp(18 * s, 14, 22);
@@ -57,57 +58,37 @@ export default function LoginScreen() {
 
     try {
       setIsLoading(true);
-      const cleanEmail = email.trim().toLowerCase();
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPassword = password;
+      const res = await apiLogin({
         email: cleanEmail,
-        password,
+        password: cleanPassword,
+        device_name: Platform.OS === "ios" ? "ios" : "android",
       });
 
-      if (error) {
-        Alert.alert("Login failed", error.message);
-        return;
-      }
+      const user = res?.user ?? null;
 
-      const authUid = data.user?.id;
-      if (!authUid) {
+      if (!user?.id) {
         Alert.alert("Login failed", "No user session found.");
         return;
       }
 
-      const workerRes = await supabase
-        .from("user_worker")
-        .select("id")
-        .eq("auth_uid", authUid)
-        .maybeSingle();
+      const role = String(user?.role ?? "").toLowerCase().trim();
 
-      if (workerRes.error) {
-        Alert.alert("Error", workerRes.error.message);
-        return;
-      }
-      if (workerRes.data) {
+      if (role === "worker") {
         router.replace("/workerpage/workerpage");
         return;
       }
 
-      const clientRes = await supabase
-        .from("user_client")
-        .select("id")
-        .eq("auth_uid", authUid)
-        .maybeSingle();
-
-      if (clientRes.error) {
-        Alert.alert("Error", clientRes.error.message);
-        return;
-      }
-      if (clientRes.data) {
+      if (role === "client") {
         router.replace("/clientpage/clientpage");
         return;
       }
 
       Alert.alert(
         "Account role not found",
-        "Your account is not registered as Worker or Client.",
+        "Your account is not registered as Worker or Client."
       );
     } catch (e: any) {
       Alert.alert("Login error", e?.message ?? "Something went wrong");
@@ -149,10 +130,8 @@ export default function LoginScreen() {
               },
             ]}
           >
-            <View
-              style={[styles.formWrap, { maxWidth: clamp(440 * s, 360, 560) }]}
-            >
-              {/* ✅ CARD */}
+            <View style={[styles.formWrap, { maxWidth: clamp(440 * s, 360, 560) }]}>
+              {/* CARD */}
               <View
                 style={[
                   styles.card,
@@ -162,7 +141,6 @@ export default function LoginScreen() {
                   },
                 ]}
               >
-                {/* ✅ Title now inside the card */}
                 <Text style={[styles.title, { fontSize: TITLE_SIZE }]}>
                   Log in to <Text style={styles.titleBlue}>JDK HOMECARE</Text>
                 </Text>
@@ -250,6 +228,7 @@ export default function LoginScreen() {
                   >
                     Don&apos;t have an account?
                   </Text>
+
                   <TouchableOpacity onPress={() => router.push("/role/role")}>
                     <Text
                       style={[
@@ -262,7 +241,7 @@ export default function LoginScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-              {/* ✅ END CARD */}
+              {/* END CARD */}
             </View>
           </View>
 
@@ -283,16 +262,13 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
 
-  centerWrap: {
-    flex: 1,
-  },
+  centerWrap: { flex: 1 },
 
   formWrap: {
     width: "100%",
     alignSelf: "center",
   },
 
-  // ✅ CARD
   card: {
     width: "100%",
     backgroundColor: "#ffffff",

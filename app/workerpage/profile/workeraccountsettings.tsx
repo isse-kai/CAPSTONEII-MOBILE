@@ -16,7 +16,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { supabase } from "../../../supabase/supabase"; // ✅ adjust path if needed
+import { getUser as apiGetUser, logout as apiLogout, updateUser as apiUpdateUser } from '../../../api/authService';
+import { getClientProfileByUserId, updateClientProfile } from '../../../api/clientService';
+import { getWorkerProfileByUserId, updateWorkerProfile } from '../../../api/workerService';
 
 const BLUE = "#1E88E5";
 type Role = "worker" | "client" | null;
@@ -196,12 +198,8 @@ export default function WorkerAccountSettingsScreen() {
       try {
         setLoading(true);
 
-        const {
-          data: { user },
-          error: userErr,
-        } = await supabase.auth.getUser();
-
-        if (userErr) throw userErr;
+        const userRes = await apiGetUser();
+        const user = userRes?.user || userRes?.data?.user || null;
         if (!user) {
           Alert.alert("Not signed in", "Please log in again.");
           router.replace("./login/login");
@@ -210,20 +208,11 @@ export default function WorkerAccountSettingsScreen() {
 
         const authUid = user.id;
 
-        // 1) worker
-        const workerRes = await supabase
-          .from("user_worker")
-          .select(
-            "id, auth_uid, first_name, last_name, email_address, contact_number, date_of_birth, age, created_at",
-          )
-          .eq("auth_uid", authUid)
-          .maybeSingle();
-
-        if (workerRes.error) throw workerRes.error;
-
-        if (workerRes.data) {
+        const workerRes = await getWorkerProfileByUserId(authUid);
+        const worker = workerRes?.data || workerRes || null;
+        if (worker) {
           if (!mounted) return;
-          const p = workerRes.data as ProfileRow;
+          const p = worker as ProfileRow;
           setRole("worker");
           setProfile(p);
 
@@ -238,20 +227,11 @@ export default function WorkerAccountSettingsScreen() {
           return;
         }
 
-        // 2) client
-        const clientRes = await supabase
-          .from("user_client")
-          .select(
-            "id, auth_uid, first_name, last_name, email_address, contact_number, date_of_birth, age, created_at",
-          )
-          .eq("auth_uid", authUid)
-          .maybeSingle();
-
-        if (clientRes.error) throw clientRes.error;
-
-        if (clientRes.data) {
+        const clientRes = await getClientProfileByUserId(authUid);
+        const client = clientRes?.data || clientRes || null;
+        if (client) {
           if (!mounted) return;
-          const p = clientRes.data as ProfileRow;
+          const p = client as ProfileRow;
           setRole("client");
           setProfile(p);
 
@@ -344,11 +324,10 @@ export default function WorkerAccountSettingsScreen() {
         age: ageDb,
       };
 
-      const { error } = await supabase
-        .from(table)
-        .update(payload)
-        .eq("id", profile.id);
-      if (error) throw error;
+      const service = table === 'worker' ? updateWorkerProfile : updateClientProfile;
+      const id = profile.id;
+      const res = await service(id, payload);
+      if (res?.error) throw res.error;
 
       Alert.alert("Saved", "Your information was updated.");
 
@@ -401,10 +380,8 @@ export default function WorkerAccountSettingsScreen() {
 
     try {
       setSavingPass(true);
-      const { error } = await supabase.auth.updateUser({
-        password: newPass.trim(),
-      });
-      if (error) throw error;
+      const up = await apiUpdateUser({ password: newPass.trim() });
+      if (up?.error) throw up.error;
 
       Alert.alert("Password updated", "Your password has been changed.");
       setOldPass("");
@@ -419,7 +396,7 @@ export default function WorkerAccountSettingsScreen() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await apiLogout();
     } catch {}
     router.replace("./login/login");
   };

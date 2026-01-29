@@ -19,12 +19,7 @@ import {
 import AgreementModal from "../legal/AgreementModal";
 import type { LegalKey } from "../legal/legalContent";
 
-// ✅ Supabase auth logic
-import {
-  resendSignupOtp,
-  signUpWorker,
-  verifyEmailOtp,
-} from "../../supabase/services/authService"; // <-- adjust path if needed
+// ✅ API auth logic
 
 const BLUE = "#1E88E5";
 const { width } = Dimensions.get("window");

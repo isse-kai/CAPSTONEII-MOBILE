@@ -17,7 +17,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { supabase } from "../../../supabase/supabase"; // ✅ adjust path if needed
+import { getUser as apiGetUser, logout as apiLogout } from '../../../api/authService';
+import { updateClientProfile } from '../../../api/clientService';
+import { updateWorkerProfile } from '../../../api/workerService';
 
 const BLUE = "#1E88E5";
 
@@ -75,12 +77,8 @@ export default function ProfileScreen() {
       try {
         setLoading(true);
 
-        const {
-          data: { user },
-          error: userErr,
-        } = await supabase.auth.getUser();
-
-        if (userErr) throw userErr;
+        const userRes = await apiGetUser();
+        const user = userRes?.user || userRes?.data?.user || null;
         if (!user) {
           Alert.alert("Not signed in", "Please log in again.");
           router.replace("./login/login");
@@ -89,43 +87,25 @@ export default function ProfileScreen() {
 
         const authUid = user.id;
 
-        // worker
-        const workerRes = await supabase
-          .from("user_worker")
-          .select(
-            "id, auth_uid, first_name, last_name, sex, email_address, contact_number, date_of_birth",
-          )
-          .eq("auth_uid", authUid)
-          .maybeSingle();
-
-        if (workerRes.error) throw workerRes.error;
-
-        if (workerRes.data) {
+        const workerRes = await getWorkerProfileByUserId(authUid);
+        const worker = workerRes?.data || workerRes || null;
+        if (worker) {
           if (!mounted) return;
           setRole("worker");
-          setProfile(workerRes.data as ProfileRow);
-          setContactNumber(workerRes.data.contact_number ?? "");
-          setBirthday(workerRes.data.date_of_birth ?? "");
+          setProfile(worker as ProfileRow);
+          setContactNumber(worker.contact_number ?? "");
+          setBirthday(worker.date_of_birth ?? "");
           return;
         }
 
-        // client
-        const clientRes = await supabase
-          .from("user_client")
-          .select(
-            "id, auth_uid, first_name, last_name, sex, email_address, contact_number, date_of_birth",
-          )
-          .eq("auth_uid", authUid)
-          .maybeSingle();
-
-        if (clientRes.error) throw clientRes.error;
-
-        if (clientRes.data) {
+        const clientRes = await getClientProfileByUserId(authUid);
+        const client = clientRes?.data || clientRes || null;
+        if (client) {
           if (!mounted) return;
           setRole("client");
-          setProfile(clientRes.data as ProfileRow);
-          setContactNumber(clientRes.data.contact_number ?? "");
-          setBirthday(clientRes.data.date_of_birth ?? "");
+          setProfile(client as ProfileRow);
+          setContactNumber(client.contact_number ?? "");
+          setBirthday(client.date_of_birth ?? "");
           return;
         }
 
@@ -162,15 +142,13 @@ export default function ProfileScreen() {
 
       const table = role === "worker" ? "user_worker" : "user_client";
 
-      const { error } = await supabase
-        .from(table)
-        .update({
-          contact_number: contactNumber.trim() || null,
-          date_of_birth: birthday.trim() || null,
-        })
-        .eq("id", profile.id);
+      const service = table === 'worker' ? updateWorkerProfile : updateClientProfile;
+      const res = await service(profile.id, {
+        contact_number: contactNumber.trim() || null,
+        date_of_birth: birthday.trim() || null,
+      });
 
-      if (error) throw error;
+      if (res?.error) throw res.error;
 
       Alert.alert("Saved", "Your profile was updated.");
       setProfile((p) =>
@@ -191,7 +169,7 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await apiLogout();
     } catch {}
     router.replace("./login/login");
   };

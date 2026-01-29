@@ -13,7 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { supabase } from "../../../supabase/supabase";
+import { getUser as apiGetUser } from '../../../api/authService';
+import { getWorkerWorksByUserId, upsertWorkerWorks } from '../../../api/worksService';
 
 const BLUE = "#1E88E5";
 
@@ -52,11 +53,8 @@ export default function WorkerMyWorksScreen() {
       try {
         setLoading(true);
 
-        const {
-          data: { user },
-          error: userErr,
-        } = await supabase.auth.getUser();
-        if (userErr) throw userErr;
+        const userRes = await apiGetUser();
+        const user = userRes?.user || userRes?.data?.user || null;
         if (!user) {
           Alert.alert("Not signed in", "Please log in again.");
           router.replace("./login/login");
@@ -65,15 +63,8 @@ export default function WorkerMyWorksScreen() {
 
         const authUid = user.id;
 
-        const { data, error } = await supabase
-          .from("worker_works")
-          .select(
-            "best_work_1, best_work_2, best_work_3, previous_work_1, previous_work_2, previous_work_3",
-          )
-          .eq("auth_uid", authUid)
-          .maybeSingle();
-
-        if (error && error.code !== "PGRST116") throw error; // ignore "no rows" error
+        const res = await getWorkerWorksByUserId(authUid);
+        const data = res?.data || res || null;
 
         if (data && isMounted) {
           setSlots((prev) =>
@@ -140,14 +131,9 @@ export default function WorkerMyWorksScreen() {
   // Supabase clear for a given slot
   const clearSlotInSupabase = async (slot: WorkSlot) => {
     try {
-      const {
-        data: { user },
-        error: userErr,
-      } = await supabase.auth.getUser();
-      if (userErr) throw userErr;
-      if (!user) {
-        return; // if no user, we've already cleared local
-      }
+      const userRes = await apiGetUser();
+      const user = userRes?.user || userRes?.data?.user || null;
+      if (!user) return;
       const authUid = user.id;
 
       const columnName =
@@ -156,18 +142,14 @@ export default function WorkerMyWorksScreen() {
           : `previous_work_${slot.index}`;
 
       const updatePayload: any = {
+        auth_uid: authUid,
         [columnName]: null,
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase
-        .from("worker_works")
-        .update(updatePayload)
-        .eq("auth_uid", authUid);
-
-      if (error) {
-        console.log("clearSlotInSupabase error", error);
-        // optional: tell user, but we already cleared UI
+      const res = await upsertWorkerWorks(updatePayload);
+      if (res?.error) {
+        console.log("clearSlotInSupabase error", res);
         Alert.alert(
           "Remove failed (online)",
           "Photo was removed locally but not synced to server.",
@@ -175,7 +157,6 @@ export default function WorkerMyWorksScreen() {
       }
     } catch (e) {
       console.log("clearSlotInSupabase catch", e);
-      // same note: UI already cleared
     }
   };
 
@@ -209,11 +190,8 @@ export default function WorkerMyWorksScreen() {
     try {
       setSaving(true);
 
-      const {
-        data: { user },
-        error: userErr,
-      } = await supabase.auth.getUser();
-      if (userErr) throw userErr;
+      const userRes = await apiGetUser();
+      const user = userRes?.user || userRes?.data?.user || null;
       if (!user) {
         Alert.alert("Not signed in", "Please log in again.");
         router.replace("./login/login");
@@ -240,33 +218,10 @@ export default function WorkerMyWorksScreen() {
         payload[col] = slot.uri || null; // just save the string we have
       });
 
-      // check if row exists
-      const { data: existing, error: fetchErr } = await supabase
-        .from("worker_works")
-        .select("id")
-        .eq("auth_uid", authUid)
-        .maybeSingle();
-
-      if (fetchErr && fetchErr.code !== "PGRST116") {
-        throw fetchErr;
-      }
-
-      if (existing) {
-        const { error } = await supabase
-          .from("worker_works")
-          .update({
-            ...payload,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", existing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("worker_works").insert({
-          ...payload,
-          created_at: new Date().toISOString(),
-        });
-        if (error) throw error;
-      }
+      // upsert via API
+      const upsertPayload = { ...payload, created_at: new Date().toISOString() };
+      const up = await upsertWorkerWorks(upsertPayload);
+      if (up?.error) throw up.error;
 
       // 🔔 Success alert text
       Alert.alert("Upload successfully", "Your works have been saved.");

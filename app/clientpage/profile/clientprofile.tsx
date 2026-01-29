@@ -13,7 +13,11 @@ import {
   View,
 } from "react-native";
 
-import { supabase } from "../../../supabase/supabase";
+import { getUser as apiGetUser, logout as apiLogout } from "../../../api/authService";
+import {
+  getClientProfileByAuthUid,
+  updateClientProfileByAuthUid,
+} from "../../../api/clientService";
 
 const BLUE = "#1E88E5";
 
@@ -37,7 +41,7 @@ export default function ClientProfile() {
 
   const initials = useMemo(
     () => getInitials(firstName, lastName),
-    [firstName, lastName],
+    [firstName, lastName]
   );
 
   const fullName = useMemo(() => {
@@ -50,42 +54,48 @@ export default function ClientProfile() {
   useEffect(() => {
     let mounted = true;
 
+    const safeStr = (v: any) => (v ?? "").toString();
+
     const load = async () => {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      const { data: authData, error: authErr } = await supabase.auth.getUser();
-      if (authErr || !authData?.user) {
-        router.replace("/login/login");
-        return;
+        const userRes = await apiGetUser();
+        const user = userRes?.user || userRes?.data?.user || null;
+
+        if (!user) {
+          router.replace("/login/login");
+          return;
+        }
+
+        // If your API returns first_name/last_name on the user model:
+        if (mounted) {
+          setEmail(safeStr(user.email));
+          if (user.first_name != null) setFirstName(safeStr(user.first_name));
+          if (user.last_name != null) setLastName(safeStr(user.last_name));
+        }
+
+        const authUid = user.id;
+
+        const clientRes = await getClientProfileByAuthUid(authUid);
+        const client = clientRes?.data || clientRes || null;
+
+        if (client && mounted) {
+          const p: any = client;
+
+          // If client profile has the real profile fields, prioritize them:
+          if (p.first_name != null) setFirstName(safeStr(p.first_name));
+          if (p.last_name != null) setLastName(safeStr(p.last_name));
+          if (p.email != null) setEmail(safeStr(p.email));
+
+          setPhone(safeStr(p.contact_number));
+          setDob(safeStr(p.date_of_birth));
+        }
+      } catch (e: any) {
+        Alert.alert("Error", e?.message || "Failed to load profile.");
+      } finally {
+        if (mounted) setLoading(false);
       }
-
-      const u = authData.user;
-      const uid = u.id;
-
-      if (!mounted) return;
-
-      setEmail(u.email ?? "");
-
-      const { data: row, error } = await supabase
-        .from("user_client")
-        .select("first_name,last_name,contact_number,date_of_birth")
-        .eq("auth_uid", uid)
-        .maybeSingle();
-
-      if (!mounted) return;
-
-      if (!error && row) {
-        setFirstName(row.first_name ?? "");
-        setLastName(row.last_name ?? "");
-        setPhone(row.contact_number ?? "");
-        setDob(row.date_of_birth ?? "");
-      } else {
-        const meta: any = u.user_metadata || {};
-        setFirstName(meta.first_name ?? "");
-        setLastName(meta.last_name ?? "");
-      }
-
-      setLoading(false);
     };
 
     load();
@@ -96,33 +106,39 @@ export default function ClientProfile() {
   }, [router]);
 
   const onSaveQuick = async () => {
-    const { data: authData, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !authData?.user) return;
+    try {
+      const userRes = await apiGetUser();
+      const user = userRes?.user || userRes?.data?.user || null;
+      if (!user) {
+        router.replace("/login/login");
+        return;
+      }
 
-    const uid = authData.user.id;
+      const uid = user.id;
 
-    const phoneTrim = phone.trim();
-    const dobTrim = dob.trim();
+      const res = await updateClientProfileByAuthUid(uid, {
+        contact_number: phone.trim(),
+        date_of_birth: dob.trim(),
+      });
 
-    const { error } = await supabase
-      .from("user_client")
-      .update({
-        contact_number: phoneTrim,
-        date_of_birth: dobTrim,
-      })
-      .eq("auth_uid", uid);
+      // Handle common API shapes
+      if (res?.error) {
+        Alert.alert("Update failed", res.error?.message || "");
+        return;
+      }
 
-    if (error) {
-      Alert.alert("Update failed", error.message);
-      return;
+      Alert.alert("Saved", "Your profile details were updated.");
+    } catch (e: any) {
+      Alert.alert("Update failed", e?.message || "Please try again.");
     }
-
-    Alert.alert("Saved", "Your profile details were updated.");
   };
 
   const onLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace("/login/login");
+    try {
+      await apiLogout();
+    } finally {
+      router.replace("/login/login");
+    }
   };
 
   return (

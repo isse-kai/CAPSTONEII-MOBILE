@@ -1,96 +1,68 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Briefcase, ChevronLeft, MapPin } from "lucide-react-native";
-import React, { useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { getWorkRequestById, type WorkRequest } from "../../../api/worksService";
 
 const BLUE = "#1E88E5";
 
-type RequestItem = {
-  id: string;
-  title: string;
-  service: string;
-  location: string;
-  budget: string;
-  posted: string;
-  description: string;
-};
-
-const PLACEHOLDER_REQUESTS: RequestItem[] = [
-  {
-    id: "REQ-001",
-    title: "House Cleaning Needed",
-    service: "Cleaning",
-    location: "Bacolod City",
-    budget: "₱500 - ₱800",
-    posted: "Posted today",
-    description:
-      "Need help with general cleaning (living room + kitchen). Estimated 2-3 hours.",
-  },
-  {
-    id: "REQ-002",
-    title: "Fix Leaking Faucet",
-    service: "Plumbing",
-    location: "Barangay Villamonte",
-    budget: "₱600 - ₱1,200",
-    posted: "Posted 1 day ago",
-    description:
-      "Kitchen faucet leaking. Bring basic tools if possible. Prefer afternoon schedule.",
-  },
-  {
-    id: "REQ-003",
-    title: "Electrical Outlet Repair",
-    service: "Electrical",
-    location: "Barangay Tangub",
-    budget: "₱800 - ₱1,500",
-    posted: "Posted 2 days ago",
-    description:
-      "One outlet not working. Need inspection and fix. Safety first.",
-  },
-];
-
-export default function RequestDetailsScreen() {
+export default function ViewDetails() {
   const router = useRouter();
-  const { requestId } = useLocalSearchParams<{ requestId: string }>();
+  const { requestId } = useLocalSearchParams<{ requestId?: string }>();
 
-  const req = useMemo(() => {
-    return PLACEHOLDER_REQUESTS.find((r) => r.id === requestId) || null;
-  }, [requestId]);
+  const [loading, setLoading] = useState(true);
+  const [job, setJob] = useState<WorkRequest | null>(null);
 
-  const onApply = () => {
-    Alert.alert(
-      "Apply Now (Placeholder)",
-      "Later connect this to your real apply/submit flow.",
-    );
-  };
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
 
-  if (!req) {
+      if (!requestId) {
+        Alert.alert("Error", "Missing requestId.");
+        router.back();
+        return;
+      }
+
+      const res = await getWorkRequestById(requestId);
+      if (!res?.job) {
+        Alert.alert("Not found", "This request no longer exists.");
+        router.back();
+        return;
+      }
+
+      setJob(res.job);
+    } catch (e: any) {
+      Alert.alert("Error", e?.message ?? "Failed to load details.");
+      router.back();
+    } finally {
+      setLoading(false);
+    }
+  }, [requestId, router]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const title = job?.service_task || job?.service || "Service Request";
+
+  const postedBy = useMemo(() => {
+    return job?.posted_name ||
+      `${job?.posted_first_name ?? ""} ${job?.posted_last_name ?? ""}`.trim() ||
+      "Unknown";
+  }, [job]);
+
+  if (loading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.topBar}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.iconBtn}
-            onPress={() => router.back()}
-          >
-            <ChevronLeft size={22} color="#0f172a" />
-          </TouchableOpacity>
-          <Text style={styles.topTitle}>Request</Text>
-          <View style={{ width: 44 }} />
-        </View>
-
-        <View style={styles.missingCard}>
-          <Text style={styles.missingTitle}>Request not found</Text>
-          <Text style={styles.missingSub}>
-            This is placeholder data. Go back and choose another request.
-          </Text>
+        <View style={styles.wrap}>
+          <Text style={styles.h1}>Loading...</Text>
         </View>
       </SafeAreaView>
     );
@@ -98,162 +70,83 @@ export default function RequestDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          style={styles.iconBtn}
-          onPress={() => router.back()}
-        >
-          <ChevronLeft size={22} color="#0f172a" />
-        </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.wrap}>
+        <Text style={styles.h1}>{title}</Text>
 
-        <View style={{ flex: 1 }}>
-          <Text style={styles.topTitle}>Request Details</Text>
-          <Text style={styles.topSub}>{req.id}</Text>
-        </View>
-
-        <View style={{ width: 44 }} />
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
         <View style={styles.card}>
-          <View style={styles.badge}>
-            <Briefcase size={14} color={BLUE} />
-            <Text style={styles.badgeText}>{req.service}</Text>
-          </View>
-
-          <Text style={styles.title}>{req.title}</Text>
-
-          <View style={styles.metaRow}>
-            <MapPin size={16} color="#64748b" />
-            <Text style={styles.metaText}>{req.location}</Text>
-            <Text style={styles.metaDot}>•</Text>
-            <Text style={styles.budget}>{req.budget}</Text>
-          </View>
-
-          <Text style={styles.posted}>{req.posted}</Text>
-
-          <Text style={styles.section}>Description</Text>
-          <Text style={styles.desc}>{req.description}</Text>
-
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.applyBtn}
-            onPress={onApply}
-          >
-            <Text style={styles.applyBtnText}>Apply Now</Text>
-          </TouchableOpacity>
+          <Row label="Service" value={job?.service ?? "—"} />
+          <Row label="Urgency" value={job?.urgency ?? "—"} />
+          <Row label="Workers Needed" value={String(job?.workers_needed ?? "—")} />
+          <Row label="Preferred Date" value={String(job?.preferred_date ?? "—")} />
+          <Row label="Preferred Time" value={String(job?.preferred_time ?? "—")} />
+          <Row label="Payment Method" value={job?.payment_method ?? "—"} />
+          <Row label="Status" value={job?.status ?? "—"} />
         </View>
 
-        <View style={{ height: 18 }} />
+        <View style={styles.card}>
+          <Row label="Posted by" value={postedBy} />
+          <Row label="Email" value={job?.posted_email ?? "—"} />
+          <Row label="Phone" value={job?.posted_phone_number ?? "—"} />
+          <Row label="Barangay" value={job?.posted_barangay ?? "—"} />
+          <Row label="Street" value={job?.posted_street ?? "—"} />
+        </View>
+
+        <View style={styles.card}>
+          <Row label="Price (each)" value={job?.price_display ?? "—"} />
+          <Row label="Units" value={String(job?.units ?? "—")} />
+          <Row label="Total Price" value={job?.total_price_display ?? "—"} />
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.label}>Description</Text>
+          <Text style={styles.value}>{job?.service_description ?? "—"}</Text>
+
+          <Text style={[styles.label, { marginTop: 12 }]}>Equipments</Text>
+          <Text style={styles.value}>{job?.service_equipments ?? "—"}</Text>
+        </View>
+
+        <TouchableOpacity style={styles.btn} onPress={() => router.back()}>
+          <Text style={styles.btnText}>Back</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value}>{value}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#f5f6fa" },
-
-  topBar: {
-    paddingHorizontal: 18,
-    paddingTop: 10,
-    paddingBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 12,
-  },
-  iconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topTitle: { fontSize: 18, fontWeight: "900", color: "#0f172a" },
-  topSub: { marginTop: 2, fontSize: 12.5, color: "#64748b", fontWeight: "800" },
-
-  scroll: { paddingHorizontal: 18, paddingBottom: 16 },
+  wrap: { padding: 18, paddingBottom: 30 },
+  h1: { fontSize: 20, fontWeight: "900", color: "#0f172a", marginTop: 10 },
 
   card: {
-    marginTop: 12,
-    borderRadius: 16,
-    backgroundColor: "#ffffff",
+    marginTop: 14,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 16,
     borderWidth: 1,
     borderColor: "#e5e9f2",
-    padding: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
   },
 
-  badge: {
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 12,
-    height: 30,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#dbeafe",
-    backgroundColor: "#eff6ff",
-    marginBottom: 10,
-  },
-  badgeText: { fontSize: 12.5, fontWeight: "900", color: BLUE },
+  row: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#eef2f7" },
+  label: { fontSize: 12, fontWeight: "900", color: "#64748b" },
+  value: { marginTop: 4, fontSize: 14, fontWeight: "700", color: "#0f172a" },
 
-  title: { fontSize: 18, fontWeight: "900", color: "#0f172a" },
-
-  metaRow: { marginTop: 8, flexDirection: "row", alignItems: "center", gap: 6 },
-  metaText: { fontSize: 12.8, fontWeight: "800", color: "#475569" },
-  metaDot: { color: "#cbd5e1", fontWeight: "900" },
-  budget: { fontSize: 12.8, fontWeight: "900", color: "#0f172a" },
-
-  posted: { marginTop: 8, fontSize: 12.2, fontWeight: "800", color: "#94a3b8" },
-
-  section: { marginTop: 14, fontSize: 13, fontWeight: "900", color: "#0f172a" },
-  desc: {
-    marginTop: 6,
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#64748b",
-    lineHeight: 19,
-  },
-
-  applyBtn: {
+  btn: {
     marginTop: 18,
-    height: 48,
+    height: 46,
     borderRadius: 999,
     backgroundColor: BLUE,
     alignItems: "center",
     justifyContent: "center",
   },
-  applyBtnText: { fontSize: 14, fontWeight: "900", color: "#ffffff" },
-
-  missingCard: {
-    marginTop: 14,
-    marginHorizontal: 18,
-    borderRadius: 16,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e5e9f2",
-    padding: 18,
-    alignItems: "center",
-  },
-  missingTitle: { fontSize: 14.5, fontWeight: "900", color: "#0f172a" },
-  missingSub: {
-    marginTop: 6,
-    fontSize: 12.8,
-    fontWeight: "700",
-    color: "#64748b",
-    textAlign: "center",
-    lineHeight: 18,
-  },
+  btnText: { color: "#fff", fontWeight: "900" },
 });

@@ -1,37 +1,15 @@
-import { supabase } from "../supabase";
+import { signup, verifyOtp, resendOtp } from '../../api/authService';
 
-// signup
-export async function signUpWorker(
-  email: string,
-  password: string,
-  extra: any,
-) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: extra },
-  });
-  if (error) throw error;
-  return data;
+export async function signUpWorker(email: string, password: string, extra: any) {
+  return signup({ email, password, extra });
 }
 
-// ✅ verify OTP for signup MUST be type: 'signup'
+// verify OTP for signup
 export async function verifyEmailOtp(email: string, token: string) {
-  const { data, error } = await supabase.auth.verifyOtp({
-    email,
-    token,
-    type: "signup",
-  });
-  if (error) throw error;
-  return data;
+  return verifyOtp({ email, token, type: 'signup' });
 }
 
 // resend signup OTP
 export async function resendSignupOtp(email: string) {
-  const { data, error } = await supabase.auth.resend({
-    type: "signup",
-    email,
-  });
-  if (error) throw error;
-  return data;
+  return resendOtp({ email, type: 'signup' });
 }
