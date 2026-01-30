@@ -16,9 +16,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { getUser as apiGetUser, logout as apiLogout, updateUser as apiUpdateUser } from '../../../api/authService';
-import { getClientProfileByUserId, updateClientProfile } from '../../../api/clientService';
-import { getWorkerProfileByUserId, updateWorkerProfile } from '../../../api/workerService';
+import { getUser as apiGetUser, logout as apiLogout } from "../../../api/authService";
+import { getClientProfileByUserId } from "../../../api/clientService";
+import { getWorkerProfileByUserId } from "../../../api/workerService";
 
 const BLUE = "#1E88E5";
 type Role = "worker" | "client" | null;
@@ -46,15 +46,6 @@ const formatDobForUi = (yyyyMmDd: string) => {
   return `${mo}/${d}/${y}`;
 };
 
-const parseDobToDb = (mmDdYyyy: string) => {
-  // "MM/DD/YYYY" -> "YYYY-MM-DD"
-  if (!mmDdYyyy) return "";
-  const m = mmDdYyyy.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!m) return "";
-  const [, mo, d, y] = m;
-  return `${y}-${mo}-${d}`;
-};
-
 const parseUiDobToDate = (mmDdYyyy: string) => {
   const m = (mmDdYyyy || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (!m) return null;
@@ -63,13 +54,6 @@ const parseUiDobToDate = (mmDdYyyy: string) => {
   const y = Number(m[3]);
   const dt = new Date(y, mo - 1, d);
   return Number.isNaN(dt.getTime()) ? null : dt;
-};
-
-const formatDateToUiDob = (dt: Date) => {
-  const mo = String(dt.getMonth() + 1).padStart(2, "0");
-  const d = String(dt.getDate()).padStart(2, "0");
-  const y = String(dt.getFullYear());
-  return `${mo}/${d}/${y}`;
 };
 
 const calcAgeFromDate = (birth: Date) => {
@@ -106,33 +90,15 @@ const fmtCreated = (createdAt?: string | null) => {
 // --- Phone helpers (PH) ---
 const stripToDigits = (s: string) => (s || "").replace(/[^\d]/g, "");
 
-// turn any input into digits after +63 (10 digits preferred)
 const toPHLocalDigits = (input: string) => {
   const digits = stripToDigits(input);
   if (!digits) return "";
 
-  // +63 9XXXXXXXXX -> digits may start with 63...
-  if (digits.startsWith("63") && digits.length >= 12)
-    return digits.slice(2, 12);
-
-  // 09XXXXXXXXX (11 digits) -> take last 10 after leading 0
-  if (digits.startsWith("09") && digits.length >= 11)
-    return digits.slice(1, 11);
-
-  // 9XXXXXXXXX (10 digits)
+  if (digits.startsWith("63") && digits.length >= 12) return digits.slice(2, 12);
+  if (digits.startsWith("09") && digits.length >= 11) return digits.slice(1, 11);
   if (digits.startsWith("9") && digits.length >= 10) return digits.slice(0, 10);
-
-  // fallback: last 10 digits if longer
   if (digits.length > 10) return digits.slice(digits.length - 10);
-
-  // if shorter, keep (user still typing)
   return digits;
-};
-
-const normalizePHNumber = (local10Digits: string) => {
-  const d = toPHLocalDigits(local10Digits);
-  if (!d) return "";
-  return `+63${d}`;
 };
 
 const displayPHNumber = (dbValue: string) => {
@@ -144,35 +110,36 @@ const displayPHNumber = (dbValue: string) => {
 export default function WorkerAccountSettingsScreen() {
   const router = useRouter();
 
-  const [tab, setTab] = useState<"info" | "password">("info");
+  const [tab, setTab] = useState<"info" | "password">("info"); // password tab kept, but read-only too
 
   const [loading, setLoading] = useState(true);
-  const [savingInfo, setSavingInfo] = useState(false);
-  const [savingPass, setSavingPass] = useState(false);
 
   const [role, setRole] = useState<Role>(null);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const firstName = profile?.first_name ?? "";
+  const lastName = profile?.last_name ?? "";
+  const email = profile?.email_address ?? "";
 
-  const [age, setAge] = useState("");
-  const [phone, setPhone] = useState(""); // displayed as "+63 XXXXXXXXXX"
-  const [dob, setDob] = useState(""); // UI: MM/DD/YYYY
+  // display-only values (same spirit as workerpage.tsx)
+  const phoneDisplay = useMemo(
+    () => (profile?.contact_number ? displayPHNumber(String(profile.contact_number)) : ""),
+    [profile?.contact_number],
+  );
 
-  const [oldPass, setOldPass] = useState("");
-  const [newPass, setNewPass] = useState("");
-  const [confirmPass, setConfirmPass] = useState("");
+  const dobDisplay = useMemo(
+    () => (profile?.date_of_birth ? formatDobForUi(String(profile.date_of_birth)) : ""),
+    [profile?.date_of_birth],
+  );
 
-  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
-  const [dobModalOpen, setDobModalOpen] = useState(false);
-
-  const [tempPhoneDigits, setTempPhoneDigits] = useState("");
-  const [tempDobDate, setTempDobDate] = useState<Date>(new Date(2000, 0, 1));
-
-  // ✅ Android picker dialog toggle
-  const [showAndroidDobPicker, setShowAndroidDobPicker] = useState(false);
+  const ageDisplay = useMemo(() => {
+    if (profile?.date_of_birth) {
+      const a = calcAgeFromDobString(String(profile.date_of_birth));
+      return a == null ? "" : String(a);
+    }
+    if (profile?.age != null) return String(profile.age);
+    return "";
+  }, [profile?.date_of_birth, profile?.age]);
 
   const initials = useMemo(() => {
     const a = (firstName?.trim()?.[0] || "U").toUpperCase();
@@ -182,14 +149,13 @@ export default function WorkerAccountSettingsScreen() {
 
   const createdText = useMemo(
     () => fmtCreated(profile?.created_at ?? null),
-    [profile],
+    [profile?.created_at],
   );
 
-  // ✅ Auto compute age whenever dob changes
-  useEffect(() => {
-    const a = calcAgeFromDobString(dob.trim());
-    setAge(a == null ? "" : String(a));
-  }, [dob]);
+  // kept (not used anymore, but leaving harmless + no UI breaking)
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [dobModalOpen, setDobModalOpen] = useState(false);
+  const [showAndroidDobPicker, setShowAndroidDobPicker] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -208,22 +174,13 @@ export default function WorkerAccountSettingsScreen() {
 
         const authUid = user.id;
 
+        // ✅ Prefer worker. If not found, fallback to client.
         const workerRes = await getWorkerProfileByUserId(authUid);
         const worker = workerRes?.data || workerRes || null;
         if (worker) {
           if (!mounted) return;
-          const p = worker as ProfileRow;
           setRole("worker");
-          setProfile(p);
-
-          setFirstName(safeStr(p.first_name));
-          setLastName(safeStr(p.last_name));
-          setEmail(safeStr(p.email_address));
-
-          setPhone(displayPHNumber(safeStr(p.contact_number)));
-          setDob(formatDobForUi(safeStr(p.date_of_birth)));
-
-          if (!safeStr(p.date_of_birth) && p.age != null) setAge(String(p.age));
+          setProfile(worker as ProfileRow);
           return;
         }
 
@@ -231,18 +188,8 @@ export default function WorkerAccountSettingsScreen() {
         const client = clientRes?.data || clientRes || null;
         if (client) {
           if (!mounted) return;
-          const p = client as ProfileRow;
           setRole("client");
-          setProfile(p);
-
-          setFirstName(safeStr(p.first_name));
-          setLastName(safeStr(p.last_name));
-          setEmail(safeStr(p.email_address));
-
-          setPhone(displayPHNumber(safeStr(p.contact_number)));
-          setDob(formatDobForUi(safeStr(p.date_of_birth)));
-
-          if (!safeStr(p.date_of_birth) && p.age != null) setAge(String(p.age));
+          setProfile(client as ProfileRow);
           return;
         }
 
@@ -259,140 +206,6 @@ export default function WorkerAccountSettingsScreen() {
       mounted = false;
     };
   }, [router]);
-
-  const openPhoneModal = () => {
-    setTempPhoneDigits(toPHLocalDigits(phone));
-    setPhoneModalOpen(true);
-  };
-
-  const openDobModal = () => {
-    const parsed = parseUiDobToDate(dob);
-    setTempDobDate(parsed ?? new Date(2000, 0, 1));
-    setShowAndroidDobPicker(false);
-    setDobModalOpen(true);
-
-    // ✅ optional: auto-open the Android picker as soon as modal opens
-    if (Platform.OS === "android") {
-      setTimeout(() => setShowAndroidDobPicker(true), 150);
-    }
-  };
-
-  const confirmPhone = () => {
-    const normalized = normalizePHNumber(tempPhoneDigits);
-    setPhone(normalized ? `+63 ${toPHLocalDigits(normalized)}` : "");
-    setPhoneModalOpen(false);
-  };
-
-  const confirmDob = () => {
-    setDob(formatDateToUiDob(tempDobDate));
-    setDobModalOpen(false);
-    setShowAndroidDobPicker(false);
-  };
-
-  const handleSaveInfo = async () => {
-    if (!profile || !role || savingInfo) return;
-
-    const dobDb = dob.trim() ? parseDobToDb(dob.trim()) : "";
-    if (dob.trim() && !dobDb) {
-      Alert.alert("Invalid Birthday", "Birthday must be selected properly.");
-      return;
-    }
-
-    let ageDb: number | null = null;
-    if (dobDb) {
-      const computed = calcAgeFromDobString(dobDb);
-      if (computed == null) {
-        Alert.alert(
-          "Invalid Birthday",
-          "Could not compute age from your birthday.",
-        );
-        return;
-      }
-      ageDb = computed;
-    }
-
-    const phoneDb = phone.trim() ? normalizePHNumber(phone) : "";
-
-    try {
-      setSavingInfo(true);
-      const table = role === "worker" ? "user_worker" : "user_client";
-
-      // ✅ Names removed from payload so they can’t be updated
-      const payload: any = {
-        contact_number: phoneDb || null,
-        date_of_birth: dobDb || null,
-        age: ageDb,
-      };
-
-      const service = table === 'worker' ? updateWorkerProfile : updateClientProfile;
-      const id = profile.id;
-      const res = await service(id, payload);
-      if (res?.error) throw res.error;
-
-      Alert.alert("Saved", "Your information was updated.");
-
-      setProfile((p) =>
-        p
-          ? {
-              ...p,
-              contact_number: payload.contact_number,
-              date_of_birth: payload.date_of_birth,
-              age: payload.age,
-            }
-          : p,
-      );
-
-      setPhone(
-        payload.contact_number ? displayPHNumber(payload.contact_number) : "",
-      );
-      setDob(
-        payload.date_of_birth ? formatDobForUi(payload.date_of_birth) : "",
-      );
-      setAge(payload.age != null ? String(payload.age) : "");
-    } catch (e: any) {
-      Alert.alert("Save failed", e?.message ?? "Something went wrong.");
-    } finally {
-      setSavingInfo(false);
-    }
-  };
-
-  const handleSavePassword = async () => {
-    if (savingPass) return;
-
-    if (!newPass.trim() || !confirmPass.trim()) {
-      Alert.alert(
-        "Missing password",
-        "Please enter and confirm your new password.",
-      );
-      return;
-    }
-    if (newPass !== confirmPass) {
-      Alert.alert(
-        "Password mismatch",
-        "New password and confirm password do not match.",
-      );
-      return;
-    }
-    if (newPass.trim().length < 8) {
-      Alert.alert("Weak password", "Use at least 8 characters.");
-      return;
-    }
-
-    try {
-      setSavingPass(true);
-      const up = await apiUpdateUser({ password: newPass.trim() });
-      if (up?.error) throw up.error;
-
-      Alert.alert("Password updated", "Your password has been changed.");
-      setOldPass("");
-      setNewPass("");
-      setConfirmPass("");
-    } catch (e: any) {
-      Alert.alert("Update failed", e?.message ?? "Could not update password.");
-    } finally {
-      setSavingPass(false);
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -418,7 +231,7 @@ export default function WorkerAccountSettingsScreen() {
           <View style={{ width: 44 }} />
         </View>
 
-        {/* Tabs */}
+        {/* Tabs (kept) */}
         <View style={styles.tabRow}>
           <TouchableOpacity
             activeOpacity={0.9}
@@ -430,9 +243,7 @@ export default function WorkerAccountSettingsScreen() {
               color={tab === "info" ? BLUE : "#64748b"}
               strokeWidth={2.2}
             />
-            <Text
-              style={[styles.tabText, tab === "info" && styles.tabTextActive]}
-            >
+            <Text style={[styles.tabText, tab === "info" && styles.tabTextActive]}>
               My Information
             </Text>
           </TouchableOpacity>
@@ -442,12 +253,7 @@ export default function WorkerAccountSettingsScreen() {
             style={[styles.tabBtn, tab === "password" && styles.tabBtnActive]}
             onPress={() => setTab("password")}
           >
-            <Text
-              style={[
-                styles.tabText,
-                tab === "password" && styles.tabTextActive,
-              ]}
-            >
+            <Text style={[styles.tabText, tab === "password" && styles.tabTextActive]}>
               Password
             </Text>
           </TouchableOpacity>
@@ -460,24 +266,26 @@ export default function WorkerAccountSettingsScreen() {
         >
           <View style={styles.pageHeader}>
             <Text style={styles.pageTitle}>Profile</Text>
-            <Text style={styles.pageSub}>Manage your personal details</Text>
-            {!!createdText && (
-              <Text style={styles.createdText}>{createdText}</Text>
-            )}
+            <Text style={styles.pageSub}>Your account details (read-only)</Text>
+            {!!createdText && <Text style={styles.createdText}>{createdText}</Text>}
           </View>
 
           {loading ? (
             <View style={{ paddingTop: 20, alignItems: "center", gap: 10 }}>
               <ActivityIndicator />
-              <Text
-                style={{ fontSize: 12.5, color: "#000", fontWeight: "700" }}
-              >
+              <Text style={{ fontSize: 12.5, color: "#000", fontWeight: "700" }}>
                 Loading...
               </Text>
             </View>
           ) : tab === "info" ? (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Personal Information</Text>
+              <Text style={styles.cardTitle}>
+                {role === "worker"
+                  ? "Worker Information"
+                  : role === "client"
+                    ? "Client Information"
+                    : "Personal Information"}
+              </Text>
 
               <View style={styles.avatarRow}>
                 <View style={styles.avatar}>
@@ -487,31 +295,29 @@ export default function WorkerAccountSettingsScreen() {
                   <Text style={styles.avatarLabel}>
                     {role ? role.toUpperCase() : "PROFILE"}
                   </Text>
-                  <Text style={styles.avatarEmail}>{email}</Text>
+                  <Text style={styles.avatarEmail}>{email || "—"}</Text>
                 </View>
               </View>
 
               <View style={styles.row2}>
                 <View style={styles.field}>
                   <Text style={styles.label}>First Name</Text>
-                  {/* ✅ UNEDITABLE */}
                   <TextInput
-                    value={firstName}
+                    value={safeStr(firstName)}
                     editable={false}
                     style={[styles.input, { backgroundColor: "#f9fafb" }]}
-                    placeholder="First name"
+                    placeholder="—"
                     placeholderTextColor="#9ca3af"
                   />
                 </View>
 
                 <View style={styles.field}>
                   <Text style={styles.label}>Last Name</Text>
-                  {/* ✅ UNEDITABLE */}
                   <TextInput
-                    value={lastName}
+                    value={safeStr(lastName)}
                     editable={false}
                     style={[styles.input, { backgroundColor: "#f9fafb" }]}
-                    placeholder="Last name"
+                    placeholder="—"
                     placeholderTextColor="#9ca3af"
                   />
                 </View>
@@ -521,117 +327,47 @@ export default function WorkerAccountSettingsScreen() {
                 <View style={styles.field}>
                   <Text style={styles.label}>Email</Text>
                   <TextInput
-                    value={email}
+                    value={safeStr(email)}
                     editable={false}
                     style={[styles.input, { backgroundColor: "#f9fafb" }]}
+                    placeholder="—"
                     placeholderTextColor="#9ca3af"
                   />
                 </View>
+
                 <View style={styles.fieldSmall}>
                   <Text style={styles.label}>Age</Text>
                   <TextInput
-                    value={age}
+                    value={safeStr(ageDisplay)}
                     editable={false}
                     style={[styles.input, { backgroundColor: "#f9fafb" }]}
-                    placeholder="Age"
+                    placeholder="—"
                     placeholderTextColor="#9ca3af"
                   />
                 </View>
               </View>
 
+              {/* ✅ display-only like workerpage.tsx */}
               <View style={styles.infoRow}>
                 <View style={styles.infoLeft}>
                   <Text style={styles.infoLabel}>Mobile Number</Text>
-                  <Text style={styles.infoValue}>{phone || "—"}</Text>
+                  <Text style={styles.infoValue}>{phoneDisplay || "—"}</Text>
                 </View>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={openPhoneModal}
-                  style={styles.infoEditBtn}
-                >
-                  <Text style={styles.infoEditText}>
-                    {phone ? "Edit" : "Add"}
-                  </Text>
-                </TouchableOpacity>
               </View>
 
               <View style={styles.infoRow}>
                 <View style={styles.infoLeft}>
                   <Text style={styles.infoLabel}>Birthday</Text>
-                  <Text style={styles.infoValue}>{dob || "—"}</Text>
+                  <Text style={styles.infoValue}>{dobDisplay || "—"}</Text>
                 </View>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={openDobModal}
-                  style={styles.infoEditBtn}
-                >
-                  <Text style={styles.infoEditText}>
-                    {dob ? "Edit" : "Add"}
-                  </Text>
-                </TouchableOpacity>
               </View>
-
-              <TouchableOpacity
-                activeOpacity={0.9}
-                style={styles.primaryBtn}
-                onPress={handleSaveInfo}
-                disabled={savingInfo}
-              >
-                <Text style={styles.primaryBtnText}>
-                  {savingInfo ? "Saving..." : "Confirm"}
-                </Text>
-              </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Change Password</Text>
-
-              <View style={styles.fieldFull}>
-                <Text style={styles.label}>Current Password</Text>
-                <TextInput
-                  value={oldPass}
-                  onChangeText={setOldPass}
-                  style={styles.input}
-                  placeholder="Current password"
-                  placeholderTextColor="#9ca3af"
-                  secureTextEntry
-                />
-              </View>
-
-              <View style={styles.fieldFull}>
-                <Text style={styles.label}>New Password</Text>
-                <TextInput
-                  value={newPass}
-                  onChangeText={setNewPass}
-                  style={styles.input}
-                  placeholder="New password"
-                  placeholderTextColor="#9ca3af"
-                  secureTextEntry
-                />
-              </View>
-
-              <View style={styles.fieldFull}>
-                <Text style={styles.label}>Confirm New Password</Text>
-                <TextInput
-                  value={confirmPass}
-                  onChangeText={setConfirmPass}
-                  style={styles.input}
-                  placeholder="Confirm password"
-                  placeholderTextColor="#9ca3af"
-                  secureTextEntry
-                />
-              </View>
-
-              <TouchableOpacity
-                activeOpacity={0.9}
-                style={styles.primaryBtn}
-                onPress={handleSavePassword}
-                disabled={savingPass}
-              >
-                <Text style={styles.primaryBtnText}>
-                  {savingPass ? "Updating..." : "Update Password"}
-                </Text>
-              </TouchableOpacity>
+              <Text style={styles.cardTitle}>Password</Text>
+              <Text style={{ marginTop: 6, fontSize: 13, color: "#000", fontWeight: "700" }}>
+                Password updates are disabled on this screen.
+              </Text>
             </View>
           )}
 
@@ -647,72 +383,38 @@ export default function WorkerAccountSettingsScreen() {
           <View style={{ height: 24 }} />
         </ScrollView>
 
-        {/* PHONE MODAL */}
+        {/* (Optional) kept to avoid breaking imports; not used anymore */}
         <Modal visible={phoneModalOpen} transparent animationType="fade">
           <View style={styles.modalBackdrop}>
             <View style={styles.modalSheet}>
-              <Text style={styles.modalTitle}>
-                {phone ? "Edit" : "Add"} Mobile Number
-              </Text>
-              <Text style={styles.modalHint}>
-                Enter your number (no need to type +63).
-              </Text>
-
-              <View style={styles.phoneInputRow}>
-                <View style={styles.phonePrefix}>
-                  <Text style={styles.phonePrefixText}>+63</Text>
-                </View>
-                <TextInput
-                  value={tempPhoneDigits}
-                  onChangeText={(v) => setTempPhoneDigits(toPHLocalDigits(v))}
-                  style={[styles.input, styles.phoneDigitsInput]}
-                  keyboardType="phone-pad"
-                  placeholder="9123456789"
-                  placeholderTextColor="#9ca3af"
-                  maxLength={10}
-                />
-              </View>
-
-              <Text style={styles.phoneHelper}>Example: 9123456789</Text>
-
+              <Text style={styles.modalTitle}>Mobile Number</Text>
+              <Text style={styles.modalHint}>Read-only</Text>
               <View style={styles.modalBtnRow}>
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  style={[styles.modalBtn, styles.modalBtnGhost]}
+                  style={[styles.modalBtn, styles.modalBtnPrimary]}
                   onPress={() => setPhoneModalOpen(false)}
                 >
-                  <Text style={styles.modalBtnGhostText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  style={[styles.modalBtn, styles.modalBtnPrimary]}
-                  onPress={confirmPhone}
-                >
-                  <Text style={styles.modalBtnPrimaryText}>Save</Text>
+                  <Text style={styles.modalBtnPrimaryText}>Close</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </Modal>
 
-        {/* DOB MODAL */}
         <Modal visible={dobModalOpen} transparent animationType="fade">
           <View style={styles.modalBackdrop}>
             <View style={styles.modalSheet}>
-              <Text style={styles.modalTitle}>
-                {dob ? "Edit" : "Add"} Birthday
-              </Text>
-              <Text style={styles.modalHint}>Select your date of birth.</Text>
+              <Text style={styles.modalTitle}>Birthday</Text>
+              <Text style={styles.modalHint}>Read-only</Text>
 
               {Platform.OS === "ios" ? (
                 <View style={{ marginTop: 12 }}>
                   <DateTimePicker
-                    value={tempDobDate}
+                    value={new Date()}
                     mode="date"
                     display="spinner"
-                    onChange={(event, selectedDate) => {
-                      if (selectedDate) setTempDobDate(selectedDate);
-                    }}
+                    onChange={() => {}}
                     maximumDate={new Date()}
                     textColor="#000"
                   />
@@ -726,66 +428,23 @@ export default function WorkerAccountSettingsScreen() {
                       styles.modalBtnGhost,
                       { marginTop: 12, alignSelf: "flex-start" },
                     ]}
-                    onPress={() => setShowAndroidDobPicker(true)}
+                    onPress={() => setShowAndroidDobPicker(false)}
                   >
                     <Text style={styles.modalBtnGhostText}>Pick date</Text>
                   </TouchableOpacity>
-
-                  {showAndroidDobPicker && (
-                    <DateTimePicker
-                      value={tempDobDate}
-                      mode="date"
-                      display="default"
-                      maximumDate={new Date()}
-                      textColor="#000"
-                      onChange={(event, selectedDate) => {
-                        if (event.type === "dismissed") {
-                          setShowAndroidDobPicker(false);
-                          return;
-                        }
-                        if (selectedDate) setTempDobDate(selectedDate);
-                        setShowAndroidDobPicker(false);
-                      }}
-                    />
-                  )}
                 </>
               )}
-
-              <Text style={styles.dobPreview}>
-                Selected:{" "}
-                <Text style={{ fontWeight: "900", color: "#000" }}>
-                  {formatDateToUiDob(tempDobDate)}
-                </Text>
-                {(() => {
-                  const a = calcAgeFromDate(tempDobDate);
-                  return a != null ? (
-                    <Text>
-                      {"  "}• Age:{" "}
-                      <Text style={{ fontWeight: "900", color: "#000" }}>
-                        {a}
-                      </Text>
-                    </Text>
-                  ) : null;
-                })()}
-              </Text>
 
               <View style={styles.modalBtnRow}>
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  style={[styles.modalBtn, styles.modalBtnGhost]}
+                  style={[styles.modalBtn, styles.modalBtnPrimary]}
                   onPress={() => {
                     setDobModalOpen(false);
                     setShowAndroidDobPicker(false);
                   }}
                 >
-                  <Text style={styles.modalBtnGhostText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  style={[styles.modalBtn, styles.modalBtnPrimary]}
-                  onPress={confirmDob}
-                >
-                  <Text style={styles.modalBtnPrimaryText}>Save</Text>
+                  <Text style={styles.modalBtnPrimaryText}>Close</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -929,26 +588,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   infoValue: { fontSize: 14, fontWeight: "700", color: "#000" },
-  infoEditBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#f9fafb",
-    marginLeft: 12,
-  },
-  infoEditText: { fontSize: 12, fontWeight: "700", color: "#000" },
-
-  primaryBtn: {
-    marginTop: 14,
-    height: 50,
-    borderRadius: 999,
-    backgroundColor: BLUE,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  primaryBtnText: { fontSize: 15, fontWeight: "900", color: "#ffffff" },
 
   logoutBtn: {
     marginTop: 18,
@@ -1001,32 +640,4 @@ const styles = StyleSheet.create({
   modalBtnGhostText: { fontSize: 13, fontWeight: "700", color: "#000" },
   modalBtnPrimary: { backgroundColor: BLUE },
   modalBtnPrimaryText: { fontSize: 13, fontWeight: "800", color: "#ffffff" },
-
-  phoneInputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 12,
-  },
-  phonePrefix: {
-    height: 50,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#f9fafb",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  phonePrefixText: { fontSize: 14, fontWeight: "900", color: "#000" },
-  phoneDigitsInput: { flex: 1 },
-
-  phoneHelper: {
-    marginTop: 6,
-    fontSize: 11.5,
-    color: "#000",
-    fontWeight: "700",
-  },
-
-  dobPreview: { marginTop: 10, fontSize: 12.5, color: "#000" },
 });

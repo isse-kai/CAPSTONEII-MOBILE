@@ -1,10 +1,11 @@
 // app/workerpage/Browse/Browse.tsx
 import { useRouter } from "expo-router";
 import { Briefcase, Eye, Filter, MapPin, Star } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Image,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -14,86 +15,24 @@ import {
   View,
 } from "react-native";
 
+import {
+  getWorkRequests,
+  type WorkRequest
+} from "../../../api/worksService";
+
 import BottomNav from "../nav/bottomnav/BottomNav";
 
 const BLUE = "#1E88E5";
 
 type ServiceFilter =
   | "All"
-  | "Carwash"
-  | "Plumbing"
-  | "Carpentry"
+  | "Carpenter"
+  | "Carwasher"
+  | "Electrician"
   | "Laundry"
-  | "Electrician";
+  | "Plumber";
 
-type RequestItem = {
-  id: string;
-  title: string;
-  service: Exclude<ServiceFilter, "All">;
-  location: string;
-  budget: string;
-  posted: string;
-  description: string;
-  rating: number; // 0-5
-};
-
-const PLACEHOLDER_REQUESTS: RequestItem[] = [
-  {
-    id: "REQ-001",
-    title: "Car Wash (Sedan) - Home Service",
-    service: "Carwash",
-    location: "Bacolod City",
-    budget: "₱250 - ₱400",
-    posted: "Posted today",
-    description:
-      "Need basic exterior wash and vacuum. Prefer morning schedule.",
-    rating: 4.6,
-  },
-  {
-    id: "REQ-002",
-    title: "Fix Leaking Faucet",
-    service: "Plumbing",
-    location: "Barangay Villamonte",
-    budget: "₱600 - ₱1,200",
-    posted: "Posted 1 day ago",
-    description:
-      "Kitchen faucet leaking. Bring basic tools if possible. Prefer afternoon schedule.",
-    rating: 4.2,
-  },
-  {
-    id: "REQ-003",
-    title: "Door Hinge & Cabinet Repair",
-    service: "Carpentry",
-    location: "Barangay Tangub",
-    budget: "₱700 - ₱1,400",
-    posted: "Posted 2 days ago",
-    description:
-      "Cabinet door sagging and hinge needs replacement. Quick repair requested.",
-    rating: 4.8,
-  },
-  {
-    id: "REQ-004",
-    title: "Laundry Help (Wash & Fold)",
-    service: "Laundry",
-    location: "Mandalagan",
-    budget: "₱350 - ₱650",
-    posted: "Posted 3 days ago",
-    description:
-      "Need wash & fold for clothes (approx 1 load). Pickup/drop-off preferred.",
-    rating: 4.1,
-  },
-  {
-    id: "REQ-005",
-    title: "Install Light Fixture",
-    service: "Electrician",
-    location: "Singcang-Airport",
-    budget: "₱500 - ₱900",
-    posted: "Posted 4 days ago",
-    description:
-      "Replace old ceiling light with new fixture. Please bring basic tools.",
-    rating: 4.9,
-  },
-];
+type RequestItem = WorkRequest;
 
 function Stars({ rating }: { rating: number }) {
   const full = Math.floor(rating);
@@ -131,6 +70,41 @@ export default function BrowseRequestsScreen() {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
+  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // ✅ ADD refresh state
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadRequests = async () => {
+    try {
+      setLoading(true);
+      const res = await getWorkRequests();
+      setRequests(res?.jobs ?? []);
+    } catch (e: any) {
+      Alert.alert("Error", e?.message ?? "Failed to load requests.");
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ ADD pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      await loadRequests();
+    } catch (e: any) {
+      Alert.alert("Error", e?.message ?? "Failed to refresh.");
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRequests();
+  }, []);
+
   // ✅ Filter state
   const [filterOpen, setFilterOpen] = useState(false);
   const [serviceFilter, setServiceFilter] = useState<ServiceFilter>("All");
@@ -138,19 +112,22 @@ export default function BrowseRequestsScreen() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
 
-    return PLACEHOLDER_REQUESTS.filter((r) => {
+    return requests.filter((r) => {
+      const rid = String(r.id || "");
+      const title = (r.title || r.service || "").toLowerCase();
+      const service = (r.service || "").toLowerCase();
+      const location = ((r.posted_barangay || r.posted_street) || "").toLowerCase();
+
       const matchesSearch = !q
         ? true
-        : `${r.id} ${r.title} ${r.service} ${r.location}`
-            .toLowerCase()
-            .includes(q);
+        : `${rid} ${title} ${service} ${location}`.includes(q);
 
       const matchesFilter =
-        serviceFilter === "All" ? true : r.service === serviceFilter;
+        serviceFilter === "All" ? true : (r.service || "") === serviceFilter;
 
       return matchesSearch && matchesFilter;
     });
-  }, [search, serviceFilter]);
+  }, [search, serviceFilter, requests]);
 
   const onApply = (req: RequestItem) => {
     Alert.alert(
@@ -207,11 +184,11 @@ export default function BrowseRequestsScreen() {
             {(
               [
                 "All",
-                "Carwash",
-                "Plumbing",
-                "Carpentry",
-                "Laundry",
+                "Carpenter",
+                "Carwasher",
                 "Electrician",
+                "Laundry",
+                "Plumber",
               ] as ServiceFilter[]
             ).map((k) => {
               const active = serviceFilter === k;
@@ -244,6 +221,10 @@ export default function BrowseRequestsScreen() {
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
+          // ✅ ADD refreshControl (pull down at top)
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         >
           {/* results count */}
           <View style={styles.resultsRow}>
@@ -260,7 +241,11 @@ export default function BrowseRequestsScreen() {
             ) : null}
           </View>
 
-          {filtered.length === 0 ? (
+          {loading ? (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>Loading requests...</Text>
+            </View>
+          ) : filtered.length === 0 ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyTitle}>No results</Text>
               <Text style={styles.emptySub}>
@@ -268,61 +253,76 @@ export default function BrowseRequestsScreen() {
               </Text>
             </View>
           ) : (
-            filtered.map((req) => (
-              <View key={req.id} style={styles.card}>
-                <View style={styles.cardTopRow}>
-                  <View style={styles.badgeRow}>
-                    <View style={styles.badge}>
-                      <Briefcase size={14} color={BLUE} />
-                      <Text style={styles.badgeText}>{req.service}</Text>
+            filtered.map((req) => {
+              const id = String(req.id);
+              const service = req.service || "Service";
+              const title = req.title || req.service || "Service Request";
+              const location = req.posted_barangay || req.posted_street || "Unknown";
+              const budget = req.total_price_display || req.price_display || "—";
+              const description = (req.service_description || req.service_task || "") as string;
+
+              return (
+                <View key={id} style={styles.card}>
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.badgeRow}>
+                      <View style={styles.badge}>
+                        <Briefcase size={14} color={BLUE} />
+                        <Text style={styles.badgeText}>{service}</Text>
+                      </View>
+
+                      <View style={{ alignItems: "flex-end", gap: 4 }}>
+                        <Text style={styles.posted}>{req.created_at ?? ""}</Text>
+                      </View>
                     </View>
 
-                    <View style={{ alignItems: "flex-end", gap: 4 }}>
-                      <Text style={styles.posted}>{req.posted}</Text>
-                      <Stars rating={req.rating} />
+                    <Text style={styles.reqTitle}>{title}</Text>
+
+                    <View style={styles.metaRow}>
+                      <MapPin size={16} color="#64748b" />
+                      <Text style={styles.metaText}>{location}</Text>
+                      <Text style={styles.metaDot}>•</Text>
+
+                      <View style={styles.priceChip}>
+                        <Text style={styles.priceChipText}>{budget}</Text>
+                      </View>
                     </View>
+
+                    <Text style={styles.desc} numberOfLines={2}>
+                      {description}
+                    </Text>
                   </View>
 
-                  <Text style={styles.reqTitle}>{req.title}</Text>
+                  <View style={styles.btnRow}>
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      style={styles.viewBtn}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/workerpage/Browse/ViewDetails",
+                          params: { requestId: id },
+                        } as any)
+                      }
+                    >
+                      <Eye size={16} color={BLUE} />
+                      <Text style={styles.viewBtnText}>View</Text>
+                    </TouchableOpacity>
 
-                  <View style={styles.metaRow}>
-                    <MapPin size={16} color="#64748b" />
-                    <Text style={styles.metaText}>{req.location}</Text>
-                    <Text style={styles.metaDot}>•</Text>
-
-                    {/* price highlight */}
-                    <View style={styles.priceChip}>
-                      <Text style={styles.priceChipText}>{req.budget}</Text>
-                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      style={styles.applyBtn}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/workerpage/Browse/Apply",
+                          params: { requestId: id },
+                        } as any)
+                      }
+                    >
+                      <Text style={styles.applyBtnText}>Apply Now</Text>
+                    </TouchableOpacity>
                   </View>
-
-                  <Text style={styles.desc} numberOfLines={2}>
-                    {req.description}
-                  </Text>
                 </View>
-
-                <View style={styles.btnRow}>
-                  <TouchableOpacity
-                    activeOpacity={0.9}
-                    style={styles.viewBtn}
-                    onPress={() =>
-                      router.push(`./workerpage/Browse/ViewDetails`)
-                    }
-                  >
-                    <Eye size={16} color={BLUE} />
-                    <Text style={styles.viewBtnText}>View</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    activeOpacity={0.9}
-                    style={styles.applyBtn}
-                    onPress={() => onApply(req)}
-                  >
-                    <Text style={styles.applyBtnText}>Apply Now</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))
+              );
+            })
           )}
 
           <View style={{ height: 18 }} />
@@ -335,6 +335,7 @@ export default function BrowseRequestsScreen() {
 }
 
 const styles = StyleSheet.create({
+  // ... ✅ unchanged (keep all your styles)
   safe: { flex: 1, backgroundColor: "#f5f6fa" },
   root: { flex: 1, backgroundColor: "#f5f6fa" },
 

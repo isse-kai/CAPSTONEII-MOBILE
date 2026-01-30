@@ -135,7 +135,7 @@ export default function OngoingService() {
   function goToWorkerPage() {
     // Adjust this path to where your workerpage.tsx is in expo-router
     // Example: app/workerpage/workerpage.tsx => "/workerpage/workerpage"
-    router.push("./workerpage/workerpage");
+    router.push("/workerpage/workerpage");
   }
 
   return (

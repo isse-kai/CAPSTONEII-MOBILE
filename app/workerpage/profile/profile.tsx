@@ -1,11 +1,6 @@
 // app/workerpage/profile/profile.tsx
 import { useRouter } from "expo-router";
-import {
-  ChevronLeft,
-  Image as ImageIcon,
-  LogOut,
-  Settings,
-} from "lucide-react-native";
+import { ChevronLeft, LogOut, Settings } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -13,13 +8,16 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { getUser as apiGetUser, logout as apiLogout } from '../../../api/authService';
-import { updateClientProfile } from '../../../api/clientService';
-import { updateWorkerProfile } from '../../../api/workerService';
+
+import {
+  getUser as apiGetUser,
+  logout as apiLogout,
+} from "../../../api/authService";
+import { getClientProfileByUserId } from "../../../api/clientService";
+import { getWorkerProfileByUserId } from "../../../api/workerService";
 
 const BLUE = "#1E88E5";
 
@@ -27,28 +25,31 @@ type Role = "worker" | "client" | null;
 
 type ProfileRow = {
   id: number;
-  auth_uid: string;
+
+  // from users table (based on your WorkerProfileController->showByUserId)
   first_name: string | null;
   last_name: string | null;
-  sex: string | null;
-  email_address: string | null;
-  contact_number: string | null;
-  date_of_birth: string | null;
+  role?: string | null;
+
+  // allow email if your API returns it sometimes
+  email_address?: string | null;
+  email?: string | null;
 };
 
 export default function ProfileScreen() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
   const [role, setRole] = useState<Role>(null);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
 
-  const [contactNumber, setContactNumber] = useState("");
-  const [birthday, setBirthday] = useState("");
-
-  const email = profile?.email_address ?? "";
+  const email = useMemo(() => {
+    return (
+      profile?.email_address ??
+      profile?.email ??
+      "" // safe fallback
+    );
+  }, [profile]);
 
   const fullName = useMemo(() => {
     const fn = (profile?.first_name ?? "").trim();
@@ -61,7 +62,7 @@ export default function ProfileScreen() {
     const ln = (profile?.last_name ?? "").trim();
     const a = fn ? fn[0].toUpperCase() : "";
     const b = ln ? ln[0].toUpperCase() : "";
-    return a + b || "U";
+    return (a + b) || "U";
   }, [profile]);
 
   const roleBadgeText = useMemo(() => {
@@ -79,33 +80,39 @@ export default function ProfileScreen() {
 
         const userRes = await apiGetUser();
         const user = userRes?.user || userRes?.data?.user || null;
+
         if (!user) {
           Alert.alert("Not signed in", "Please log in again.");
-          router.replace("./login/login");
+          router.replace("/login/login"); // ✅ absolute route
           return;
         }
 
-        const authUid = user.id;
+        const authUid = String(user.id);
 
+        // 1) try worker profile
         const workerRes = await getWorkerProfileByUserId(authUid);
         const worker = workerRes?.data || workerRes || null;
-        if (worker) {
+
+        // NOTE: your API may return {message:"..."} even if not found
+        const workerHasName = worker && (worker.first_name || worker.last_name);
+
+        if (workerHasName) {
           if (!mounted) return;
           setRole("worker");
           setProfile(worker as ProfileRow);
-          setContactNumber(worker.contact_number ?? "");
-          setBirthday(worker.date_of_birth ?? "");
           return;
         }
 
+        // 2) try client profile
         const clientRes = await getClientProfileByUserId(authUid);
         const client = clientRes?.data || clientRes || null;
-        if (client) {
+
+        const clientHasName = client && (client.first_name || client.last_name);
+
+        if (clientHasName) {
           if (!mounted) return;
           setRole("client");
           setProfile(client as ProfileRow);
-          setContactNumber(client.contact_number ?? "");
-          setBirthday(client.date_of_birth ?? "");
           return;
         }
 
@@ -126,52 +133,14 @@ export default function ProfileScreen() {
     };
   }, [router]);
 
-  const handleSave = async () => {
-    if (!role || !profile || saving) return;
-
-    if (birthday.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(birthday.trim())) {
-      Alert.alert(
-        "Invalid birthday",
-        "Use format YYYY-MM-DD (example: 2001-08-25).",
-      );
-      return;
-    }
-
-    try {
-      setSaving(true);
-
-      const table = role === "worker" ? "user_worker" : "user_client";
-
-      const service = table === 'worker' ? updateWorkerProfile : updateClientProfile;
-      const res = await service(profile.id, {
-        contact_number: contactNumber.trim() || null,
-        date_of_birth: birthday.trim() || null,
-      });
-
-      if (res?.error) throw res.error;
-
-      Alert.alert("Saved", "Your profile was updated.");
-      setProfile((p) =>
-        p
-          ? {
-              ...p,
-              contact_number: contactNumber.trim() || null,
-              date_of_birth: birthday.trim() || null,
-            }
-          : p,
-      );
-    } catch (e: any) {
-      Alert.alert("Save failed", e?.message ?? "Something went wrong.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleLogout = async () => {
     try {
-      await apiLogout();
-    } catch {}
-    router.replace("./login/login");
+      await apiLogout(); // calls /auth/logout then removes AsyncStorage token
+    } catch (e) {
+      // even if API fails, we still navigate out
+    } finally {
+      router.replace("/login/login"); // ✅ absolute route (fixes your issue)
+    }
   };
 
   return (
@@ -216,8 +185,8 @@ export default function ProfileScreen() {
                         role === "worker"
                           ? styles.roleBadgeWorker
                           : role === "client"
-                            ? styles.roleBadgeClient
-                            : styles.roleBadgeUnknown,
+                          ? styles.roleBadgeClient
+                          : styles.roleBadgeUnknown,
                       ]}
                     >
                       <Text style={styles.roleBadgeText}>{roleBadgeText}</Text>
@@ -227,84 +196,20 @@ export default function ProfileScreen() {
                   {!!fullName && (
                     <Text style={styles.summaryName}>{fullName}</Text>
                   )}
-                  <Text style={styles.summaryEmail}>{email}</Text>
+
+                  {!!email && <Text style={styles.summaryEmail}>{email}</Text>}
                 </View>
               </View>
-
-              <View style={styles.infoRow}>
-                <View style={styles.infoField}>
-                  <Text style={styles.infoLabel}>Contact Number</Text>
-                  <TextInput
-                    value={contactNumber}
-                    onChangeText={setContactNumber}
-                    placeholder="Enter contact number"
-                    placeholderTextColor="#9aa4b2"
-                    keyboardType="phone-pad"
-                    style={styles.infoInput}
-                  />
-                </View>
-
-                <View style={styles.infoField}>
-                  <Text style={styles.infoLabel}>Birthday</Text>
-                  <TextInput
-                    value={birthday}
-                    onChangeText={setBirthday}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#9aa4b2"
-                    style={styles.infoInput}
-                  />
-                </View>
-              </View>
-
-              <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={handleSave}
-                disabled={saving || loading || !role}
-                style={[
-                  styles.saveBtn,
-                  saving ? styles.saveBtnOff : styles.saveBtnOn,
-                ]}
-              >
-                <Text style={styles.saveBtnText}>
-                  {saving ? "Saving..." : "Save"}
-                </Text>
-              </TouchableOpacity>
             </View>
 
             {/* Actions */}
             <View style={styles.actionsCard}>
-              {/* 🔵 My Works – on top */}
-              <TouchableOpacity
-                activeOpacity={0.9}
-                style={styles.actionRow}
-                onPress={() =>
-                  router.push("./workerpage/profile/myworks" as const)
-                }
-              >
-                <View style={styles.actionLeft}>
-                  <View style={styles.actionIconBox}>
-                    <ImageIcon size={22} color={BLUE} />
-                  </View>
-
-                  <View style={styles.actionTextWrap}>
-                    <Text style={styles.actionTitle}>My Works</Text>
-                    <Text style={styles.actionSub}>
-                      Upload your best and previous projects
-                    </Text>
-                  </View>
-                </View>
-
-                <Text style={styles.chevron}>›</Text>
-              </TouchableOpacity>
-
-              <View style={styles.actionDivider} />
-
               {/* Account Settings */}
               <TouchableOpacity
                 activeOpacity={0.9}
                 style={styles.actionRow}
                 onPress={() =>
-                  router.push("./workerpage/profile/workeraccountsettings")
+                  router.push("/workerpage/profile/workeraccountsettings")
                 }
               >
                 <View style={styles.actionLeft}>
@@ -323,7 +228,7 @@ export default function ProfileScreen() {
                 <Text style={styles.chevron}>›</Text>
               </TouchableOpacity>
 
-              <View className="divider" style={styles.actionDivider} />
+              <View style={styles.actionDivider} />
 
               {/* Logout */}
               <TouchableOpacity
@@ -476,40 +381,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111827",
   },
-
-  infoRow: {
-    marginTop: 14,
-    flexDirection: "row",
-    gap: 12,
-  },
-  infoField: { flex: 1 },
-  infoLabel: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#111827",
-    marginBottom: 6,
-  },
-  infoInput: {
-    height: 44,
-    borderWidth: 1,
-    borderColor: "#d7dee9",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 13.5,
-    color: "#111827",
-    backgroundColor: "#ffffff",
-  },
-
-  saveBtn: {
-    height: 44,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 14,
-  },
-  saveBtnOn: { backgroundColor: "#cfd6df" },
-  saveBtnOff: { backgroundColor: "#d1d5db" },
-  saveBtnText: { fontSize: 14, fontWeight: "900", color: "#111827" },
 
   actionsCard: {
     borderRadius: 12,

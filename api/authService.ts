@@ -1,3 +1,4 @@
+// api/authService.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiRequest } from "./client";
 
@@ -8,12 +9,29 @@ export async function login(payload: unknown) {
   });
 
   // Expect: { token: "...", user: {...} }
-  if (data?.token) await AsyncStorage.setItem("token", data.token);
+  // Persist token from common response fields so different backends work
+  const tokenValue =
+    data?.token ||
+    data?.access_token ||
+    data?.accessToken ||
+    data?.session?.access_token ||
+    data?.data?.token ||
+    null;
+
+  if (tokenValue) {
+    try {
+      await AsyncStorage.setItem("token", String(tokenValue));
+      console.log("[authService] stored token");
+    } catch (e) {
+      console.warn("[authService] failed to store token", e);
+    }
+  }
 
   return data; // return {token,user}
 }
 
 export async function getUser() {
+  // ✅ must exist in Laravel: GET /api/auth/user (auth:sanctum)
   return apiRequest("/auth/user", { method: "GET" });
 }
 
@@ -27,8 +45,9 @@ export async function logout() {
 }
 
 export async function updateUser(payload: unknown) {
-  return apiRequest("/auth/update", {
-    method: "POST",
+  // ✅ must exist in Laravel: PUT /api/auth/user (auth:sanctum)
+  return apiRequest("/auth/user", {
+    method: "PUT",
     body: JSON.stringify(payload),
   });
 }

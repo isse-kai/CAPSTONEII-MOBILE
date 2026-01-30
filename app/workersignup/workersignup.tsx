@@ -242,7 +242,7 @@ export default function WorkerSignupScreen() {
 
       // If email confirmations are OFF, session may exist immediately:
       if (data.session) {
-        router.replace("./workerpage/workerpage");
+        router.replace("/workerpage/workerpage");
         return;
       }
 
@@ -274,7 +274,7 @@ export default function WorkerSignupScreen() {
         setOtpInfo("Verified! Logging you in...");
         setTimeout(() => {
           setOtpOpen(false);
-          router.replace("./workerpage/workerpage");
+          router.replace("/workerpage/workerpage");
         }, 200);
         return;
       }

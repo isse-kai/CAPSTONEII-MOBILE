@@ -203,12 +203,12 @@ export default function WorkerPage() {
       return;
     }
 
-    router.push("./workerforms/WorkerInfoStep1");
+    router.push("/workerforms/WorkerInfoStep1");
   };
 
   const goToAccountSettings = () => {
     setEligibilityVisible(false);
-    router.push("./workerpage/profile/workeraccountsettings");
+    router.push("/workerpage/profile/workeraccountsettings");
   };
 
   const renderModalContent = () => {
@@ -363,14 +363,6 @@ export default function WorkerPage() {
                   {me?.role || "—"}
                 </Text>
               </Text>
-
-              <TouchableOpacity
-                style={styles.outlineBtn}
-                activeOpacity={0.85}
-                onPress={handleBecomeWorker}
-              >
-                <Text style={styles.outlineBtnText}>+ Become a worker</Text>
-              </TouchableOpacity>
             </View>
           </View>
 
@@ -378,7 +370,7 @@ export default function WorkerPage() {
             <Text style={styles.sectionTitle}>Available Service Requests</Text>
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => router.push("./workerpage/Browse/Browse")}
+              onPress={() => router.push("/workerpage/Browse/Browse")}
             >
               <Text style={styles.link}>Browse available requests →</Text>
             </TouchableOpacity>
